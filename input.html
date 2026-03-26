@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>セットリスト入力 — SmileRT LIVE Manager</title>
+    <meta name="description" content="出演者向けセットリスト入力フォーム">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .input-page {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .performer-header {
+            text-align: center;
+            padding: var(--space-2xl) 0 var(--space-lg);
+        }
+
+        .performer-header .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: var(--radius-full);
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto var(--space-md);
+            box-shadow: var(--shadow-glow-pink);
+        }
+
+        .add-song-btn {
+            width: 100%;
+            padding: var(--space-lg);
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .add-song-btn:hover {
+            border-color: var(--accent-pink);
+            color: var(--accent-pink);
+            background: rgba(255, 107, 157, 0.05);
+        }
+
+        .save-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 26, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-color);
+            padding: var(--space-md) var(--space-lg);
+            z-index: 50;
+            display: flex;
+            justify-content: center;
+            gap: var(--space-md);
+        }
+
+        .save-bar .btn {
+            min-width: 160px;
+        }
+
+        .section-divider {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin: var(--space-2xl) 0 var(--space-lg);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .section-divider::before,
+        .section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .preview-card {
+            background: var(--bg-glass-strong);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            margin-top: var(--space-xl);
+        }
+
+        .preview-song {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        .preview-song:last-child {
+            border-bottom: none;
+        }
+
+        .preview-song .num {
+            width: 24px;
+            height: 24px;
+            border-radius: var(--radius-full);
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #fff;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="index.html" class="site-logo"><span class="logo-icon">S</span><span>SmileRT</span></a>
+            <nav class="site-nav">
+                <a href="index.html">ホーム</a>
+                <a href="performer.html" class="active">出演者</a>
+                <a href="admin.html">管理</a>
+                <a href="view.html">技術資料</a>
+            </nav>
+        </div>
+    </header>
+    <div class="page-wrapper" style="padding-bottom: 100px;">
+        <div class="container">
+            <div class="input-page page-enter">
+                <div style="margin-bottom:var(--space-md)">
+                    <a href="performer.html" class="btn btn-ghost btn-sm" id="backBtn">← 出演者ポータルに戻る</a>
+                </div>
+                <div class="performer-header">
+                    <div class="avatar" style="font-weight:800;font-size:1.5rem">S</div>
+                    <h2 id="pageTitle">セットリスト入力</h2>
+                    <p class="text-muted mt-sm" id="pageSubtitle">出演者情報とセットリストを入力してください</p>
+                </div>
+                <!-- Profile -->
+                <div class="glass-card mb-lg">
+                    <h3 class="mb-lg" style="font-size:1.1rem">プロフィール</h3>
+                    <div class="form-group"><label class="form-label">出演者名 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="inputName" placeholder="ステージネーム">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">Discord ハンドルネーム</label><input type="text"
+                                class="form-input" id="inputDiscord" placeholder="例: smile_rt"></div>
+                        <div class="form-group"><label class="form-label">X (Twitter) ID</label><input type="text"
+                                class="form-input" id="inputTwitter" placeholder="@username"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label class="form-label">サイリウムカラー</label>
+                            <div class="flex gap-sm items-center">
+                                <input type="color" id="inputColor" value="#ff6b9d"
+                                    style="width:50px;height:38px;border:none;background:transparent;cursor:pointer">
+                                <input type="text" class="form-input" id="inputColorText" value="" placeholder="色名でもOK"
+                                    style="flex:1">
+                            </div>
+                        </div>
+                        <div class="form-group"><label class="form-label">パーカーサイズ</label>
+                            <select class="form-select" id="inputHoodie">
+                                <option value="">--</option>
+                                <option value="S">S</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="XL">XL</option>
+                                <option value="XXL">XXL</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group"><label class="form-label">フライヤー アイコン素材URL</label><input type="text"
+                            class="form-input" id="inputIcon" placeholder="GigaFileなどのURL"></div>
+                </div>
+                <!-- Songs -->
+                <div class="section-divider">セットリスト</div>
+                <div id="songContainer"></div>
+                <button class="add-song-btn mt-md" onclick="addSong()">+ 曲を追加する</button>
+                <!-- Tech -->
+                <div class="section-divider">🔧 技術リクエスト</div>
+                <div class="glass-card">
+                    <div class="form-group" style="margin-bottom:0"><label class="form-label">演出・照明・その他リクエスト</label>
+                        <textarea class="form-textarea" id="inputTech" rows="4"
+                            placeholder="例: サビで照明を赤に、MCの時間が必要"></textarea>
+                    </div>
+                </div>
+                <!-- Preview -->
+                <div class="preview-card">
+                    <h4>入力プレビュー</h4>
+                    <div id="previewContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="save-bar"><button class="btn btn-primary btn-lg" onclick="saveInput()">保存する</button></div>
+
+    <script src="js/data.js"></script>
+    <script>
+        let eventId = null, performerId = null, songs = [];
+        document.addEventListener('DOMContentLoaded', () => {
+            eventId = getParam('event'); performerId = getParam('performer');
+            if (eventId && performerId) loadExistingData(); else addSong();
+            document.getElementById('inputColor').addEventListener('input', e => document.getElementById('inputColorText').value = e.target.value);
+            document.addEventListener('input', () => updatePreview());
+        });
+
+        function loadExistingData() {
+            const p = db.getPerformer(eventId, performerId);
+            if (!p) { document.getElementById('pageSubtitle').textContent = '出演者が見つかりません'; addSong(); return; }
+            const ev = db.getEvent(eventId);
+            if (ev) document.getElementById('pageSubtitle').textContent = ev.title || '';
+            document.getElementById('inputName').value = p.name || '';
+            document.getElementById('inputDiscord').value = p.discord || '';
+            document.getElementById('inputTwitter').value = p.twitter || '';
+            document.getElementById('inputColorText').value = p.cyalumeColor || '';
+            if (/^#[0-9a-fA-F]{6}$/.test(p.cyalumeColor)) document.getElementById('inputColor').value = p.cyalumeColor;
+            document.getElementById('inputIcon').value = p.iconUrl || '';
+            document.getElementById('inputHoodie').value = p.hoodie || '';
+            document.getElementById('inputTech').value = p.techRequests || '';
+            songs = p.songs.length ? p.songs : [createSong()];
+            renderSongs(); updatePreview();
+        }
+
+        function addSong() { songs.push(createSong()); renderSongs(); setTimeout(() => document.getElementById('songContainer').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100); }
+        function removeSong(idx) { if (songs.length <= 1) { showToast('最低1曲は必要です', 'info'); return; } songs.splice(idx, 1); renderSongs(); }
+
+        function renderSongs() {
+            document.getElementById('songContainer').innerHTML = songs.map((s, i) => `
+        <div class="song-card" style="animation:fadeSlideUp 0.3s ease-out">
+          <span class="song-number">${i + 1}曲目</span>
+          ${songs.length > 1 ? `<button class="btn btn-ghost btn-icon btn-sm remove-song" onclick="removeSong(${i})">✕</button>` : ''}
+          <div class="form-group mt-sm"><label class="form-label">楽曲名 <span class="required">*</span></label>
+            <input type="text" class="form-input" data-song="${i}" data-field="title" value="${escHtml(s.title)}" placeholder="曲名" oninput="onSI(this)"></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">カバー/オリジナル</label>
+              <select class="form-select" data-song="${i}" data-field="type" onchange="onSI(this)">
+                <option value="cover" ${s.type === 'cover' ? 'selected' : ''}>カバー</option>
+                <option value="original" ${s.type === 'original' ? 'selected' : ''}>オリジナル</option>
+              </select></div>
+            <div class="form-group"><label class="form-label">曲の尺</label>
+              <input type="text" class="form-input" data-song="${i}" data-field="duration" value="${formatDuration(s.duration)}" placeholder="4:30" oninput="onSI(this)"></div>
+          </div>
+          <div class="form-group"><label class="form-label">音源アップロード</label>
+            <div class="flex gap-md mb-sm">
+              <label class="form-check"><input type="radio" name="audio_${i}" value="uploaded" ${s.audioStatus === 'uploaded' ? 'checked' : ''} onchange="onAC(${i},'uploaded')"> あり</label>
+              <label class="form-check"><input type="radio" name="audio_${i}" value="none" ${s.audioStatus !== 'uploaded' ? 'checked' : ''} onchange="onAC(${i},'none')"> なし</label>
+            </div>
+            <input type="text" class="form-input" data-song="${i}" data-field="audioUrl" value="${escHtml(s.audioUrl)}" placeholder="GigaFile等のリンク" oninput="onSI(this)" style="${s.audioStatus !== 'uploaded' ? 'display:none' : ''}" id="aUrl_${i}">
+          </div>
+          <div class="form-group"><label class="form-label">演出や特殊リクエスト</label>
+            <textarea class="form-textarea" data-song="${i}" data-field="cue" rows="2" placeholder="照明・BGM・演出" oninput="onSI(this)">${escHtml(s.cue)}</textarea></div>
+        </div>`).join('');
+        }
+
+        function onSI(el) { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i]) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : el.value; updatePreview(); }
+        function onAC(idx, v) { songs[idx].audioStatus = v; const u = document.getElementById(`aUrl_${idx}`); if (u) u.style.display = v === 'uploaded' ? '' : 'none'; }
+
+        function updatePreview() {
+            const name = document.getElementById('inputName').value || '未入力';
+            document.getElementById('previewContent').innerHTML = `
+        <p style="font-weight:600;margin-bottom:var(--space-sm)">${escHtml(name)}</p>
+        ${songs.filter(s => s.title).map((s, i) => `<div class="preview-song"><span class="num">${i + 1}</span><span style="flex:1">${escHtml(s.title)}</span><span class="badge ${s.type === 'original' ? 'badge-purple' : 'badge-blue'}" style="font-size:0.65rem">${s.type === 'original' ? 'O' : 'C'}</span>${s.duration ? `<span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">${formatDuration(s.duration)}</span>` : ''}</div>`).join('') || '<p class="text-muted" style="font-size:0.85rem">曲を入力してください</p>'}`;
+        }
+
+        function saveInput() {
+            const name = document.getElementById('inputName').value.trim();
+            if (!name) { showToast('出演者名を入力してください', 'error'); return; }
+            document.querySelectorAll('[data-song]').forEach(el => { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i] || !f) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : el.value; });
+            const data = {
+                name, discord: document.getElementById('inputDiscord').value.trim(),
+                twitter: document.getElementById('inputTwitter').value.trim(),
+                cyalumeColor: document.getElementById('inputColorText').value.trim() || document.getElementById('inputColor').value,
+                iconUrl: document.getElementById('inputIcon').value.trim(),
+                hoodie: document.getElementById('inputHoodie').value,
+                techRequests: document.getElementById('inputTech').value.trim(),
+                songs: songs.filter(s => s.title.trim())
+            };
+            if (eventId && performerId) {
+                const ex = db.getPerformer(eventId, performerId);
+                if (ex) { Object.assign(ex, data); db.updatePerformer(eventId, ex); showToast('保存しました', 'success'); return; }
+            }
+            if (!eventId) {
+                const ev = createEvent({ title: '入力データ (' + name + ')' });
+                const p = createPerformer(data); ev.performers.push(p); db.saveEvent(ev);
+                eventId = ev.id; performerId = p.id; setParams({ event: eventId, performer: performerId });
+                showToast('新しいイベントとして保存しました！', 'success');
+            }
+        }
+    </script>
+</body>
+
+</html>

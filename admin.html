@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理ダッシュボード — SmileRT LIVE Manager</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-layout {
+            display: flex;
+            gap: var(--space-xl);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar {
+            width: 300px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .admin-layout.sidebar-collapsed .sidebar {
+            width: 0;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            opacity: 0;
+        }
+
+        .admin-layout.sidebar-collapsed .main-content {
+            flex: 1;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            left: 12px;
+            top: 80px;
+            z-index: 10;
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-full);
+            background: var(--bg-glass-strong);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+
+        .admin-layout.sidebar-collapsed .sidebar-toggle {
+            display: flex;
+        }
+
+        .main-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        @media (max-width: 960px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+        }
+
+        .event-list-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border: 1px solid transparent;
+            margin-bottom: var(--space-xs);
+        }
+
+        .event-list-item:hover {
+            background: var(--bg-glass);
+        }
+
+        .event-list-item.active {
+            background: var(--bg-glass-strong);
+            border-color: var(--accent-pink);
+        }
+
+        .event-list-item .ev-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .event-list-item .ev-date {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: var(--space-xs);
+            margin-bottom: var(--space-xl);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: var(--space-xs);
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+            font-family: var(--font-sans);
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-glass);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-pink);
+            border-bottom: 2px solid var(--accent-pink);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+            animation: fadeSlideUp 0.3s ease-out;
+        }
+
+        /* Schedule Grid */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: var(--space-sm);
+        }
+
+        .schedule-grid .form-group {
+            margin-bottom: 0;
+        }
+
+        .schedule-grid .form-label {
+            font-size: 0.75rem;
+        }
+
+        .schedule-grid .form-input {
+            padding: 0.4rem 0.6rem;
+            font-size: 0.85rem;
+        }
+
+        /* Setlist Table */
+        .setlist-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--bg-glass);
+        }
+
+        .setlist-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1400px;
+            table-layout: auto;
+        }
+
+        .setlist-wrap thead th {
+            background: var(--bg-glass-strong);
+            padding: 0.5rem 0.4rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            white-space: nowrap;
+        }
+
+        .setlist-wrap tbody td {
+            padding: 0.3rem 0.3rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.82rem;
+            vertical-align: top;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .setlist-wrap tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .setlist-wrap tbody tr.special-row {
+            background: rgba(251, 191, 36, 0.06);
+        }
+
+        .setlist-wrap tbody tr.special-row td {
+            color: var(--accent-yellow);
+            font-weight: 600;
+        }
+
+        /* Row selection for swap */
+        .setlist-wrap tbody tr.row-selected {
+            background: rgba(99, 102, 241, 0.15);
+            outline: 2px solid var(--accent-blue);
+            outline-offset: -2px;
+        }
+
+        .setlist-wrap tbody tr.row-selected td {
+            color: var(--text-primary);
+        }
+
+        .swap-toolbar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-sm) var(--space-md);
+            margin-bottom: var(--space-sm);
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .swap-toolbar .swap-count {
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .ie {
+            /* inline-edit */
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-primary);
+            padding: 0.25rem 0.35rem;
+            border-radius: 4px;
+            font-family: var(--font-sans);
+            font-size: 0.82rem;
+            width: 100%;
+            transition: all var(--transition-fast);
+            outline: none;
+        }
+
+        .ie:hover {
+            border-color: var(--border-color);
+        }
+
+        .ie:focus {
+            background: var(--bg-input);
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 0 2px rgba(255, 107, 157, 0.1);
+        }
+
+        .ie-sm {
+            width: 50px;
+            text-align: center;
+        }
+
+        /* Spreadsheet-style dropdowns */
+        select.ie-select {
+            appearance: none;
+            border: 1px solid transparent;
+            color: var(--text-primary);
+            padding: 0.25rem 1.2rem 0.25rem 0.35rem;
+            border-radius: 4px;
+            font-family: var(--font-sans);
+            font-size: 0.82rem;
+            cursor: pointer;
+            outline: none;
+            transition: all var(--transition-fast);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 4px center;
+            background-size: 8px;
+        }
+
+        select.ie-select option {
+            background: #1a1a3e;
+            color: #f0f0ff;
+        }
+
+        select.ie-select:hover {
+            border-color: var(--border-color);
+        }
+
+        select.ie-select:focus {
+            border-color: var(--accent-pink);
+        }
+
+        /* Mic dropdown - green bg like spreadsheet */
+        .mic-select {
+            background-color: rgba(52, 211, 153, 0.15);
+        }
+
+        .mic-select:focus {
+            background-color: rgba(52, 211, 153, 0.25);
+        }
+
+        /* Audio status dropdown - yellow bg like spreadsheet */
+        .audio-select {
+            background-color: rgba(251, 191, 36, 0.15);
+        }
+
+        .audio-select:focus {
+            background-color: rgba(251, 191, 36, 0.25);
+        }
+
+        .audio-select.status-done {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        .audio-select.status-received {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        /* Checkboxes */
+        .cb-cell {
+            text-align: center;
+        }
+
+        .cb-cell input[type="checkbox"] {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color-hover);
+            border-radius: 3px;
+            background: var(--bg-input);
+            cursor: pointer;
+            position: relative;
+            transition: all var(--transition-fast);
+            vertical-align: middle;
+        }
+
+        .cb-cell input[type="checkbox"]:checked {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .cb-cell input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        /* CSV */
+        .csv-drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2xl);
+            text-align: center;
+            transition: all var(--transition-base);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .csv-drop-zone:hover,
+        .csv-drop-zone.dragover {
+            border-color: var(--accent-pink);
+            background: rgba(255, 107, 157, 0.05);
+        }
+
+        .csv-drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="index.html" class="site-logo"><span class="logo-icon">S</span><span>SmileRT</span></a>
+            <nav class="site-nav">
+                <a href="index.html">ホーム</a>
+                <a href="performer.html">出演者</a>
+                <a href="admin.html" class="active">管理</a>
+                <a href="view.html">技術資料</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="page-wrapper">
+        <div class="container mt-xl page-enter">
+            <div class="admin-layout" id="adminLayout">
+                <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
+                <aside class="sidebar" id="sidebarEl">
+                    <div class="glass-card" style="padding:var(--space-lg)">
+                        <div class="section-header" style="margin-bottom:var(--space-md)">
+                            <h3>イベント</h3>
+                            <button class="btn btn-primary btn-sm" onclick="showCreateEvent()">+ 新規</button>
+                        </div>
+                        <div id="eventList"></div>
+                    </div>
+                </aside>
+                <main class="main-content" id="mainContent">
+                    <div class="empty-state" id="noEventSelected">
+                        <div class="empty-icon" style="font-size:1.5rem;opacity:0.3">←</div>
+                        <p>イベントを選択するか新規作成してください</p>
+                    </div>
+                    <div id="eventDetail" style="display:none">
+                        <div class="glass-card mb-lg" id="eventHeader"></div>
+                        <div class="tab-bar">
+                            <button class="tab-btn active" data-tab="performers">出演者一覧</button>
+                            <button class="tab-btn" data-tab="setlist">タイムテーブル</button>
+                            <button class="tab-btn" data-tab="import">CSV取込</button>
+                        </div>
+                        <div class="tab-panel active" id="tab-performers">
+                            <div class="section-header">
+                                <h3>出演者管理</h3>
+                                <button class="btn btn-primary btn-sm" onclick="addPerformer()">+ 出演者を追加</button>
+                            </div>
+                            <div id="performerList" class="performer-list"></div>
+                        </div>
+                        <div class="tab-panel" id="tab-setlist">
+                            <div class="section-header">
+                                <h3>タイムテーブル</h3>
+                                <div class="actions">
+                                    <label class="flex items-center gap-sm"
+                                        style="font-size:0.85rem;color:var(--text-secondary)">
+                                        開演 <input type="time" class="form-input"
+                                            style="width:110px;padding:0.4rem 0.6rem" id="eventStartTime"
+                                            onchange="updateStartTime(this.value)">
+                                    </label>
+                                    <button class="btn btn-secondary btn-sm" onclick="addBreakSlot()">+ 休憩</button>
+                                    <button class="btn btn-secondary btn-sm" onclick="addExchangeSlot()">+ 交流会</button>
+                                </div>
+                            </div>
+                            <!-- Swap Toolbar (AppScript equivalent) -->
+                            <div class="swap-toolbar" id="swapToolbar">
+                                <span>行を入れ替え：</span>
+                                <span>選択中 <span class="swap-count" id="swapCount">0</span> 行</span>
+                                <button class="btn btn-primary btn-sm" id="swapBtn" onclick="swapSelectedRows()"
+                                    disabled>入れ替える</button>
+                                <button class="btn btn-ghost btn-sm" onclick="clearSelection()">選択解除</button>
+                                <span class="text-muted" style="font-size:0.78rem;margin-left:auto">2行をクリックして選択 →
+                                    入れ替え</span>
+                            </div>
+                            <div class="setlist-wrap" id="setlistWrap"></div>
+                        </div>
+                        <div class="tab-panel" id="tab-import">
+                            <div class="section-header">
+                                <h3>Googleフォーム CSV取込</h3>
+                            </div>
+                            <div class="glass-card mb-lg">
+                                <p class="text-muted mb-md" style="font-size:0.9rem">
+                                    Googleフォームの回答 → スプレッドシート → 「ファイル」→「ダウンロード」→「CSV」で取得したファイルをドロップしてください。
+                                </p>
+                                <div class="csv-drop-zone" id="csvDropZone">
+                                    <div style="font-size:1.5rem;margin-bottom:var(--space-md);font-weight:700;opacity:0.4">CSV</div>
+                                    <p style="font-weight:600;margin-bottom:var(--space-sm)">CSVファイルをドラッグ＆ドロップ</p>
+                                    <p class="text-muted" style="font-size:0.85rem">またはクリックしてファイルを選択</p>
+                                    <input type="file" accept=".csv,.txt" id="csvFileInput">
+                                </div>
+                                <div id="csvResult" class="mt-lg" style="display:none"></div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Event Modal -->
+    <div class="modal-overlay" id="createEventModal">
+        <div class="modal" style="max-width:700px">
+            <div class="modal-header">
+                <h3 id="eventModalTitle">イベント新規作成</h3>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('createEventModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">イベント名 <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="evTitle" placeholder="例: Smile RT Vol.10">
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">開催日</label><input type="date" class="form-input"
+                            id="evDate"></div>
+                    <div class="form-group"><label class="form-label">会場</label><input type="text" class="form-input"
+                            id="evVenue" placeholder="○○スタジオ"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">メモ</label>
+                    <textarea class="form-textarea" id="evNotes" rows="2"
+                        placeholder="ショーケース150分(15分×10人) など"></textarea>
+                </div>
+                <hr style="border-color:var(--border-color);margin:var(--space-lg) 0">
+                <h4 class="mb-md">スケジュール</h4>
+                <div class="schedule-grid">
+                    <div class="form-group"><label class="form-label">会場入り</label><input type="time" class="form-input"
+                            id="evSchVenue"></div>
+                    <div class="form-group"><label class="form-label">リハ開始</label><input type="time" class="form-input"
+                            id="evSchRehStart"></div>
+                    <div class="form-group"><label class="form-label">リハ終了</label><input type="time" class="form-input"
+                            id="evSchRehEnd"></div>
+                    <div class="form-group"><label class="form-label">顔合わせ</label><input type="time" class="form-input"
+                            id="evSchMeet"></div>
+                    <div class="form-group"><label class="form-label">MC</label><input type="time" class="form-input"
+                            id="evSchMC"></div>
+                    <div class="form-group"><label class="form-label">オープン</label><input type="time" class="form-input"
+                            id="evSchOpen"></div>
+                    <div class="form-group"><label class="form-label">スタート（開演）</label><input type="time"
+                            class="form-input" id="evSchStart"></div>
+                    <div class="form-group"><label class="form-label">交流会開始</label><input type="time" class="form-input"
+                            id="evSchExStart"></div>
+                    <div class="form-group"><label class="form-label">交流会終了</label><input type="time" class="form-input"
+                            id="evSchExEnd"></div>
+                    <div class="form-group"><label class="form-label">完全撤収</label><input type="time" class="form-input"
+                            id="evSchClear"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('createEventModal')">キャンセル</button>
+                <button class="btn btn-primary" id="evSaveBtn" onclick="saveCreateEvent()">作成する</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Performer Modal -->
+    <div class="modal-overlay" id="editPerformerModal">
+        <div class="modal" style="max-width:720px">
+            <div class="modal-header">
+                <h3>出演者情報の編集</h3>
+                <button class="btn btn-ghost btn-icon" onclick="closeModal('editPerformerModal')">✕</button>
+            </div>
+            <div class="modal-body" id="editPerformerBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('editPerformerModal')">キャンセル</button>
+                <button class="btn btn-primary" onclick="savePerformerEdit()">保存する</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script>
+        let currentEventId = null, editingPerformerId = null, editingEventId = null;
+        let selectedRows = new Set(); // For row swap feature
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderEventList(); setupTabs(); setupCSVDrop();
+            const urlEvent = getParam('event');
+            if (urlEvent) selectEvent(urlEvent);
+        });
+
+        // === EVENT LIST ===
+        function renderEventList() {
+            const events = db.getEvents();
+            const list = document.getElementById('eventList');
+            if (!events.length) { list.innerHTML = '<p class="text-muted text-center" style="font-size:0.85rem;padding:var(--space-lg) 0">イベントがありません</p>'; return; }
+            list.innerHTML = events.map(e => `
+        <div class="event-list-item ${e.id === currentEventId ? 'active' : ''}" onclick="selectEvent('${e.id}')">
+          <div><div class="ev-title">${escHtml(e.title) || '無題'}</div><div class="ev-date">${e.date || '日付未定'} · ${e.performers.length}人</div></div>
+        </div>
+      `).join('');
+        }
+
+        function selectEvent(id) {
+            currentEventId = id; setParams({ event: id }); renderEventList(); renderEventDetail();
+            document.getElementById('noEventSelected').style.display = 'none';
+            document.getElementById('eventDetail').style.display = 'block';
+        }
+
+        // === CREATE / EDIT EVENT ===
+        function showCreateEvent() {
+            editingEventId = null;
+            document.getElementById('eventModalTitle').textContent = 'イベント新規作成';
+            document.getElementById('evSaveBtn').textContent = '作成する';
+            ['evTitle', 'evDate', 'evVenue', 'evNotes', 'evSchVenue', 'evSchRehStart', 'evSchRehEnd', 'evSchMeet', 'evSchMC', 'evSchOpen', 'evSchStart', 'evSchExStart', 'evSchExEnd', 'evSchClear']
+                .forEach(id => document.getElementById(id).value = '');
+            document.getElementById('evSchStart').value = '17:00';
+            openModal('createEventModal');
+        }
+
+        function showEditEvent() {
+            const ev = db.getEvent(currentEventId); if (!ev) return;
+            editingEventId = ev.id;
+            document.getElementById('eventModalTitle').textContent = 'イベント編集';
+            document.getElementById('evSaveBtn').textContent = '保存する';
+            document.getElementById('evTitle').value = ev.title;
+            document.getElementById('evDate').value = ev.date;
+            document.getElementById('evVenue').value = ev.venue;
+            document.getElementById('evNotes').value = ev.notes || '';
+            const s = ev.schedule || {};
+            document.getElementById('evSchVenue').value = s.venueEntry || '';
+            document.getElementById('evSchRehStart').value = s.rehearsalStart || '';
+            document.getElementById('evSchRehEnd').value = s.rehearsalEnd || '';
+            document.getElementById('evSchMeet').value = s.meetGreet || '';
+            document.getElementById('evSchMC').value = s.mc || '';
+            document.getElementById('evSchOpen').value = s.doorsOpen || '';
+            document.getElementById('evSchStart').value = ev.startTime || '';
+            document.getElementById('evSchExStart').value = s.exchangeStart || '';
+            document.getElementById('evSchExEnd').value = s.exchangeEnd || '';
+            document.getElementById('evSchClear').value = s.fullClear || '';
+            openModal('createEventModal');
+        }
+
+        function saveCreateEvent() {
+            const title = document.getElementById('evTitle').value.trim();
+            if (!title) { showToast('イベント名を入力してください', 'error'); return; }
+            const schedule = {
+                venueEntry: document.getElementById('evSchVenue').value,
+                rehearsalStart: document.getElementById('evSchRehStart').value,
+                rehearsalEnd: document.getElementById('evSchRehEnd').value,
+                meetGreet: document.getElementById('evSchMeet').value,
+                mc: document.getElementById('evSchMC').value,
+                doorsOpen: document.getElementById('evSchOpen').value,
+                exchangeStart: document.getElementById('evSchExStart').value,
+                exchangeEnd: document.getElementById('evSchExEnd').value,
+                fullClear: document.getElementById('evSchClear').value
+            };
+            if (editingEventId) {
+                const ev = db.getEvent(editingEventId);
+                ev.title = title; ev.date = document.getElementById('evDate').value;
+                ev.venue = document.getElementById('evVenue').value.trim();
+                ev.notes = document.getElementById('evNotes').value.trim();
+                ev.startTime = document.getElementById('evSchStart').value;
+                ev.schedule = schedule;
+                db.saveEvent(ev); showToast('更新しました', 'success');
+            } else {
+                const ev = createEvent({ title, date: document.getElementById('evDate').value, venue: document.getElementById('evVenue').value.trim(), startTime: document.getElementById('evSchStart').value || '17:00', notes: document.getElementById('evNotes').value.trim(), schedule });
+                db.saveEvent(ev); currentEventId = ev.id; showToast('作成しました！', 'success');
+            }
+            closeModal('createEventModal'); renderEventList(); selectEvent(currentEventId);
+        }
+
+        function deleteCurrentEvent() {
+            if (!currentEventId || !confirm('このイベントを削除しますか？')) return;
+            db.deleteEvent(currentEventId); currentEventId = null; renderEventList();
+            document.getElementById('eventDetail').style.display = 'none';
+            document.getElementById('noEventSelected').style.display = 'block';
+            showToast('削除しました', 'info');
+        }
+
+        // === EVENT DETAIL ===
+        function renderEventDetail() {
+            const ev = db.getEvent(currentEventId); if (!ev) return;
+            document.getElementById('eventHeader').innerHTML = `
+        <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:var(--space-md)">
+          <div>
+            <h2>${escHtml(ev.title) || '無題'}</h2>
+            <div class="flex gap-md mt-sm text-muted" style="font-size:0.85rem;flex-wrap:wrap">
+              <span>${ev.date || '日付未定'}</span>
+              <span>開演 ${ev.startTime || '--:--'}</span>
+              ${ev.venue ? `<span>${escHtml(ev.venue)}</span>` : ''}
+              <span>${ev.performers.length}人</span>
+            </div>
+            ${ev.notes ? `<div class="mt-sm text-muted" style="font-size:0.82rem">${escHtml(ev.notes)}</div>` : ''}
+          </div>
+          <div class="flex gap-sm">
+            <button class="btn btn-secondary btn-sm" onclick="showEditEvent()">編集</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCurrentEvent()">削除</button>
+          </div>
+        </div>`;
+            document.getElementById('eventStartTime').value = ev.startTime || '17:00';
+            renderPerformerList(); renderSetlistTable();
+        }
+
+        // === PERFORMERS ===
+        function addPerformer() {
+            const p = createPerformer({ name: '新しい出演者' });
+            db.addPerformer(currentEventId, p); renderEventDetail(); showEditPerformerModal(p.id);
+        }
+
+        function renderPerformerList() {
+            const ev = db.getEvent(currentEventId); if (!ev) return;
+            const list = document.getElementById('performerList');
+            if (!ev.performers.length) {
+                list.innerHTML = '<div class="empty-state" style="padding:var(--space-xl)"><div class="empty-icon" style="font-size:1.5rem;opacity:0.3">—</div><p>まだ出演者がいません</p></div>'; return;
+            }
+            list.innerHTML = ev.performers.map((p, i) => `
+        <div class="performer-item" draggable="true" data-pid="${p.id}"
+             ondragstart="onDS(event)" ondragover="onDO(event)" ondrop="onDP(event)" ondragend="onDE(event)" ondragleave="onDL(event)">
+          <span class="drag-handle">⠿</span>
+          <span class="order-num">${i + 1}</span>
+          ${p.cyalumeColor ? `<span class="color-swatch" style="background:${p.cyalumeColor}"></span>` : ''}
+          <div class="performer-info">
+            <div class="performer-name">${escHtml(p.name) || '未入力'}</div>
+            <div class="performer-songs">${p.songs.length ? p.songs.map(s => s.title || '曲名未入力').join(' / ') : '曲なし'}${p.hoodie ? ` | ${escHtml(p.hoodie)}` : ''}</div>
+          </div>
+          <div class="performer-actions">
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();window.open('input.html?event=${currentEventId}&performer=${p.id}','_blank')">フォーム</button>
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showEditPerformerModal('${p.id}')">編集</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--accent-red)" onclick="event.stopPropagation();delPerformer('${p.id}')">削除</button>
+          </div>
+        </div>`).join('');
+        }
+
+        function delPerformer(id) { if (!confirm('削除しますか？')) return; db.deletePerformer(currentEventId, id); renderEventDetail(); }
+
+        // Drag & Drop
+        let dragPid = null;
+        function onDS(e) { dragPid = e.currentTarget.dataset.pid; e.currentTarget.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+        function onDO(e) { e.preventDefault(); if (e.currentTarget.dataset.pid !== dragPid) e.currentTarget.classList.add('drag-over'); }
+        function onDL(e) { e.currentTarget.classList.remove('drag-over'); }
+        function onDP(e) { e.preventDefault(); e.currentTarget.classList.remove('drag-over'); const tid = e.currentTarget.dataset.pid; if (dragPid && dragPid !== tid) { const ev = db.getEvent(currentEventId); const ids = ev.performers.map(p => p.id); const fi = ids.indexOf(dragPid), ti = ids.indexOf(tid); ids.splice(fi, 1); ids.splice(ti, 0, dragPid); db.reorderPerformers(currentEventId, ids); renderEventDetail(); } }
+        function onDE(e) { e.currentTarget.classList.remove('dragging'); document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over')); dragPid = null; }
+
+        // === EDIT PERFORMER MODAL (simplified - no status fields) ===
+        function showEditPerformerModal(pid) {
+            editingPerformerId = pid;
+            const p = db.getPerformer(currentEventId, pid); if (!p) return;
+            document.getElementById('editPerformerBody').innerHTML = `
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">出演者名 <span class="required">*</span></label><input type="text" class="form-input" id="pName" value="${escHtml(p.name)}"></div>
+          <div class="form-group"><label class="form-label">サイリウムカラー</label>
+            <div class="flex gap-sm items-center">
+              <input type="color" id="pColor" value="${p.cyalumeColor || '#ff6b9d'}" style="width:50px;height:36px;border:none;background:transparent;cursor:pointer">
+              <input type="text" class="form-input" id="pColorText" value="${escHtml(p.cyalumeColor || '')}" placeholder="#ff6b9d" style="flex:1">
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Discord</label><input type="text" class="form-input" id="pDiscord" value="${escHtml(p.discord)}"></div>
+          <div class="form-group"><label class="form-label">X (Twitter)</label><input type="text" class="form-input" id="pTwitter" value="${escHtml(p.twitter)}"></div>
+          <div class="form-group"><label class="form-label">パーカーサイズ</label>
+            <select class="form-select" id="pHoodie"><option value="">--</option>
+              ${['S', 'M', 'L', 'XL', 'XXL'].map(s => `<option value="${s}" ${p.hoodie === s ? 'selected' : ''}>${s}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label">アイコン素材URL</label><input type="text" class="form-input" id="pIcon" value="${escHtml(p.iconUrl)}"></div>
+        <div class="form-group"><label class="form-label">技術リクエスト・備考</label><textarea class="form-textarea" id="pTech">${escHtml(p.techRequests)}</textarea></div>
+        <hr style="border-color:var(--border-color);margin:var(--space-xl) 0">
+        <div class="section-header" style="margin-bottom:var(--space-md)"><h4>セットリスト</h4>
+          <button class="btn btn-secondary btn-sm" onclick="addSongToEdit()">+ 曲を追加</button>
+        </div>
+        <div id="editSongList"></div>`;
+            document.getElementById('pColor').addEventListener('input', e => document.getElementById('pColorText').value = e.target.value);
+            document.getElementById('pColorText').addEventListener('input', e => { if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) document.getElementById('pColor').value = e.target.value; });
+            renderEditSongs(p.songs); openModal('editPerformerModal');
+        }
+
+        function renderEditSongs(songs) {
+            const c = document.getElementById('editSongList');
+            if (!songs.length) { c.innerHTML = '<p class="text-muted text-center" style="font-size:0.85rem;padding:var(--space-lg)">曲なし</p>'; return; }
+            c.innerHTML = songs.map((s, i) => `
+        <div class="song-card" data-si="${i}">
+          <span class="song-number">${i + 1}曲目</span>
+          <button class="btn btn-ghost btn-icon btn-sm remove-song" onclick="rmSongEdit(${i})">✕</button>
+          <div class="form-row mt-sm">
+            <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">曲名</label>
+              <input type="text" class="form-input sf" data-f="title" data-i="${i}" value="${escHtml(s.title)}"></div>
+            <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">種別</label>
+              <select class="form-select sf" data-f="type" data-i="${i}"><option value="cover" ${s.type === 'cover' ? 'selected' : ''}>カバー</option><option value="original" ${s.type === 'original' ? 'selected' : ''}>オリジナル</option></select></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">曲尺</label>
+              <input type="text" class="form-input sf" data-f="duration" data-i="${i}" value="${formatDuration(s.duration)}" placeholder="4:30"></div>
+            <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">音源URL</label>
+              <input type="text" class="form-input sf" data-f="audioUrl" data-i="${i}" value="${escHtml(s.audioUrl)}"></div>
+          </div>
+          <div class="form-group" style="margin-bottom:0"><label class="form-label">きっかけ・照明・音響 / 備考</label>
+            <textarea class="form-textarea sf" data-f="cue" data-i="${i}" rows="2" placeholder="演出リクエスト、備考など">${escHtml(s.cue)}${s.remarks ? '\n' + escHtml(s.remarks) : ''}</textarea></div>
+        </div>`).join('');
+        }
+
+        function addSongToEdit() {
+            const p = db.getPerformer(currentEventId, editingPerformerId); if (!p) return;
+            p.songs.push(createSong()); db.updatePerformer(currentEventId, p);
+            renderEditSongs(p.songs);
+            document.getElementById('editSongList').lastElementChild?.scrollIntoView({ behavior: 'smooth' });
+        }
+        function rmSongEdit(i) {
+            const p = db.getPerformer(currentEventId, editingPerformerId); if (!p) return;
+            p.songs.splice(i, 1); db.updatePerformer(currentEventId, p); renderEditSongs(p.songs);
+        }
+
+        function savePerformerEdit() {
+            const p = db.getPerformer(currentEventId, editingPerformerId); if (!p) return;
+            p.name = document.getElementById('pName').value.trim();
+            p.discord = document.getElementById('pDiscord').value.trim();
+            p.twitter = document.getElementById('pTwitter').value.trim();
+            p.cyalumeColor = document.getElementById('pColorText').value.trim() || document.getElementById('pColor').value;
+            p.iconUrl = document.getElementById('pIcon').value.trim();
+            p.hoodie = document.getElementById('pHoodie').value;
+            p.techRequests = document.getElementById('pTech').value.trim();
+            document.querySelectorAll('.sf').forEach(f => {
+                const i = parseInt(f.dataset.i), k = f.dataset.f; if (!p.songs[i]) return;
+                if (k === 'duration') p.songs[i].duration = parseDuration(f.value);
+                else p.songs[i][k] = f.value;
+            });
+            db.updatePerformer(currentEventId, p); closeModal('editPerformerModal');
+            renderEventDetail(); showToast('保存しました', 'success');
+        }
+
+        // === TIMETABLE (GLOBAL SETLIST) ===
+        function renderSetlistTable() {
+            const ev = db.getEvent(currentEventId); if (!ev) return;
+            const timeline = db.calculateTimetable(ev);
+            const wrap = document.getElementById('setlistWrap');
+            selectedRows.clear(); updateSwapUI();
+            if (!timeline.length) { wrap.innerHTML = '<div class="empty-state" style="padding:var(--space-xl)"><p>セットリストがまだありません</p></div>'; return; }
+
+            wrap.innerHTML = `<table>
+        <thead><tr>
+          <th style="width:35px">曲順</th>
+          <th style="width:95px">時間</th>
+          <th style="width:110px">演者名</th>
+          <th>曲名</th>
+          <th style="width:60px">プロンプト</th>
+          <th style="width:200px">きっかけ・照明・音響</th>
+          <th style="width:140px">備考・要望</th>
+          <th style="width:50px">マイク</th>
+          <th style="width:50px">カウント</th>
+          <th style="width:40px">Key</th>
+          <th style="width:55px">曲尺</th>
+          <th style="width:80px">完成音源</th>
+          <th style="width:50px">音源確認</th>
+          <th style="width:60px">はれむぅ確認</th>
+        </tr></thead>
+        <tbody>${timeline.map((t, idx) => {
+                const isSpecial = t.slotType === 'break' || t.slotType === 'exchange' || t.slotType === 'mc';
+                if (isSpecial) return `<tr class="special-row" data-row="${idx}" onclick="toggleRowSelect(${idx},event)"><td>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="12"></td></tr>`;
+
+                const micCls = 'ie-select mic-select';
+                const audioCls = 'ie-select audio-select' + (t.completedAudio === '完成済み' ? ' status-done' : t.completedAudio === '受け取り済み' ? ' status-received' : '');
+
+                return `<tr data-row="${idx}" onclick="toggleRowSelect(${idx},event)">
+            <td style="text-align:center;color:var(--text-muted);font-size:0.78rem">${t.order}</td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
+            <td><div class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</div></td>
+            <td>${escHtml(t.songTitle)} ${t.type === 'original' ? '<span class="badge badge-purple" style="font-size:0.6rem">O</span>' : ''}</td>
+            <td><input class="ie ie-sm" value="${escHtml(t.promptNumber)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'promptNumber',this.value)"></td>
+            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'cue',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.cue)}</textarea></td>
+            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'remarks',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.remarks)}</textarea></td>
+            <td><select class="${micCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'micCount',parseInt(this.value))">
+              ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<option ${t.micCount === n ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
+            <td><input class="ie ie-sm" value="${escHtml(t.count)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'count',this.value)"></td>
+            <td><input class="ie ie-sm" value="${escHtml(t.key)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'key',this.value)"></td>
+            <td style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
+            <td><select class="${audioCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'completedAudio',this.value);this.className='ie-select audio-select'+(this.value==='完成済み'?' status-done':this.value==='受け取り済み'?' status-received':'')">
+              <option value="" ${!t.completedAudio ? 'selected' : ''}></option>
+              <option value="受け取り済み" ${t.completedAudio === '受け取り済み' ? 'selected' : ''}>受け取り済み</option>
+              <option value="完成済み" ${t.completedAudio === '完成済み' ? 'selected' : ''}>完成済み</option></select></td>
+            <td class="cb-cell"><input type="checkbox" ${t.audioConfirmed ? 'checked' : ''} onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'audioConfirmed',this.checked)"></td>
+            <td class="cb-cell"><input type="checkbox" ${t.audioConfirmedHaremu ? 'checked' : ''} onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'audioConfirmedHaremu',this.checked)"></td>
+          </tr>`;
+            }).join('')}</tbody></table>`;
+            // Auto-resize textareas on initial render
+            wrap.querySelectorAll('textarea.ie').forEach(ta => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+        }
+
+        // Shorthand: Update Song Field
+        function usf(performerId, songIndex, field, value) {
+            const p = db.getPerformer(currentEventId, performerId); if (!p || !p.songs[songIndex]) return;
+            p.songs[songIndex][field] = value;
+            db.updatePerformer(currentEventId, p);
+        }
+
+        function updateStartTime(val) {
+            const ev = db.getEvent(currentEventId); if (!ev) return;
+            ev.startTime = val; db.saveEvent(ev); renderSetlistTable();
+        }
+
+        function addBreakSlot() {
+            const ev = db.getEvent(currentEventId); if (!ev) return;
+            const timeline = db.calculateTimetable(ev);
+            const afterIdx = timeline.length > 0 ? Math.floor(timeline.length / 2) - 1 : -1;
+            db.addSpecialSlot(currentEventId, afterIdx, { title: '休憩', slotType: 'break', duration: 600 });
+            renderSetlistTable(); showToast('休憩を追加しました', 'success');
+        }
+
+        function addExchangeSlot() {
+            const ev = db.getEvent(currentEventId); if (!ev) return;
+            const timeline = db.calculateTimetable(ev);
+            const afterIdx = timeline.length - 1;
+            db.addSpecialSlot(currentEventId, afterIdx, { title: '交流会', slotType: 'exchange', duration: 1800 });
+            renderSetlistTable(); showToast('交流会を追加しました', 'success');
+        }
+
+        // === ROW SWAP (AppScript equivalent) ===
+        function toggleRowSelect(rowIdx, e) {
+            // Don't select if clicking on an input/select/checkbox
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+            const tr = document.querySelector(`tr[data-row="${rowIdx}"]`);
+            if (!tr) return;
+
+            if (selectedRows.has(rowIdx)) {
+                selectedRows.delete(rowIdx);
+                tr.classList.remove('row-selected');
+            } else {
+                if (selectedRows.size >= 2) {
+                    // Deselect oldest and select new
+                    const oldest = selectedRows.values().next().value;
+                    document.querySelector(`tr[data-row="${oldest}"]`)?.classList.remove('row-selected');
+                    selectedRows.delete(oldest);
+                }
+                selectedRows.add(rowIdx);
+                tr.classList.add('row-selected');
+            }
+            updateSwapUI();
+        }
+
+        function updateSwapUI() {
+            document.getElementById('swapCount').textContent = selectedRows.size;
+            document.getElementById('swapBtn').disabled = selectedRows.size !== 2;
+        }
+
+        function clearSelection() {
+            selectedRows.forEach(idx => {
+                document.querySelector(`tr[data-row="${idx}"]`)?.classList.remove('row-selected');
+            });
+            selectedRows.clear();
+            updateSwapUI();
+        }
+
+        function swapSelectedRows() {
+            if (selectedRows.size !== 2) { showToast('入れ替えたい2行を選択してください', 'info'); return; }
+            const [idx1, idx2] = [...selectedRows];
+            const result = db.swapTimetableRows(currentEventId, idx1, idx2);
+            if (!result) { showToast('入れ替えに失敗しました', 'error'); return; }
+            clearSelection();
+            renderSetlistTable();
+            showToast('行を入れ替えました', 'success');
+        }
+
+        // === CSV IMPORT ===
+        function setupCSVDrop() {
+            const zone = document.getElementById('csvDropZone'), input = document.getElementById('csvFileInput');
+            if (!zone || !input) return;
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+            zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('dragover'); if (e.dataTransfer.files[0]) processCSV(e.dataTransfer.files[0]); });
+            input.addEventListener('change', e => { if (e.target.files[0]) processCSV(e.target.files[0]); });
+        }
+
+        function processCSV(file) {
+            if (!currentEventId) { showToast('先にイベントを選択してください', 'error'); return; }
+            const reader = new FileReader();
+            reader.onload = e => {
+                const r = db.importCSV(currentEventId, e.target.result);
+                const div = document.getElementById('csvResult'); div.style.display = 'block';
+                if (r.success) {
+                    div.innerHTML = `<div class="glass-card accent-green"><h4 style="color:var(--accent-green)">取込完了</h4><p class="mt-sm">${r.count}件の出演者データを取り込みました。</p></div>`;
+                    renderEventDetail(); showToast(`${r.count}件のデータを取り込みました`, 'success');
+                } else {
+                    div.innerHTML = `<div class="glass-card accent-red"><h4 style="color:var(--accent-red)">エラー</h4><p class="mt-sm">${r.error}</p></div>`;
+                }
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        // === TABS ===
+        function setupTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+                // Auto-collapse sidebar for timetable tab, expand for others
+                const layout = document.getElementById('adminLayout');
+                if (btn.dataset.tab === 'setlist') {
+                    layout.classList.add('sidebar-collapsed');
+                    setTimeout(() => {
+                        document.querySelectorAll('#setlistWrap textarea.ie').forEach(ta => {
+                            ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px';
+                        });
+                    }, 350);
+                } else {
+                    layout.classList.remove('sidebar-collapsed');
+                }
+            }));
+        }
+
+        function toggleSidebar() {
+            document.getElementById('adminLayout').classList.toggle('sidebar-collapsed');
+        }
+    </script>
+</body>
+
+</html>

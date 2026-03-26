@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出演者ポータル — SmileRT LIVE Manager</title>
+    <meta name="description" content="出演者向け — イベントを選んでセットリストを入力">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .portal-page {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .portal-header {
+            text-align: center;
+            padding: var(--space-2xl) 0 var(--space-xl);
+        }
+
+        .portal-header .icon {
+            font-size: 3.5rem;
+            margin-bottom: var(--space-md);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+
+        /* Steps indicator */
+        .steps {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: center;
+            margin-bottom: var(--space-2xl);
+        }
+
+        .step-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            background: var(--bg-glass);
+            color: var(--text-muted);
+            border: 2px solid var(--border-color);
+            transition: all var(--transition-base);
+        }
+
+        .step-dot.active {
+            background: var(--gradient-primary);
+            color: #fff;
+            border-color: var(--accent-pink);
+            box-shadow: var(--shadow-glow-pink);
+        }
+
+        .step-dot.done {
+            background: var(--accent-green);
+            color: #fff;
+            border-color: var(--accent-green);
+        }
+
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: var(--border-color);
+            align-self: center;
+        }
+
+        .step-line.done {
+            background: var(--accent-green);
+        }
+
+        /* Event cards */
+        .event-pick-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-md);
+        }
+
+        .event-pick {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+            padding: var(--space-lg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            background: var(--bg-glass);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .event-pick:hover {
+            border-color: var(--accent-pink);
+            background: var(--bg-glass-strong);
+            transform: translateY(-2px);
+        }
+
+        .event-pick .ev-emoji {
+            font-size: 1.8rem;
+        }
+
+        .event-pick .ev-title {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .event-pick .ev-meta {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Performer list */
+        .performer-pick {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--bg-glass);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            margin-bottom: var(--space-sm);
+        }
+
+        .performer-pick:hover {
+            border-color: var(--accent-blue);
+            background: var(--bg-glass-strong);
+        }
+
+        .performer-pick .p-order {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-full);
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #fff;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .performer-pick .p-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .performer-pick .p-songs {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .performer-pick .p-arrow {
+            margin-left: auto;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        .new-register-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+            width: 100%;
+            padding: var(--space-lg);
+            margin-top: var(--space-md);
+            border: 2px dashed var(--accent-pink);
+            border-radius: var(--radius-lg);
+            background: transparent;
+            color: var(--accent-pink);
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .new-register-btn:hover {
+            background: rgba(255, 107, 157, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .selected-event-bar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-md) var(--space-lg);
+            background: var(--bg-glass-strong);
+            border: 1px solid var(--accent-pink);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-xl);
+        }
+
+        .selected-event-bar .ev-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .selected-event-bar .ev-name {
+            font-weight: 700;
+        }
+
+        .selected-event-bar button {
+            margin-left: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container">
+            <a href="index.html" class="site-logo"><span class="logo-icon">S</span><span>SmileRT</span></a>
+            <nav class="site-nav">
+                <a href="index.html">ホーム</a>
+                <a href="performer.html" class="active">出演者</a>
+                <a href="admin.html">管理</a>
+                <a href="view.html">技術資料</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="page-wrapper">
+        <div class="container">
+            <div class="portal-page page-enter">
+                <div class="portal-header">
+                    <div class="icon"
+                        style="font-size:2.5rem;font-weight:800;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+                        S</div>
+                    <h1 class="text-gradient">出演者ポータル</h1>
+                    <p class="text-muted mt-sm">イベントを選んで、セットリストを入力しましょう</p>
+                </div>
+
+                <!-- Step Indicator -->
+                <div class="steps" id="stepsIndicator">
+                    <div class="step-dot active" id="stepDot1">1</div>
+                    <div class="step-line" id="stepLine1"></div>
+                    <div class="step-dot" id="stepDot2">2</div>
+                    <div class="step-line" id="stepLine2"></div>
+                    <div class="step-dot" id="stepDot3">3</div>
+                </div>
+
+                <!-- Step 1: Select Event -->
+                <div id="step1">
+                    <h2 class="mb-lg" style="text-align:center">参加するイベントを選択</h2>
+                    <div class="event-pick-grid" id="eventPickGrid"></div>
+                    <div class="empty-state" id="noEvents" style="display:none">
+                        <div class="empty-icon" style="font-size:1.5rem;opacity:0.3">—</div>
+                        <p>現在イベントが登録されていません</p>
+                        <p class="text-muted mt-sm" style="font-size:0.85rem">主催者にイベントの登録をお願いしてください</p>
+                    </div>
+                </div>
+
+                <!-- Step 2: Select/Create Performer -->
+                <div id="step2" style="display:none">
+                    <div class="selected-event-bar">
+                        <div>
+                            <div class="ev-label">選択中のイベント</div>
+                            <div class="ev-name" id="selectedEventName"></div>
+                        </div>
+                        <button class="btn btn-ghost btn-sm" onclick="goToStep1()">変更</button>
+                    </div>
+                    <h2 class="mb-md" style="text-align:center">あなたの名前を選択</h2>
+                    <p class="text-muted mb-lg" style="text-align:center;font-size:0.88rem">
+                        自分の名前がある場合はクリック、なければ「新しく登録する」を押してください</p>
+                    <div id="performerPickList"></div>
+                    <button class="new-register-btn" onclick="registerNew()">+ 新しく登録する</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script>
+        let selectedEventId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check URL params for pre-selection
+            const urlEvent = getParam('event');
+            if (urlEvent) {
+                const ev = db.getEvent(urlEvent);
+                if (ev) { selectEvent(urlEvent); return; }
+            }
+            renderEventList();
+        });
+
+        function renderEventList() {
+            const events = db.getEvents();
+            const grid = document.getElementById('eventPickGrid');
+            const empty = document.getElementById('noEvents');
+            if (!events.length) { grid.style.display = 'none'; empty.style.display = ''; return; }
+            empty.style.display = 'none'; grid.style.display = '';
+            grid.innerHTML = events.map(e => {
+                const pCount = e.performers.length;
+                const sCount = e.performers.reduce((sum, p) => sum + p.songs.length, 0);
+                return `
+          <div class="event-pick" onclick="selectEvent('${e.id}')">
+            <div class="ev-emoji" style="font-size:1.5rem;font-weight:800;color:var(--accent-pink)">Live</div>
+            <div style="flex:1;min-width:0">
+              <div class="ev-title">${escHtml(e.title || '無題')}</div>
+              <div class="ev-meta">${e.date || '日付未定'} · ${pCount}人 · ${sCount}曲${e.venue ? ' · ' + escHtml(e.venue) : ''}</div>
+            </div>
+            <span style="font-size:1.2rem;color:var(--text-muted)">→</span>
+          </div>`;
+            }).join('');
+        }
+
+        function selectEvent(eventId) {
+            selectedEventId = eventId;
+            const ev = db.getEvent(eventId);
+            if (!ev) return;
+            document.getElementById('selectedEventName').textContent = ev.title || '無題';
+            // Update steps
+            document.getElementById('stepDot1').className = 'step-dot done';
+            document.getElementById('stepDot1').textContent = '✓';
+            document.getElementById('stepLine1').className = 'step-line done';
+            document.getElementById('stepDot2').className = 'step-dot active';
+            // Show step 2
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = '';
+            renderPerformerList(ev);
+        }
+
+        function goToStep1() {
+            selectedEventId = null;
+            document.getElementById('stepDot1').className = 'step-dot active';
+            document.getElementById('stepDot1').textContent = '1';
+            document.getElementById('stepLine1').className = 'step-line';
+            document.getElementById('stepDot2').className = 'step-dot';
+            document.getElementById('step1').style.display = '';
+            document.getElementById('step2').style.display = 'none';
+            renderEventList();
+        }
+
+        function renderPerformerList(ev) {
+            const list = document.getElementById('performerPickList');
+            if (!ev.performers.length) {
+                list.innerHTML = `
+          <div class="glass-card" style="text-align:center;padding:var(--space-2xl)">
+            <div style="font-size:1.2rem;margin-bottom:var(--space-md);font-weight:700;color:var(--text-muted)">—</div>
+            <p style="font-weight:600">まだ出演者がいません</p>
+            <p class="text-muted mt-sm" style="font-size:0.85rem">下の「新しく登録する」ボタンから登録してください</p>
+          </div>`;
+                return;
+            }
+            list.innerHTML = ev.performers.map((p, i) => `
+        <div class="performer-pick" onclick="goToInput('${p.id}')">
+          <span class="p-order">${i + 1}</span>
+          ${p.cyalumeColor ? `<span class="color-swatch" style="background:${p.cyalumeColor}"></span>` : ''}
+          <div style="flex:1;min-width:0">
+            <div class="p-name">${escHtml(p.name || '未入力')}</div>
+            <div class="p-songs">${p.songs.length ? p.songs.map(s => s.title || '曲名未入力').join(' / ') : '曲なし'}</div>
+          </div>
+          <span class="p-arrow">→</span>
+        </div>`).join('');
+        }
+
+        function goToInput(performerId) {
+            // Set step 3
+            document.getElementById('stepDot2').className = 'step-dot done';
+            document.getElementById('stepDot2').textContent = '✓';
+            document.getElementById('stepLine2').className = 'step-line done';
+            document.getElementById('stepDot3').className = 'step-dot active';
+            // Navigate to input page
+            setTimeout(() => {
+                location.href = `input.html?event=${selectedEventId}&performer=${performerId}`;
+            }, 300);
+        }
+
+        function registerNew() {
+            if (!selectedEventId) return;
+            // Create a new performer and navigate to input
+            const p = createPerformer({ name: '' });
+            db.addPerformer(selectedEventId, p);
+            goToInput(p.id);
+        }
+    </script>
+</body>
+
+</html>

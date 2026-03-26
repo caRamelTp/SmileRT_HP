@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技術資料 — SmileRT LIVE Manager</title>
+    <meta name="description" content="SmileRT 技術資料 — タイムテーブル・セットリスト・テクニカル情報">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .view-header {
+            padding: var(--space-2xl) 0 var(--space-lg)
+        }
+
+        .event-selector {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            flex-wrap: wrap
+        }
+
+        .event-selector select {
+            min-width: 280px
+        }
+
+        .schedule-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: var(--space-sm) var(--space-lg);
+            padding: var(--space-lg);
+            background: var(--bg-glass-strong);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-xl);
+        }
+
+        .schedule-info .si {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 0.85rem
+        }
+
+        .schedule-info .si-label {
+            color: var(--text-muted);
+            white-space: nowrap
+        }
+
+        .schedule-info .si-time {
+            font-family: var(--font-mono);
+            font-weight: 700
+        }
+
+        .tt-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--bg-glass);
+        }
+
+        .tt-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px
+        }
+
+        .tt-wrap thead th {
+            background: var(--bg-glass-strong);
+            padding: 0.5rem 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            white-space: nowrap
+        }
+
+        .tt-wrap tbody td {
+            padding: 0.35rem 0.4rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.82rem;
+            vertical-align: middle
+        }
+
+        .tt-wrap tbody tr:hover {
+            background: var(--bg-card-hover)
+        }
+
+        .tt-wrap tbody tr.special-row {
+            background: rgba(251, 191, 36, 0.06)
+        }
+
+        .tt-wrap tbody tr.special-row td {
+            color: var(--accent-yellow);
+            font-weight: 600
+        }
+
+        .audio-done {
+            color: var(--accent-green);
+            font-weight: 600
+        }
+
+        .audio-received {
+            color: #f59e0b;
+            font-weight: 600
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-2xl)
+        }
+
+        .detail-card {
+            break-inside: avoid
+        }
+
+        .detail-card .card-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--border-color)
+        }
+
+        .detail-card .card-header .order-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-full);
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #fff;
+            flex-shrink: 0
+        }
+
+        .detail-card .song-item {
+            display: flex;
+            align-items: start;
+            gap: var(--space-sm);
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem
+        }
+
+        .detail-card .song-item:last-child {
+            border-bottom: none
+        }
+
+        .detail-card .s-num {
+            width: 22px;
+            height: 22px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 107, 157, 0.15);
+            color: var(--accent-pink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 2px
+        }
+
+        .summary-bar {
+            display: flex;
+            gap: var(--space-xl);
+            flex-wrap: wrap;
+            margin: var(--space-lg) 0
+        }
+
+        .summary-bar .si {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 0.85rem;
+            color: var(--text-secondary)
+        }
+
+        .summary-bar .si strong {
+            color: var(--text-primary);
+            font-size: 1.1rem
+        }
+
+        @media (max-width:768px) {
+            .tt-wrap table {
+                min-width: 600px
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media print {
+
+            .site-header,
+            .event-selector,
+            .no-print {
+                display: none !important
+            }
+
+            .view-header h1 {
+                font-size: 1.5rem;
+                -webkit-text-fill-color: #000;
+                background: none
+            }
+
+            .schedule-info {
+                background: #f5f5f5;
+                border: 1px solid #ccc
+            }
+
+            .schedule-info .si {
+                color: #333
+            }
+
+            .schedule-info .si-time {
+                color: #000
+            }
+
+            .tt-wrap {
+                border: 1px solid #ccc;
+                background: #fff;
+                backdrop-filter: none
+            }
+
+            .tt-wrap thead th {
+                background: #eee;
+                color: #333;
+                border-bottom: 2px solid #333
+            }
+
+            .tt-wrap tbody td {
+                color: #000;
+                border-color: #ddd
+            }
+
+            .tt-wrap tbody tr:hover {
+                background: transparent
+            }
+
+            .detail-card {
+                border: 1px solid #ccc;
+                background: #fff;
+                backdrop-filter: none;
+                break-inside: avoid
+            }
+
+            .summary-bar .si {
+                color: #333
+            }
+
+            .summary-bar .si strong {
+                color: #000
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="site-header no-print">
+        <div class="container">
+            <a href="index.html" class="site-logo"><span class="logo-icon">S</span><span>SmileRT</span></a>
+            <nav class="site-nav">
+                <a href="index.html">ホーム</a>
+                <a href="performer.html">出演者</a>
+                <a href="admin.html">管理</a>
+                <a href="view.html" class="active">技術資料</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="page-wrapper">
+        <div class="container page-enter">
+            <div class="view-header">
+                <h1 class="text-gradient" id="viewTitle">技術資料</h1>
+                <div class="event-selector mt-lg no-print">
+                    <select class="form-select" id="eventSelect" onchange="onEventSelect(this.value)">
+                        <option value="">イベントを選択...</option>
+                    </select>
+                    <button class="btn btn-secondary btn-sm" onclick="window.print()">印刷</button>
+                    <button class="btn btn-secondary btn-sm" onclick="exportCSV()" id="csvExportBtn"
+                        style="display:none">CSV書き出し</button>
+                </div>
+            </div>
+            <div id="scheduleInfo" class="schedule-info" style="display:none"></div>
+            <div class="summary-bar" id="summaryBar" style="display:none"></div>
+            <div id="timetableSection" style="display:none">
+                <h2 class="mb-md">タイムテーブル</h2>
+                <div class="tt-wrap" id="ttWrap"></div>
+            </div>
+            <div id="detailSection" style="display:none">
+                <h2 class="mt-2xl mb-md">出演者詳細</h2>
+                <div class="detail-grid" id="detailGrid"></div>
+            </div>
+            <div class="empty-state" id="noEvent">
+                <div class="empty-icon" style="font-size:1.5rem;opacity:0.3">—</div>
+                <p>イベントを選択すると技術資料が表示されます</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script>
+        let selectedEventId = null;
+        document.addEventListener('DOMContentLoaded', () => {
+            const events = db.getEvents(), sel = document.getElementById('eventSelect');
+            events.forEach(e => { const o = document.createElement('option'); o.value = e.id; o.textContent = `${e.title || '無題'} (${e.date || '日付未定'})`; sel.appendChild(o) });
+            const u = getParam('event'); if (u) { sel.value = u; onEventSelect(u); }
+        });
+
+        function onEventSelect(id) {
+            selectedEventId = id; setParams({ event: id || null });
+            const show = !!id;
+            document.getElementById('noEvent').style.display = show ? 'none' : '';
+            document.getElementById('csvExportBtn').style.display = show ? '' : 'none';
+            ['scheduleInfo', 'summaryBar', 'timetableSection', 'detailSection'].forEach(s => document.getElementById(s).style.display = show ? '' : 'none');
+            if (show) renderView();
+        }
+
+        function renderView() {
+            const ev = db.getEvent(selectedEventId); if (!ev) return;
+            document.getElementById('viewTitle').textContent = ev.title || '技術資料';
+
+            // Schedule Info
+            const s = ev.schedule || {};
+            const items = [
+                ['会場入り', s.venueEntry], ['リハ開始', s.rehearsalStart], ['リハ終了', s.rehearsalEnd],
+                ['顔合わせ', s.meetGreet], ['MC', s.mc], ['オープン', s.doorsOpen],
+                ['スタート', ev.startTime], ['交流会開始', s.exchangeStart],
+                ['交流会終了', s.exchangeEnd], ['完全撤収', s.fullClear]
+            ].filter(([, v]) => v);
+            document.getElementById('scheduleInfo').innerHTML = items.length ? items.map(([l, v]) => `<div class="si"><span class="si-label">${l}</span><span class="si-time">${v}</span></div>`).join('') : '';
+            document.getElementById('scheduleInfo').style.display = items.length ? '' : 'none';
+
+            // Summary
+            const totalP = ev.performers.length;
+            const totalS = ev.performers.reduce((s, p) => s + p.songs.length, 0);
+            const totalD = ev.performers.reduce((s, p) => s + p.songs.reduce((a, song) => a + (song.duration || 0), 0), 0);
+            document.getElementById('summaryBar').innerHTML = `
+        <div class="si">${ev.date || '日付未定'}</div>
+        ${ev.venue ? `<div class="si">${escHtml(ev.venue)}</div>` : ''}
+        <div class="si">出演者 <strong>${totalP}</strong>人</div>
+        <div class="si">全 <strong>${totalS}</strong>曲</div>
+        <div class="si">総尺 <strong>${formatDuration(totalD)}</strong></div>`;
+
+            renderTimetable(ev); renderDetailCards(ev);
+        }
+
+        function renderTimetable(ev) {
+            const timeline = db.calculateTimetable(ev), wrap = document.getElementById('ttWrap');
+            if (!timeline.length) { wrap.innerHTML = '<p class="text-muted text-center" style="padding:var(--space-lg)">データなし</p>'; return; }
+            wrap.innerHTML = `<table><thead><tr>
+        <th>曲順</th><th>時間</th><th>演者名</th><th>曲名</th><th>プロンプト</th>
+        <th>きっかけ・照明・音響</th><th>備考</th><th>マイク</th><th>カウント</th><th>Key</th>
+        <th>曲尺</th><th>完成音源</th><th>音源確認</th><th>はれむぅ確認</th>
+      </tr></thead><tbody>${timeline.map(t => {
+                if (t.slotType !== 'song') return `<tr class="special-row"><td>${escHtml(t.songTitle || t.slotType)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="12"></td></tr>`;
+                return `<tr>
+          <td style="text-align:center;font-size:0.78rem;color:var(--text-muted)">${t.order}</td>
+          <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
+          <td><span class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</span></td>
+          <td>${escHtml(t.songTitle)}${t.type === 'original' ? ' <span class="badge badge-purple" style="font-size:0.6rem">O</span>' : ''}</td>
+          <td style="text-align:center">${escHtml(t.promptNumber)}</td>
+          <td style="font-size:0.78rem">${escHtml(t.cue)}</td>
+          <td style="font-size:0.78rem">${escHtml(t.remarks)}</td>
+          <td style="text-align:center">${t.micCount || 0}</td>
+          <td style="text-align:center">${escHtml(t.count)}</td>
+          <td style="text-align:center">${escHtml(t.key)}</td>
+          <td style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
+          <td class="${t.completedAudio === '完成済み' ? 'audio-done' : t.completedAudio === '受け取り済み' ? 'audio-received' : ''}" style="text-align:center;font-size:0.78rem">${escHtml(t.completedAudio)}</td>
+          <td style="text-align:center">${t.audioConfirmed ? '✓' : ''}</td>
+          <td style="text-align:center">${t.audioConfirmedHaremu ? '✓' : ''}</td>
+        </tr>`;
+            }).join('')}</tbody></table>`;
+        }
+
+        function renderDetailCards(ev) {
+            const grid = document.getElementById('detailGrid');
+            if (!ev.performers.length) { grid.innerHTML = '<p class="text-muted">出演者なし</p>'; return; }
+            grid.innerHTML = ev.performers.map((p, i) => `
+        <div class="glass-card detail-card">
+          <div class="card-header">
+            <span class="order-badge">${i + 1}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:1.1rem;font-weight:700">${escHtml(p.name || '未入力')}</div>
+              <div class="flex gap-sm" style="font-size:0.78rem;color:var(--text-muted);flex-wrap:wrap">
+                ${p.twitter ? `<span>𝕏 ${escHtml(p.twitter)}</span>` : ''}${p.discord ? `<span>Discord: ${escHtml(p.discord)}</span>` : ''}${p.hoodie ? `<span>パーカー: ${escHtml(p.hoodie)}</span>` : ''}
+              </div>
+            </div>
+            ${p.cyalumeColor ? `<span class="color-swatch" style="background:${p.cyalumeColor}"></span>` : ''}
+          </div>
+          ${p.iconUrl ? `<div style="font-size:0.8rem;margin-bottom:var(--space-sm)"><a href="${escHtml(p.iconUrl)}" target="_blank">アイコン素材</a></div>` : ''}
+          <div class="song-list">${p.songs.map((s, si) => `
+            <div class="song-item">
+              <span class="s-num">${si + 1}</span>
+              <div style="flex:1;min-width:0">
+                <div class="flex items-center gap-xs" style="flex-wrap:wrap">
+                  <strong style="font-size:0.9rem">${escHtml(s.title || '曲名未入力')}</strong>
+                  <span class="badge ${s.type === 'original' ? 'badge-purple' : 'badge-blue'}" style="font-size:0.6rem">${s.type === 'original' ? 'オリジナル' : 'カバー'}</span>
+                  ${s.duration ? `<span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">${formatDuration(s.duration)}</span>` : ''}
+                </div>
+                ${s.cue ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">${escHtml(s.cue)}</div>` : ''}
+                ${s.remarks ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">${escHtml(s.remarks)}</div>` : ''}
+                ${s.audioUrl ? `<div style="font-size:0.75rem;margin-top:2px"><a href="${escHtml(s.audioUrl)}" target="_blank">音源</a></div>` : ''}
+              </div>
+            </div>`).join('')}
+          </div>
+          ${p.techRequests ? `<div style="margin-top:var(--space-md);padding-top:var(--space-md);border-top:1px solid var(--border-color)"><p style="font-size:0.82rem;color:var(--text-secondary)">${escHtml(p.techRequests)}</p></div>` : ''}
+        </div>`).join('');
+        }
+
+        function exportCSV() {
+            if (selectedEventId) db.exportCSV(selectedEventId);
+        }
+    </script>
+</body>
+
+</html>
