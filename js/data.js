@@ -203,8 +203,22 @@ class SmileRTDatabase {
   }
 
   // --- Events ---
+  // Normalize event data (Firebase drops empty arrays)
+  _normalizeEvent(e) {
+    if (!e) return e;
+    if (!Array.isArray(e.performers)) e.performers = e.performers ? Object.values(e.performers) : [];
+    if (!Array.isArray(e.specialSlots)) e.specialSlots = e.specialSlots ? Object.values(e.specialSlots) : [];
+    if (!Array.isArray(e.timetableOrder)) e.timetableOrder = e.timetableOrder ? Object.values(e.timetableOrder) : [];
+    e.performers.forEach(p => {
+      if (!Array.isArray(p.songs)) p.songs = p.songs ? Object.values(p.songs) : [];
+    });
+    return e;
+  }
+
   getEvents() {
     const data = this._load();
+    if (!Array.isArray(data.events)) data.events = data.events ? Object.values(data.events) : [];
+    data.events.forEach(e => this._normalizeEvent(e));
     return [...data.events].sort((a, b) => {
       if (a.date && b.date) return new Date(b.date) - new Date(a.date);
       return new Date(b.createdAt) - new Date(a.createdAt);
@@ -212,7 +226,10 @@ class SmileRTDatabase {
   }
 
   getEvent(id) {
-    return this._load().events.find(e => e.id === id) || null;
+    const data = this._load();
+    if (!Array.isArray(data.events)) data.events = data.events ? Object.values(data.events) : [];
+    const e = data.events.find(e => e.id === id) || null;
+    return this._normalizeEvent(e);
   }
 
   saveEvent(event) {
