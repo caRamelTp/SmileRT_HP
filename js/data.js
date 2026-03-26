@@ -114,9 +114,59 @@ function createEvent(overrides = {}) {
 
 // --- Database ---
 class SmileRTDatabase {
-  constructor() { this._data = null; }
+  constructor() {
+    this._data = null;
+    this._ready = false;
+    this._onChangeCallbacks = [];
+    this._useFirebase = typeof firebase !== 'undefined' && typeof firebaseDB !== 'undefined';
+  }
 
-  _load() {
+  // Initialize database (call this before using db)
+  init() {
+    return new Promise((resolve) => {
+      // Load from localStorage first (fast startup)
+      this._loadLocal();
+
+      if (this._useFirebase) {
+        // Listen for realtime changes from Firebase
+        const ref = firebaseDB.ref('smilert');
+        ref.on('value', (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            this._data = val;
+            if (!this._data.events) this._data.events = [];
+            if (!this._data.settings) this._data.settings = {};
+          }
+          // Save to localStorage as cache
+          this._saveLocal();
+          this._ready = true;
+          this._fireChange();
+          resolve();
+        }, (error) => {
+          console.error('Firebase read error:', error);
+          this._useFirebase = false;
+          this._ready = true;
+          resolve();
+        });
+      } else {
+        this._ready = true;
+        resolve();
+      }
+    });
+  }
+
+  // Register callback for data changes (for realtime UI updates)
+  onChange(callback) {
+    this._onChangeCallbacks.push(callback);
+  }
+
+  _fireChange() {
+    this._onChangeCallbacks.forEach(cb => {
+      try { cb(); } catch (e) { console.error('onChange callback error:', e); }
+    });
+  }
+
+  _loadLocal() {
     if (this._data) return this._data;
     try {
       const raw = localStorage.getItem(DB_KEY);
@@ -128,11 +178,27 @@ class SmileRTDatabase {
     return this._data;
   }
 
-  _save() {
+  _saveLocal() {
     try {
       localStorage.setItem(DB_KEY, JSON.stringify(this._data));
     } catch (e) {
-      console.error('DB save error:', e);
+      console.error('localStorage save error:', e);
+    }
+  }
+
+  _load() {
+    if (this._data) return this._data;
+    return this._loadLocal();
+  }
+
+  _save() {
+    // Always save to localStorage
+    this._saveLocal();
+    // Also push to Firebase if available
+    if (this._useFirebase) {
+      firebaseDB.ref('smilert').set(this._data).catch(e => {
+        console.error('Firebase save error:', e);
+      });
     }
   }
 

@@ -559,16 +559,24 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
     <script src="js/data.js"></script>
     <script>
         let currentEventId = null, editingPerformerId = null, editingEventId = null;
         let selectedRows = new Set(); // For row swap feature
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => { db.init().then(() => {
             renderEventList(); setupTabs(); setupCSVDrop();
             const urlEvent = getParam('event');
             if (urlEvent) selectEvent(urlEvent);
-        });
+            // Realtime sync: re-render when data changes from other users
+            db.onChange(() => {
+                renderEventList();
+                if (currentEventId) renderEventDetail();
+            });
+        }); });
 
         // === EVENT LIST ===
         function renderEventList() {

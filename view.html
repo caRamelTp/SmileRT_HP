@@ -308,14 +308,17 @@
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
     <script src="js/data.js"></script>
     <script>
         let selectedEventId = null;
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => { db.init().then(() => {
             const events = db.getEvents(), sel = document.getElementById('eventSelect');
             events.forEach(e => { const o = document.createElement('option'); o.value = e.id; o.textContent = `${e.title || '無題'} (${e.date || '日付未定'})`; sel.appendChild(o) });
             const u = getParam('event'); if (u) { sel.value = u; onEventSelect(u); }
-        });
+        }); });
 
         function onEventSelect(id) {
             selectedEventId = id; setParams({ event: id || null });
