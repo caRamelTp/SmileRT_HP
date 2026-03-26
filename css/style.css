@@ -92,6 +92,8 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -100,7 +102,8 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
+  max-width: 100vw;
 }
 
 body::before {
@@ -1324,6 +1327,21 @@ select option {
 
   html {
     font-size: 15px;
+  }
+
+  /* Prevent page-level horizontal overflow */
+  body, .page-wrapper, .container {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Table containers — allow horizontal scroll */
+  .timetable-wrap,
+  .setlist-wrap,
+  [style*="overflow-x: auto"],
+  [style*="overflow-x:auto"] {
+    -webkit-overflow-scrolling: touch;
+    max-width: 100vw;
   }
 
   .container {
