@@ -30,61 +30,70 @@
     <section class="hero page-enter">
       <div class="container">
         <h1><span class="text-gradient">SmileRT LIVE Manager</span></h1>
-        <p class="subtitle">セットリストの収集・タイムテーブル管理・技術資料の作成を、ひとつのシステムで。</p>
-        <div class="hero-actions">
-          <a href="admin.html" class="btn btn-primary btn-lg">
-            イベント管理を開始
-          </a>
-          <a href="performer.html" class="btn btn-secondary btn-lg">
-            出演者はこちら
-          </a>
-          <a href="view.html" class="btn btn-secondary btn-lg">
-            技術資料を見る
-          </a>
-        </div>
+        <p class="subtitle">セットリスト入力・タイムテーブル・技術資料をひとつで管理</p>
       </div>
     </section>
 
-    <!-- Quick Stats -->
-    <section class="container mt-xl page-enter" style="animation-delay: 0.1s">
-      <div class="event-grid" id="statsGrid">
-        <div class="glass-card accent-pink" style="cursor: pointer" onclick="location.href='admin.html'">
-          <div class="flex items-center gap-md mb-md">
-            <span style="font-size: 1.5rem; font-weight:800; color:var(--accent-pink)">Events</span>
-            <div>
-              <div class="text-small">管理中のイベント</div>
-              <div style="font-size: 1.8rem; font-weight: 800" id="eventCount">0</div>
-            </div>
+    <!-- Main Actions — 出演者優先 -->
+    <section class="container page-enter" style="animation-delay: 0.05s">
+      <div class="event-grid" style="gap:var(--space-md)">
+
+        <!-- 出演者向け：一番目立つCTA -->
+        <a href="performer.html" class="glass-card accent-pink" style="text-decoration:none;color:inherit;cursor:pointer;text-align:center;padding:var(--space-xl) var(--space-lg)">
+          <div style="font-size:1.6rem;font-weight:800;color:var(--accent-pink);margin-bottom:var(--space-sm)">セットリスト入力</div>
+          <p style="font-size:0.95rem;color:var(--text-secondary)">出演者の方はこちらから<br>曲やプロフィールを登録できます</p>
+          <div style="margin-top:var(--space-md)">
+            <span class="btn btn-primary">入力ページへ →</span>
           </div>
-          <p class="text-muted" style="font-size: 0.85rem">クリックして管理画面を開く →</p>
+        </a>
+
+        <!-- 直近のイベント -->
+        <div class="glass-card accent-purple" style="text-align:center;padding:var(--space-xl) var(--space-lg)">
+          <div class="text-small" style="margin-bottom:var(--space-xs)">開催予定</div>
+          <div style="font-size:1.3rem;font-weight:800" id="nextEvent">未定</div>
+          <div class="text-muted" style="font-size:0.9rem;margin-top:var(--space-xs)" id="nextEventDate">イベントが登録されていません</div>
         </div>
 
-        <div class="glass-card accent-blue" style="cursor: pointer" onclick="location.href='view.html'">
-          <div class="flex items-center gap-md mb-md">
-            <span style="font-size: 1.5rem; font-weight:800; color:var(--accent-blue)">Artists</span>
-            <div>
-              <div class="text-small">登録済み出演者数</div>
-              <div style="font-size: 1.8rem; font-weight: 800" id="performerCount">0</div>
-            </div>
-          </div>
-          <p class="text-muted" style="font-size: 0.85rem">クリックして技術資料を開く →</p>
-        </div>
+      </div>
+    </section>
 
-        <div class="glass-card accent-purple">
-          <div class="flex items-center gap-md mb-md">
-            <span style="font-size: 1.5rem; font-weight:800; color:var(--accent-purple)">Next</span>
-            <div>
-              <div class="text-small">直近のイベント</div>
-              <div style="font-size: 1rem; font-weight: 700" id="nextEvent">未定</div>
-            </div>
-          </div>
-          <p class="text-muted" style="font-size: 0.85rem" id="nextEventDate">イベントを作成してください</p>
+    <!-- Quick Links -->
+    <section class="container mt-lg page-enter" style="animation-delay: 0.1s">
+      <div class="event-grid" style="grid-template-columns: 1fr 1fr; gap: var(--space-md)">
+
+        <a href="view.html" class="glass-card accent-blue" style="text-decoration:none;color:inherit;cursor:pointer;padding:var(--space-lg)">
+          <div style="font-size:1rem;font-weight:700;color:var(--accent-blue);margin-bottom:var(--space-xs)">技術資料</div>
+          <p class="text-muted" style="font-size:0.82rem">タイムテーブル・PA資料を確認</p>
+        </a>
+
+        <a href="admin.html" class="glass-card" style="text-decoration:none;color:inherit;cursor:pointer;padding:var(--space-lg)">
+          <div style="font-size:1rem;font-weight:700;color:var(--text-secondary);margin-bottom:var(--space-xs)">管理画面</div>
+          <p class="text-muted" style="font-size:0.82rem">イベント作成・出演者管理</p>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="container mt-lg page-enter" style="animation-delay: 0.15s">
+      <div style="display:flex;gap:var(--space-md);flex-wrap:wrap;justify-content:center">
+        <div class="glass-card" style="flex:1;min-width:120px;text-align:center;padding:var(--space-md)">
+          <div class="text-small">イベント数</div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--accent-pink)" id="eventCount">0</div>
+        </div>
+        <div class="glass-card" style="flex:1;min-width:120px;text-align:center;padding:var(--space-md)">
+          <div class="text-small">出演者数</div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--accent-blue)" id="performerCount">0</div>
+        </div>
+        <div class="glass-card" style="flex:1;min-width:120px;text-align:center;padding:var(--space-md)">
+          <div class="text-small">総曲数</div>
+          <div style="font-size:1.5rem;font-weight:800;color:var(--accent-purple)" id="songCount">0</div>
         </div>
       </div>
     </section>
 
     <!-- Recent Events -->
-    <section class="container mt-2xl page-enter" style="animation-delay: 0.2s">
+    <section class="container mt-xl page-enter" style="animation-delay: 0.2s">
       <div class="section-header">
         <h2>最近のイベント</h2>
         <a href="admin.html" class="btn btn-secondary btn-sm">すべて見る →</a>
@@ -94,32 +103,32 @@
         <div class="empty-state">
           <div class="empty-icon" style="font-size:1.5rem;opacity:0.3">—</div>
           <p>イベントがまだありません</p>
-          <a href="admin.html" class="btn btn-primary">最初のイベントを作成する</a>
+          <p class="text-muted" style="font-size:0.85rem">管理者がイベントを作成するとここに表示されます</p>
         </div>
       </div>
     </section>
 
     <!-- How-to Section -->
-    <section class="container mt-2xl page-enter" style="animation-delay: 0.3s">
+    <section class="container mt-xl page-enter" style="animation-delay: 0.3s">
       <div class="section-header">
         <h2>使いかた</h2>
       </div>
 
       <div class="event-grid">
         <div class="glass-card">
-          <div style="font-size: 2rem; margin-bottom: 0.75rem">①</div>
-          <h4 class="mb-sm">イベントを作成</h4>
-          <p class="text-muted" style="font-size: 0.88rem">管理画面からイベント名・日付・開始時刻を設定します。</p>
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem; font-weight:800; color:var(--accent-pink)">①</div>
+          <h4 class="mb-sm">イベントを選択</h4>
+          <p class="text-muted" style="font-size: 0.85rem">出演者ページから参加するイベントを選びます。</p>
         </div>
         <div class="glass-card">
-          <div style="font-size: 2rem; margin-bottom: 0.75rem">②</div>
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem; font-weight:800; color:var(--accent-blue)">②</div>
           <h4 class="mb-sm">セットリストを登録</h4>
-          <p class="text-muted" style="font-size: 0.88rem">演者が入力フォームから直接入力するか、GoogleフォームのCSVを取り込めます。</p>
+          <p class="text-muted" style="font-size: 0.85rem">自分の名前を選んで、曲名や尺を入力します。</p>
         </div>
         <div class="glass-card">
-          <div style="font-size: 2rem; margin-bottom: 0.75rem">③</div>
-          <h4 class="mb-sm">技術資料を共有</h4>
-          <p class="text-muted" style="font-size: 0.88rem">タイムテーブルが自動生成。PA・照明スタッフに即共有できます。</p>
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem; font-weight:800; color:var(--accent-purple)">③</div>
+          <h4 class="mb-sm">自動でタイムテーブルに反映</h4>
+          <p class="text-muted" style="font-size: 0.85rem">入力した内容は即座に技術資料に反映されます。</p>
         </div>
       </div>
     </section>
@@ -130,16 +139,19 @@
   <script src="js/firebase-config.js"></script>
   <script src="js/data.js"></script>
   <script>
-    // --- Portal Page Logic ---
     document.addEventListener('DOMContentLoaded', () => { db.init().then(() => {
       const events = db.getEvents();
 
       // Stats
       document.getElementById('eventCount').textContent = events.length;
 
-      let totalPerformers = 0;
-      events.forEach(e => totalPerformers += e.performers.length);
+      let totalPerformers = 0, totalSongs = 0;
+      events.forEach(e => {
+        totalPerformers += e.performers.length;
+        e.performers.forEach(p => totalSongs += p.songs.length);
+      });
       document.getElementById('performerCount').textContent = totalPerformers;
+      document.getElementById('songCount').textContent = totalSongs;
 
       // Next event
       const upcoming = events.find(e => e.date && new Date(e.date) >= new Date(new Date().toDateString()));
@@ -159,7 +171,7 @@
           const pCount = event.performers.length;
           const sCount = event.performers.reduce((sum, p) => sum + p.songs.length, 0);
           return `
-            <a href="admin.html?event=${event.id}" class="event-card glass-card" style="display:block; text-decoration:none; color:inherit;">
+            <a href="performer.html?event=${event.id}" class="event-card glass-card" style="display:block; text-decoration:none; color:inherit;">
               <div class="event-date">${event.date || '日付未定'}</div>
               <div class="event-title">${event.title || '無題のイベント'}</div>
               <div class="event-meta">
