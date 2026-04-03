@@ -371,6 +371,119 @@
             font-weight: 700;
         }
 
+        /* Performer Detail Preview (Accordion) */
+        .performer-detail-toggle {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-sans);
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .performer-detail-toggle:hover {
+            color: var(--text-primary);
+            background: var(--bg-glass);
+        }
+
+        .performer-detail-panel {
+            display: none;
+            width: 100%;
+            padding: var(--space-md) var(--space-lg);
+            border-top: 1px solid var(--border-color);
+            margin-top: var(--space-sm);
+            animation: fadeSlideUp 0.2s ease-out;
+        }
+
+        .performer-detail-panel.open {
+            display: block;
+        }
+
+        .performer-item.detail-open {
+            flex-wrap: wrap;
+        }
+
+        .detail-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: var(--space-sm) var(--space-lg);
+            margin-bottom: var(--space-md);
+        }
+
+        .detail-info-item {
+            font-size: 0.82rem;
+        }
+
+        .detail-info-item .detail-label {
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 2px;
+        }
+
+        .detail-info-item .detail-value {
+            color: var(--text-primary);
+        }
+
+        .detail-song-list {
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        .detail-song-row {
+            display: grid;
+            grid-template-columns: 28px 1fr 70px 70px 100px;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            font-size: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .detail-song-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-song-row.detail-song-header {
+            background: var(--bg-glass-strong);
+            font-weight: 600;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .detail-tech-note {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: var(--space-sm) 0;
+            border-top: 1px solid var(--border-color);
+            margin-top: var(--space-sm);
+        }
+
+        /* Timetable Column Borders */
+        .setlist-wrap thead th,
+        .setlist-wrap tbody td {
+            border-left: 1px solid var(--border-color);
+        }
+
+        .setlist-wrap thead th:first-child,
+        .setlist-wrap tbody td:first-child {
+            border-left: none;
+        }
+
+        /* Thicker borders for column group separators */
+        .setlist-wrap thead th.col-group-start,
+        .setlist-wrap tbody td.col-group-start {
+            border-left: 2px solid var(--border-color-hover);
+        }
+
         /* CSV */
         .csv-drop-zone {
             border: 2px dashed var(--border-color);
@@ -705,8 +818,10 @@
             if (!ev.performers.length) {
                 list.innerHTML = '<div class="empty-state" style="padding:var(--space-xl)"><div class="empty-icon" style="font-size:1.5rem;opacity:0.3">—</div><p>まだ出演者がいません</p></div>'; return;
             }
-            list.innerHTML = ev.performers.map((p, i) => `
-        <div class="performer-item" draggable="true" data-pid="${p.id}"
+            list.innerHTML = ev.performers.map((p, i) => {
+                const audioStatus = p.songs.map(s => s.completedAudio || '未着').join(', ');
+                return `
+        <div class="performer-item" id="pi-${p.id}" draggable="true" data-pid="${p.id}"
              ondragstart="onDS(event)" ondragover="onDO(event)" ondrop="onDP(event)" ondragend="onDE(event)" ondragleave="onDL(event)">
           <span class="drag-handle">⠿</span>
           <span class="order-num">${i + 1}</span>
@@ -716,11 +831,47 @@
             <div class="performer-songs">${p.songs.length ? p.songs.map(s => s.title || '曲名未入力').join(' / ') : '曲なし'}${p.hoodie ? ` | ${escHtml(p.hoodie)}` : ''}</div>
           </div>
           <div class="performer-actions">
+            <button class="performer-detail-toggle" onclick="event.stopPropagation();togglePerformerDetail('${p.id}')">▼ 詳細</button>
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();window.open('input.html?event=${currentEventId}&performer=${p.id}','_blank')">フォーム</button>
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showEditPerformerModal('${p.id}')">編集</button>
             <button class="btn btn-ghost btn-sm" style="color:var(--accent-red)" onclick="event.stopPropagation();delPerformer('${p.id}')">削除</button>
           </div>
-        </div>`).join('');
+          <div class="performer-detail-panel" id="detail-${p.id}">
+            <div class="detail-info-grid">
+              ${p.cyalumeColor ? `<div class="detail-info-item"><div class="detail-label">サイリウムカラー</div><div class="detail-value flex items-center gap-xs"><span class="color-swatch" style="background:${p.cyalumeColor};width:14px;height:14px"></span> ${escHtml(p.cyalumeColor)}</div></div>` : ''}
+              ${p.discord ? `<div class="detail-info-item"><div class="detail-label">Discord</div><div class="detail-value">${escHtml(p.discord)}</div></div>` : ''}
+              ${p.twitter ? `<div class="detail-info-item"><div class="detail-label">X (Twitter)</div><div class="detail-value">${escHtml(p.twitter)}</div></div>` : ''}
+              ${p.hoodie ? `<div class="detail-info-item"><div class="detail-label">パーカーサイズ</div><div class="detail-value">${escHtml(p.hoodie)}</div></div>` : ''}
+              ${p.iconUrl ? `<div class="detail-info-item"><div class="detail-label">アイコン素材</div><div class="detail-value"><a href="${escHtml(p.iconUrl)}" target="_blank" style="font-size:0.8rem">リンクを開く ↗</a></div></div>` : ''}
+            </div>
+            ${p.songs.length ? `
+            <div class="detail-song-list">
+              <div class="detail-song-row detail-song-header">
+                <div>#</div><div>曲名</div><div>種別</div><div>曲尺</div><div>音源状態</div>
+              </div>
+              ${p.songs.map((s, si) => `
+              <div class="detail-song-row">
+                <div style="text-align:center;color:var(--text-muted)">${si + 1}</div>
+                <div style="font-weight:600">${escHtml(s.title || '曲名未入力')}</div>
+                <div><span class="badge ${s.type === 'original' ? 'badge-purple' : 'badge-blue'}" style="font-size:0.65rem">${s.type === 'original' ? 'オリジナル' : 'カバー'}</span></div>
+                <div style="font-family:var(--font-mono);font-size:0.78rem">${formatDuration(s.duration) || '—'}</div>
+                <div style="font-size:0.75rem">${s.completedAudio ? `<span class="${s.completedAudio === '完成済み' ? 'badge badge-green' : 'badge badge-yellow'}" style="font-size:0.6rem">${escHtml(s.completedAudio)}</span>` : '<span style="color:var(--text-muted)">未着</span>'}</div>
+              </div>`).join('')}
+            </div>` : ''}
+            ${p.techRequests ? `<div class="detail-tech-note"><strong style="font-size:0.72rem;color:var(--text-muted)">技術リクエスト・備考:</strong><br>${escHtml(p.techRequests)}</div>` : ''}
+          </div>
+        </div>`;
+            }).join('');
+        }
+
+        function togglePerformerDetail(pid) {
+            const panel = document.getElementById('detail-' + pid);
+            const item = document.getElementById('pi-' + pid);
+            const btn = item?.querySelector('.performer-detail-toggle');
+            if (!panel) return;
+            const isOpen = panel.classList.toggle('open');
+            item?.classList.toggle('detail-open', isOpen);
+            if (btn) btn.textContent = isOpen ? '▲ 閉じる' : '▼ 詳細';
         }
 
         function delPerformer(id) { if (!confirm('削除しますか？')) return; db.deletePerformer(currentEventId, id); renderEventDetail(); }
@@ -835,14 +986,14 @@
           <th style="width:95px">時間</th>
           <th style="width:110px">演者名</th>
           <th>曲名</th>
-          <th style="width:60px">プロンプト</th>
+          <th class="col-group-start" style="width:60px">プロンプト</th>
           <th style="width:200px">きっかけ・照明・音響</th>
           <th style="width:140px">備考・要望</th>
-          <th style="width:50px">マイク</th>
+          <th class="col-group-start" style="width:50px">マイク</th>
           <th style="width:50px">カウント</th>
           <th style="width:40px">Key</th>
-          <th style="width:55px">曲尺</th>
-          <th style="width:80px">完成音源</th>
+          <th class="col-group-start" style="width:55px">曲尺</th>
+          <th class="col-group-start" style="width:80px">完成音源</th>
           <th style="width:50px">音源確認</th>
           <th style="width:60px">はれむぅ確認</th>
         </tr></thead>
@@ -858,15 +1009,15 @@
             <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
             <td><div class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</div></td>
             <td>${escHtml(t.songTitle)} ${t.type === 'original' ? '<span class="badge badge-purple" style="font-size:0.6rem">O</span>' : ''}</td>
-            <td><input class="ie ie-sm" value="${escHtml(t.promptNumber)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'promptNumber',this.value)"></td>
+            <td class="col-group-start"><input class="ie ie-sm" value="${escHtml(t.promptNumber)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'promptNumber',this.value)"></td>
             <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'cue',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.cue)}</textarea></td>
             <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'remarks',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.remarks)}</textarea></td>
-            <td><select class="${micCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'micCount',parseInt(this.value))">
+            <td class="col-group-start"><select class="${micCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'micCount',parseInt(this.value))">
               ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<option ${t.micCount === n ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
             <td><input class="ie ie-sm" value="${escHtml(t.count)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'count',this.value)"></td>
             <td><input class="ie ie-sm" value="${escHtml(t.key)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'key',this.value)"></td>
-            <td style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
-            <td><select class="${audioCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'completedAudio',this.value);this.className='ie-select audio-select'+(this.value==='完成済み'?' status-done':this.value==='受け取り済み'?' status-received':'')">
+            <td class="col-group-start" style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
+            <td class="col-group-start"><select class="${audioCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'completedAudio',this.value);this.className='ie-select audio-select'+(this.value==='完成済み'?' status-done':this.value==='受け取り済み'?' status-received':'')">
               <option value="" ${!t.completedAudio ? 'selected' : ''}></option>
               <option value="受け取り済み" ${t.completedAudio === '受け取り済み' ? 'selected' : ''}>受け取り済み</option>
               <option value="完成済み" ${t.completedAudio === '完成済み' ? 'selected' : ''}>完成済み</option></select></td>
@@ -892,18 +1043,26 @@
 
         function addBreakSlot() {
             const ev = db.getEvent(currentEventId); if (!ev) return;
+            const minStr = prompt('休憩の時間（分）を入力してください', '10');
+            if (minStr === null) return;
+            const minutes = parseInt(minStr);
+            if (isNaN(minutes) || minutes <= 0) { showToast('正しい数値を入力してください', 'error'); return; }
             const timeline = db.calculateTimetable(ev);
             const afterIdx = timeline.length > 0 ? Math.floor(timeline.length / 2) - 1 : -1;
-            db.addSpecialSlot(currentEventId, afterIdx, { title: '休憩', slotType: 'break', duration: 600 });
-            renderSetlistTable(); showToast('休憩を追加しました', 'success');
+            db.addSpecialSlot(currentEventId, afterIdx, { title: '休憩', slotType: 'break', duration: minutes * 60 });
+            renderSetlistTable(); showToast(`${minutes}分の休憩を追加しました`, 'success');
         }
 
         function addExchangeSlot() {
             const ev = db.getEvent(currentEventId); if (!ev) return;
+            const minStr = prompt('交流会の時間（分）を入力してください', '30');
+            if (minStr === null) return;
+            const minutes = parseInt(minStr);
+            if (isNaN(minutes) || minutes <= 0) { showToast('正しい数値を入力してください', 'error'); return; }
             const timeline = db.calculateTimetable(ev);
             const afterIdx = timeline.length - 1;
-            db.addSpecialSlot(currentEventId, afterIdx, { title: '交流会', slotType: 'exchange', duration: 1800 });
-            renderSetlistTable(); showToast('交流会を追加しました', 'success');
+            db.addSpecialSlot(currentEventId, afterIdx, { title: '交流会', slotType: 'exchange', duration: minutes * 60 });
+            renderSetlistTable(); showToast(`${minutes}分の交流会を追加しました`, 'success');
         }
 
         // === ROW SWAP (AppScript equivalent) ===

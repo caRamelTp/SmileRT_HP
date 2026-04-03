@@ -101,6 +101,39 @@
             font-weight: 600
         }
 
+        /* Timetable Column Borders */
+        .tt-wrap thead th,
+        .tt-wrap tbody td {
+            border-left: 1px solid var(--border-color);
+        }
+
+        .tt-wrap thead th:first-child,
+        .tt-wrap tbody td:first-child {
+            border-left: none;
+        }
+
+        .tt-wrap thead th.col-group-start,
+        .tt-wrap tbody td.col-group-start {
+            border-left: 2px solid var(--border-color-hover);
+        }
+
+        /* Export buttons */
+        .export-btns {
+            display: flex;
+            gap: var(--space-xs);
+            flex-wrap: wrap;
+        }
+
+        .copy-success {
+            animation: flashGreen 0.6s ease;
+        }
+
+        @keyframes flashGreen {
+            0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
+            50% { box-shadow: 0 0 12px 4px rgba(52, 211, 153, 0.3); }
+            100% { box-shadow: none; }
+        }
+
         .audio-done {
             color: var(--accent-green);
             font-weight: 600
@@ -289,9 +322,12 @@
                     <select class="form-select" id="eventSelect" onchange="onEventSelect(this.value)">
                         <option value="">イベントを選択...</option>
                     </select>
-                    <button class="btn btn-secondary btn-sm" onclick="window.print()">印刷</button>
-                    <button class="btn btn-secondary btn-sm" onclick="exportCSV()" id="csvExportBtn"
-                        style="display:none">CSV書き出し</button>
+                    <div class="export-btns" id="exportBtns" style="display:none">
+                        <button class="btn btn-secondary btn-sm" onclick="copyTSV()" title="Google Sheetsにそのままペーストできます">📋 Sheetsにコピー</button>
+                        <button class="btn btn-secondary btn-sm" onclick="copyHTMLTable()" title="Excelに書式付きでペーストできます">📊 Excelにコピー</button>
+                        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📄 CSV保存</button>
+                        <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ 印刷</button>
+                    </div>
                 </div>
             </div>
             <div id="scheduleInfo" class="schedule-info" style="display:none"></div>
@@ -327,7 +363,7 @@
             selectedEventId = id; setParams({ event: id || null });
             const show = !!id;
             document.getElementById('noEvent').style.display = show ? 'none' : '';
-            document.getElementById('csvExportBtn').style.display = show ? '' : 'none';
+            document.getElementById('exportBtns').style.display = show ? '' : 'none';
             ['scheduleInfo', 'summaryBar', 'timetableSection', 'detailSection'].forEach(s => document.getElementById(s).style.display = show ? '' : 'none');
             if (show) renderView();
         }
@@ -365,9 +401,9 @@
             const timeline = db.calculateTimetable(ev), wrap = document.getElementById('ttWrap');
             if (!timeline.length) { wrap.innerHTML = '<p class="text-muted text-center" style="padding:var(--space-lg)">データなし</p>'; return; }
             wrap.innerHTML = `<table><thead><tr>
-        <th>曲順</th><th>時間</th><th>演者名</th><th>曲名</th><th>プロンプト</th>
-        <th>きっかけ・照明・音響</th><th>備考</th><th>マイク</th><th>カウント</th><th>Key</th>
-        <th>曲尺</th><th>完成音源</th><th>音源確認</th><th>はれむぅ確認</th>
+        <th>曲順</th><th>時間</th><th>演者名</th><th>曲名</th><th class="col-group-start">プロンプト</th>
+        <th>きっかけ・照明・音響</th><th>備考</th><th class="col-group-start">マイク</th><th>カウント</th><th>Key</th>
+        <th class="col-group-start">曲尺</th><th class="col-group-start">完成音源</th><th>音源確認</th><th>はれむぅ確認</th>
       </tr></thead><tbody>${timeline.map(t => {
                 if (t.slotType !== 'song') return `<tr class="special-row"><td>${escHtml(t.songTitle || t.slotType)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="12"></td></tr>`;
                 return `<tr>
@@ -375,14 +411,14 @@
           <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
           <td><span class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</span></td>
           <td>${escHtml(t.songTitle)}${t.type === 'original' ? ' <span class="badge badge-purple" style="font-size:0.6rem">O</span>' : ''}</td>
-          <td style="text-align:center">${escHtml(t.promptNumber)}</td>
+          <td class="col-group-start" style="text-align:center">${escHtml(t.promptNumber)}</td>
           <td style="font-size:0.78rem">${escHtml(t.cue)}</td>
           <td style="font-size:0.78rem">${escHtml(t.remarks)}</td>
-          <td style="text-align:center">${t.micCount || 0}</td>
+          <td class="col-group-start" style="text-align:center">${t.micCount || 0}</td>
           <td style="text-align:center">${escHtml(t.count)}</td>
           <td style="text-align:center">${escHtml(t.key)}</td>
-          <td style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
-          <td class="${t.completedAudio === '完成済み' ? 'audio-done' : t.completedAudio === '受け取り済み' ? 'audio-received' : ''}" style="text-align:center;font-size:0.78rem">${escHtml(t.completedAudio)}</td>
+          <td class="col-group-start" style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
+          <td class="col-group-start ${t.completedAudio === '完成済み' ? 'audio-done' : t.completedAudio === '受け取り済み' ? 'audio-received' : ''}" style="text-align:center;font-size:0.78rem">${escHtml(t.completedAudio)}</td>
           <td style="text-align:center">${t.audioConfirmed ? '✓' : ''}</td>
           <td style="text-align:center">${t.audioConfirmedHaremu ? '✓' : ''}</td>
         </tr>`;
@@ -426,6 +462,35 @@
 
         function exportCSV() {
             if (selectedEventId) db.exportCSV(selectedEventId);
+        }
+
+        function copyTSV() {
+            if (!selectedEventId) return;
+            const tsv = db.exportTSV(selectedEventId);
+            if (!tsv) return;
+            navigator.clipboard.writeText(tsv).then(() => {
+                showToast('Sheets用データをコピーしました！ Google Sheetsで Ctrl+V で貼り付けてください', 'success');
+            }).catch(() => {
+                showToast('コピーに失敗しました', 'error');
+            });
+        }
+
+        function copyHTMLTable() {
+            if (!selectedEventId) return;
+            const html = db.exportHTMLTable(selectedEventId);
+            const plainText = db.exportTSV(selectedEventId);
+            if (!html) return;
+            const blob = new Blob([html], { type: 'text/html' });
+            const textBlob = new Blob([plainText], { type: 'text/plain' });
+            const item = new ClipboardItem({
+                'text/html': blob,
+                'text/plain': textBlob
+            });
+            navigator.clipboard.write([item]).then(() => {
+                showToast('Excel用データをコピーしました！ Excelで Ctrl+V で貼り付けてください', 'success');
+            }).catch(() => {
+                showToast('コピーに失敗しました', 'error');
+            });
         }
     </script>
 </body>

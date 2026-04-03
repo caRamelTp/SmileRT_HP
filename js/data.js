@@ -515,7 +515,69 @@ class SmileRTDatabase {
     a.click(); URL.revokeObjectURL(url);
   }
 
+  // --- TSV Export (for Google Sheets clipboard paste) ---
+  exportTSV(eventId) {
+    const event = this.getEvent(eventId);
+    if (!event) return '';
+    const timeline = this.calculateTimetable(event);
+    const headers = ['曲順', '時間', '演者名', '曲名', '種別', '曲尺', 'プロンプト', 'きっかけ・照明・音響', '備考', 'マイク', 'カウント', 'Key', '完成音源', '音源確認', 'はれむぅ確認'];
+    const rows = [headers.join('\t')];
+    timeline.forEach(t => {
+      if (t.slotType !== 'song') {
+        rows.push([t.songTitle || t.slotType, t.timeRange, '', '', '', t.durationStr, '', '', '', '', '', '', '', '', ''].join('\t'));
+      } else {
+        rows.push([
+          t.order, t.timeRange, t.performerName, t.songTitle,
+          t.type === 'original' ? 'オリジナル' : 'カバー', t.durationStr,
+          t.promptNumber, t.cue, t.remarks,
+          t.micCount, t.count, t.key,
+          t.completedAudio,
+          t.audioConfirmed ? '✓' : '', t.audioConfirmedHaremu ? '✓' : ''
+        ].join('\t'));
+      }
+    });
+    return rows.join('\n');
+  }
 
+  // --- HTML Table Export (for Excel clipboard paste with formatting) ---
+  exportHTMLTable(eventId) {
+    const event = this.getEvent(eventId);
+    if (!event) return '';
+    const timeline = this.calculateTimetable(event);
+    const thStyle = 'background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:4px 8px;font-size:12px;text-align:center;';
+    const tdStyle = 'border:1px solid #ddd;padding:4px 8px;font-size:12px;';
+    const headers = ['曲順', '時間', '演者名', '曲名', '種別', '曲尺', 'プロンプト', 'きっかけ・照明・音響', '備考', 'マイク', 'カウント', 'Key', '完成音源', '音源確認', 'はれむぅ確認'];
+    
+    let html = `<table style="border-collapse:collapse;font-family:sans-serif;">`;
+    html += `<thead><tr>${headers.map(h => `<th style="${thStyle}">${h}</th>`).join('')}</tr></thead><tbody>`;
+    
+    timeline.forEach(t => {
+      if (t.slotType !== 'song') {
+        html += `<tr style="background:#fff8e1;"><td style="${tdStyle}font-weight:bold;color:#b8860b;" colspan="15">${t.songTitle || t.slotType}　${t.timeRange}　(${t.durationStr})</td></tr>`;
+      } else {
+        const doneColor = t.completedAudio === '完成済み' ? 'color:#16a34a;font-weight:bold;' : t.completedAudio === '受け取り済み' ? 'color:#d97706;font-weight:bold;' : '';
+        html += `<tr>
+          <td style="${tdStyle}text-align:center;">${t.order}</td>
+          <td style="${tdStyle}font-family:monospace;">${t.timeRange}</td>
+          <td style="${tdStyle}">${t.performerName}</td>
+          <td style="${tdStyle}font-weight:600;">${t.songTitle}</td>
+          <td style="${tdStyle}text-align:center;">${t.type === 'original' ? 'オリジナル' : 'カバー'}</td>
+          <td style="${tdStyle}text-align:center;font-family:monospace;">${t.durationStr}</td>
+          <td style="${tdStyle}text-align:center;">${t.promptNumber}</td>
+          <td style="${tdStyle}">${t.cue}</td>
+          <td style="${tdStyle}">${t.remarks}</td>
+          <td style="${tdStyle}text-align:center;">${t.micCount || 0}</td>
+          <td style="${tdStyle}text-align:center;">${t.count}</td>
+          <td style="${tdStyle}text-align:center;">${t.key}</td>
+          <td style="${tdStyle}text-align:center;${doneColor}">${t.completedAudio}</td>
+          <td style="${tdStyle}text-align:center;">${t.audioConfirmed ? '✓' : ''}</td>
+          <td style="${tdStyle}text-align:center;">${t.audioConfirmedHaremu ? '✓' : ''}</td>
+        </tr>`;
+      }
+    });
+    html += '</tbody></table>';
+    return html;
+  }
 
   // --- CSV Import (Google Forms) ---
   importCSV(eventId, csvText) {
