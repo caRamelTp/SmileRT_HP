@@ -999,7 +999,7 @@
         </tr></thead>
         <tbody>${timeline.map((t, idx) => {
                 const isSpecial = t.slotType === 'break' || t.slotType === 'exchange' || t.slotType === 'mc';
-                if (isSpecial) return `<tr class="special-row" data-row="${idx}" onclick="toggleRowSelect(${idx},event)"><td>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="12"></td></tr>`;
+                if (isSpecial) return `<tr class="special-row" data-row="${idx}" onclick="toggleRowSelect(${idx},event)"><td>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="11"></td><td style="text-align:center"><button class="btn btn-ghost btn-sm" style="color:var(--accent-red);font-size:0.7rem;padding:2px 6px" onclick="event.stopPropagation();deleteSpecialSlot('${t.songId}','${escHtml(t.songTitle)}')" title="削除">✕</button></td></tr>`;
 
                 const micCls = 'ie-select mic-select';
                 const audioCls = 'ie-select audio-select' + (t.completedAudio === '完成済み' ? ' status-done' : t.completedAudio === '受け取り済み' ? ' status-received' : '');
@@ -1063,6 +1063,12 @@
             const afterIdx = timeline.length - 1;
             db.addSpecialSlot(currentEventId, afterIdx, { title: '交流会', slotType: 'exchange', duration: minutes * 60 });
             renderSetlistTable(); showToast(`${minutes}分の交流会を追加しました`, 'success');
+        }
+
+        function deleteSpecialSlot(slotId, title) {
+            if (!confirm(`「${title}」を削除しますか？`)) return;
+            db.removeSpecialSlot(currentEventId, slotId);
+            renderSetlistTable(); showToast(`${title}を削除しました`, 'info');
         }
 
         // === ROW SWAP (AppScript equivalent) ===
