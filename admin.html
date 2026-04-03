@@ -638,8 +638,7 @@
                             id="evSchRehEnd"></div>
                     <div class="form-group"><label class="form-label">顔合わせ</label><input type="time" class="form-input"
                             id="evSchMeet"></div>
-                    <div class="form-group"><label class="form-label">MC</label><input type="time" class="form-input"
-                            id="evSchMC"></div>
+
                     <div class="form-group"><label class="form-label">オープン</label><input type="time" class="form-input"
                             id="evSchOpen"></div>
                     <div class="form-group"><label class="form-label">スタート（開演）</label><input type="time"
@@ -716,7 +715,7 @@
             editingEventId = null;
             document.getElementById('eventModalTitle').textContent = 'イベント新規作成';
             document.getElementById('evSaveBtn').textContent = '作成する';
-            ['evTitle', 'evDate', 'evVenue', 'evNotes', 'evSchVenue', 'evSchRehStart', 'evSchRehEnd', 'evSchMeet', 'evSchMC', 'evSchOpen', 'evSchStart', 'evSchExStart', 'evSchExEnd', 'evSchClear']
+            ['evTitle', 'evDate', 'evVenue', 'evNotes', 'evSchVenue', 'evSchRehStart', 'evSchRehEnd', 'evSchMeet', 'evSchOpen', 'evSchStart', 'evSchExStart', 'evSchExEnd', 'evSchClear']
                 .forEach(id => document.getElementById(id).value = '');
             document.getElementById('evSchStart').value = '17:00';
             openModal('createEventModal');
@@ -736,7 +735,7 @@
             document.getElementById('evSchRehStart').value = s.rehearsalStart || '';
             document.getElementById('evSchRehEnd').value = s.rehearsalEnd || '';
             document.getElementById('evSchMeet').value = s.meetGreet || '';
-            document.getElementById('evSchMC').value = s.mc || '';
+
             document.getElementById('evSchOpen').value = s.doorsOpen || '';
             document.getElementById('evSchStart').value = ev.startTime || '';
             document.getElementById('evSchExStart').value = s.exchangeStart || '';
@@ -753,7 +752,7 @@
                 rehearsalStart: document.getElementById('evSchRehStart').value,
                 rehearsalEnd: document.getElementById('evSchRehEnd').value,
                 meetGreet: document.getElementById('evSchMeet').value,
-                mc: document.getElementById('evSchMC').value,
+
                 doorsOpen: document.getElementById('evSchOpen').value,
                 exchangeStart: document.getElementById('evSchExStart').value,
                 exchangeEnd: document.getElementById('evSchExEnd').value,
@@ -852,7 +851,7 @@
               ${p.songs.map((s, si) => `
               <div class="detail-song-row">
                 <div style="text-align:center;color:var(--text-muted)">${si + 1}</div>
-                <div style="font-weight:600">${escHtml(s.title || '曲名未入力')}</div>
+                <div style="font-weight:600">${escHtml(s.title || '曲名未入力')}${(s.cue || s.remarks) ? `<div style="font-size:0.72rem;color:var(--text-secondary);font-weight:400;margin-top:2px;white-space:normal">${s.cue ? escHtml(s.cue) : ''}${s.cue && s.remarks ? ' / ' : ''}${s.remarks ? escHtml(s.remarks) : ''}</div>` : ''}</div>
                 <div><span class="badge ${s.type === 'original' ? 'badge-purple' : 'badge-blue'}" style="font-size:0.65rem">${s.type === 'original' ? 'オリジナル' : 'カバー'}</span></div>
                 <div style="font-family:var(--font-mono);font-size:0.78rem">${formatDuration(s.duration) || '—'}</div>
                 <div style="font-size:0.75rem">${s.completedAudio ? `<span class="${s.completedAudio === '完成済み' ? 'badge badge-green' : 'badge badge-yellow'}" style="font-size:0.6rem">${escHtml(s.completedAudio)}</span>` : '<span style="color:var(--text-muted)">未着</span>'}</div>
