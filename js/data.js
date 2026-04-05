@@ -266,6 +266,7 @@ class SmileRTDatabase {
           }
           // Save to localStorage as cache
           this._saveLocal();
+          this._performerSnapshots.clear(); // Reset snapshots on remote data sync
           this._ready = true;
           this._fireChange();
           resolve();
@@ -379,8 +380,10 @@ class SmileRTDatabase {
   getPerformer(eventId, performerId) {
     const event = this.getEvent(eventId);
     const p = event ? event.performers.find(p => p.id === performerId) || null : null;
-    // Store snapshot for Discord change detection (before caller modifies the reference)
-    if (p) this._performerSnapshots.set(p.id, JSON.parse(JSON.stringify(p)));
+    // Only store snapshot if none exists (preserve baseline for change detection)
+    if (p && !this._performerSnapshots.has(p.id)) {
+      this._performerSnapshots.set(p.id, JSON.parse(JSON.stringify(p)));
+    }
     return p;
   }
 
