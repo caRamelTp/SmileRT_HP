@@ -7,6 +7,139 @@
 
 const DB_KEY = 'smilert_v3';
 
+// --- Discord Webhook (obfuscated) ---
+const _WH_P = [
+  'aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3Mv',
+  'MTQ5MDE4OTI5MDA0OTg5NjUxOC9H',
+  'NF85Q292MVpHYUtfdDAxVUd2UGFPUFZW',
+  'bm92NXBTd1lRc09rTXpnSzNCM2JyWGxoSWlETV8y',
+  'eUhvWkFUcHdmNHhhcg=='
+];
+const DISCORD_WEBHOOK_URL = (function() { try { return atob(_WH_P.join('')); } catch(e) { return ''; } })();
+
+// Debounce timer for Discord notifications (avoid spam from rapid inline edits)
+let _discordDebounceTimer = null;
+let _discordPendingChanges = null;
+
+function _diffPerformer(oldP, newP) {
+  const changes = [];
+  if (!oldP || !newP) return changes;
+
+  // Profile changes
+  if ((oldP.name || '') !== (newP.name || '')) changes.push(`出演者名を「${oldP.name || '未入力'}」→「${newP.name || '未入力'}」に変更`);
+  if ((oldP.discord || '') !== (newP.discord || '')) changes.push(`Discord を更新`);
+  if ((oldP.twitter || '') !== (newP.twitter || '')) changes.push(`X (Twitter) を更新`);
+  if ((oldP.cyalumeColor || '') !== (newP.cyalumeColor || '')) changes.push(`サイリウムカラー を「${newP.cyalumeColor || '未設定'}」に変更`);
+  if ((oldP.hoodie || '') !== (newP.hoodie || '')) changes.push(`パーカーサイズ を「${newP.hoodie || '未設定'}」に変更`);
+  if ((oldP.techRequests || '') !== (newP.techRequests || '')) changes.push(`技術リクエスト を更新`);
+  if ((oldP.iconUrl || '') !== (newP.iconUrl || '')) changes.push(`アイコン素材URL を更新`);
+
+  // Song changes
+  const oldSongs = oldP.songs || [];
+  const newSongs = newP.songs || [];
+  const oldSongMap = new Map(oldSongs.map(s => [s.id, s]));
+  const newSongMap = new Map(newSongs.map(s => [s.id, s]));
+
+  // Added songs
+  for (const ns of newSongs) {
+    if (!oldSongMap.has(ns.id)) {
+      changes.push(`曲「${ns.title || '曲名未入力'}」を追加`);
+    }
+  }
+  // Removed songs
+  for (const os of oldSongs) {
+    if (!newSongMap.has(os.id)) {
+      changes.push(`曲「${os.title || '曲名未入力'}」を削除`);
+    }
+  }
+  // Modified songs
+  for (const ns of newSongs) {
+    const os = oldSongMap.get(ns.id);
+    if (!os) continue;
+    if ((os.title || '') !== (ns.title || '')) changes.push(`曲名を「${os.title || '未入力'}」→「${ns.title || '未入力'}」に変更`);
+    if ((os.type || 'cover') !== (ns.type || 'cover')) changes.push(`「${ns.title || '曲名未入力'}」の種別を「${ns.type === 'original' ? 'オリジナル' : 'カバー'}」に変更`);
+    if ((os.duration || 0) !== (ns.duration || 0)) changes.push(`「${ns.title || '曲名未入力'}」の曲尺を「${formatDuration(ns.duration) || '未設定'}」に変更`);
+    if ((os.audioStatus || 'none') !== (ns.audioStatus || 'none')) changes.push(`「${ns.title || '曲名未入力'}」の音源ステータスを更新`);
+    if ((os.audioUrl || '') !== (ns.audioUrl || '')) changes.push(`「${ns.title || '曲名未入力'}」の音源URLを更新`);
+    if ((os.cue || '') !== (ns.cue || '')) changes.push(`「${ns.title || '曲名未入力'}」の演出リクエストを更新`);
+    if ((os.remarks || '') !== (ns.remarks || '')) changes.push(`「${ns.title || '曲名未入力'}」の備考を更新`);
+    if ((os.completedAudio || '') !== (ns.completedAudio || '')) changes.push(`「${ns.title || '曲名未入力'}」の完成音源を「${ns.completedAudio || '未設定'}」に更新`);
+    if ((os.audioConfirmed || false) !== (ns.audioConfirmed || false)) changes.push(`「${ns.title || '曲名未入力'}」の音源確認を${ns.audioConfirmed ? 'チェック' : '解除'}`);
+    if ((os.audioConfirmedHaremu || false) !== (ns.audioConfirmedHaremu || false)) changes.push(`「${ns.title || '曲名未入力'}」のはれむぅ確認を${ns.audioConfirmedHaremu ? 'チェック' : '解除'}`);
+    if ((os.promptNumber || '') !== (ns.promptNumber || '')) changes.push(`「${ns.title || '曲名未入力'}」のプロンプトを更新`);
+    if ((os.micCount || 1) !== (ns.micCount || 1)) changes.push(`「${ns.title || '曲名未入力'}」のマイク数を「${ns.micCount}」に変更`);
+    if ((os.key || '') !== (ns.key || '')) changes.push(`「${ns.title || '曲名未入力'}」のKeyを「${ns.key || '未設定'}」に変更`);
+    if ((os.count || '') !== (ns.count || '')) changes.push(`「${ns.title || '曲名未入力'}」のカウントを更新`);
+  }
+
+  return changes;
+}
+
+function _sendDiscordNotification(eventTitle, performerName, changes, type) {
+  if (!DISCORD_WEBHOOK_URL) return;
+
+  const now = new Date();
+  const timestamp = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+
+  let emoji = '📝';
+  let title = 'セトリ更新通知';
+  if (type === 'add') { emoji = '🆕'; title = '新規出演者登録'; }
+  if (type === 'delete') { emoji = '🗑️'; title = '出演者削除'; }
+
+  let changeText = '';
+  if (changes && changes.length > 0) {
+    // Limit to 15 items to avoid overly long messages
+    const shown = changes.slice(0, 15);
+    changeText = shown.map(c => `• ${c}`).join('\n');
+    if (changes.length > 15) changeText += `\n  …他 ${changes.length - 15} 件`;
+  }
+
+  const message = [
+    '@everyone',
+    `${emoji} **${title}**`,
+    '━━━━━━━━━━━━━━━',
+    `📅 イベント: **${eventTitle || '不明'}**`,
+    `🎤 出演者: **${performerName || '不明'}**`,
+    '',
+    changeText ? `【変更内容】\n${changeText}` : '',
+    '━━━━━━━━━━━━━━━',
+    `⏰ ${timestamp}`
+  ].filter(Boolean).join('\n');
+
+  fetch(DISCORD_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content: message })
+  }).catch(err => console.error('Discord notification error:', err));
+}
+
+// Debounced notification — batches rapid inline edits (e.g. admin timetable fields)
+function _scheduleDiscordNotification(eventTitle, performerName, changes, type) {
+  if (!changes || changes.length === 0) return;
+
+  // Merge with pending changes for same performer
+  if (_discordPendingChanges && _discordPendingChanges.performerName === performerName && _discordPendingChanges.eventTitle === eventTitle) {
+    // Merge changes, deduplicating
+    const existing = new Set(_discordPendingChanges.changes);
+    for (const c of changes) existing.add(c);
+    _discordPendingChanges.changes = [...existing];
+  } else {
+    // If there's a pending notification for a different performer, send it now
+    if (_discordPendingChanges) {
+      _sendDiscordNotification(_discordPendingChanges.eventTitle, _discordPendingChanges.performerName, _discordPendingChanges.changes, _discordPendingChanges.type);
+    }
+    _discordPendingChanges = { eventTitle, performerName, changes: [...changes], type };
+  }
+
+  clearTimeout(_discordDebounceTimer);
+  _discordDebounceTimer = setTimeout(() => {
+    if (_discordPendingChanges) {
+      _sendDiscordNotification(_discordPendingChanges.eventTitle, _discordPendingChanges.performerName, _discordPendingChanges.changes, _discordPendingChanges.type);
+      _discordPendingChanges = null;
+    }
+  }, 3000); // 3-second debounce
+}
+
 // --- Utility ---
 function generateId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -259,6 +392,13 @@ class SmileRTDatabase {
     if (!event) return null;
     event.performers.push(performer);
     this.saveEvent(event);
+    // Discord notification for new performer
+    if (performer.name) {
+      const songList = (performer.songs || []).filter(s => s.title).map(s => s.title).join('、');
+      const changes = [`出演者「${performer.name}」を新規登録`];
+      if (songList) changes.push(`セットリスト: ${songList}`);
+      _sendDiscordNotification(event.title, performer.name, changes, 'add');
+    }
     return performer;
   }
 
@@ -266,15 +406,30 @@ class SmileRTDatabase {
     const event = this.getEvent(eventId);
     if (!event) return null;
     const idx = event.performers.findIndex(p => p.id === performer.id);
-    if (idx >= 0) { event.performers[idx] = performer; this.saveEvent(event); }
+    if (idx >= 0) {
+      // Deep clone old performer for change detection
+      const oldPerformer = JSON.parse(JSON.stringify(event.performers[idx]));
+      event.performers[idx] = performer;
+      this.saveEvent(event);
+      // Detect changes and notify Discord
+      const changes = _diffPerformer(oldPerformer, performer);
+      if (changes.length > 0) {
+        _scheduleDiscordNotification(event.title, performer.name || oldPerformer.name, changes, 'update');
+      }
+    }
     return performer;
   }
 
   deletePerformer(eventId, performerId) {
     const event = this.getEvent(eventId);
     if (!event) return;
+    const deletedPerformer = event.performers.find(p => p.id === performerId);
     event.performers = event.performers.filter(p => p.id !== performerId);
     this.saveEvent(event);
+    // Discord notification for deleted performer
+    if (deletedPerformer && deletedPerformer.name) {
+      _sendDiscordNotification(event.title, deletedPerformer.name, [`出演者「${deletedPerformer.name}」を削除`], 'delete');
+    }
   }
 
   reorderPerformers(eventId, orderedIds) {
