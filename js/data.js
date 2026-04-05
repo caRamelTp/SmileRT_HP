@@ -252,6 +252,7 @@ class SmileRTDatabase {
     this._ready = false;
     this._onChangeCallbacks = [];
     this._useFirebase = typeof firebase !== 'undefined' && typeof firebaseDB !== 'undefined';
+    this._performerSnapshots = new Map(); // Snapshots for Discord change detection
   }
 
   // Initialize database (call this before using db)
@@ -384,7 +385,10 @@ class SmileRTDatabase {
   // --- Performers ---
   getPerformer(eventId, performerId) {
     const event = this.getEvent(eventId);
-    return event ? event.performers.find(p => p.id === performerId) || null : null;
+    const p = event ? event.performers.find(p => p.id === performerId) || null : null;
+    // Store snapshot for Discord change detection (before caller modifies the reference)
+    if (p) this._performerSnapshots.set(p.id, JSON.parse(JSON.stringify(p)));
+    return p;
   }
 
   addPerformer(eventId, performer) {
@@ -407,15 +411,19 @@ class SmileRTDatabase {
     if (!event) return null;
     const idx = event.performers.findIndex(p => p.id === performer.id);
     if (idx >= 0) {
-      // Deep clone old performer for change detection
-      const oldPerformer = JSON.parse(JSON.stringify(event.performers[idx]));
+      // Use snapshot taken at getPerformer() time (before caller modified the reference)
+      const oldPerformer = this._performerSnapshots.get(performer.id) || null;
       event.performers[idx] = performer;
       this.saveEvent(event);
       // Detect changes and notify Discord
-      const changes = _diffPerformer(oldPerformer, performer);
-      if (changes.length > 0) {
-        _scheduleDiscordNotification(event.title, performer.name || oldPerformer.name, changes, 'update');
+      if (oldPerformer) {
+        const changes = _diffPerformer(oldPerformer, performer);
+        if (changes.length > 0) {
+          _scheduleDiscordNotification(event.title, performer.name || oldPerformer.name, changes, 'update');
+        }
       }
+      // Update snapshot to current state
+      this._performerSnapshots.set(performer.id, JSON.parse(JSON.stringify(performer)));
     }
     return performer;
   }
