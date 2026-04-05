@@ -22,60 +22,73 @@ let _discordDebounceTimer = null;
 let _discordPendingChanges = null;
 
 function _diffPerformer(oldP, newP) {
-  const changes = [];
-  if (!oldP || !newP) return changes;
+  if (!oldP || !newP) return '';
+  const sections = [];
 
-  // Profile changes
-  if ((oldP.name || '') !== (newP.name || '')) changes.push(`出演者名を「${oldP.name || '未入力'}」→「${newP.name || '未入力'}」に変更`);
-  if ((oldP.discord || '') !== (newP.discord || '')) changes.push(`Discord を更新`);
-  if ((oldP.twitter || '') !== (newP.twitter || '')) changes.push(`X (Twitter) を更新`);
-  if ((oldP.cyalumeColor || '') !== (newP.cyalumeColor || '')) changes.push(`サイリウムカラー を「${newP.cyalumeColor || '未設定'}」に変更`);
-  if ((oldP.hoodie || '') !== (newP.hoodie || '')) changes.push(`パーカーサイズ を「${newP.hoodie || '未設定'}」に変更`);
-  if ((oldP.techRequests || '') !== (newP.techRequests || '')) changes.push(`技術リクエスト を更新`);
-  if ((oldP.iconUrl || '') !== (newP.iconUrl || '')) changes.push(`アイコン素材URL を更新`);
+  // --- Profile changes ---
+  const profileChanges = [];
+  if ((oldP.name || '') !== (newP.name || '')) profileChanges.push(`名前: ${oldP.name || '(空)'} → ${newP.name || '(空)'}`);
+  if ((oldP.discord || '') !== (newP.discord || '')) profileChanges.push('Discord を更新');
+  if ((oldP.twitter || '') !== (newP.twitter || '')) profileChanges.push('X (Twitter) を更新');
+  if ((oldP.cyalumeColor || '') !== (newP.cyalumeColor || '')) profileChanges.push(`サイリウムカラー → ${newP.cyalumeColor || '(空)'}`);
+  if ((oldP.hoodie || '') !== (newP.hoodie || '')) profileChanges.push(`パーカーサイズ → ${newP.hoodie || '(空)'}`);
+  if ((oldP.techRequests || '') !== (newP.techRequests || '')) profileChanges.push('技術リクエストを更新');
+  if ((oldP.iconUrl || '') !== (newP.iconUrl || '')) profileChanges.push('アイコン素材URLを更新');
+  if (profileChanges.length > 0) {
+    sections.push('[プロフィール]\n' + profileChanges.map(c => `  ・${c}`).join('\n'));
+  }
 
-  // Song changes
+  // --- Song changes ---
   const oldSongs = oldP.songs || [];
   const newSongs = newP.songs || [];
   const oldSongMap = new Map(oldSongs.map(s => [s.id, s]));
   const newSongMap = new Map(newSongs.map(s => [s.id, s]));
+  const newSongIndex = new Map(newSongs.map((s, i) => [s.id, i + 1]));
 
-  // Added songs
-  for (const ns of newSongs) {
-    if (!oldSongMap.has(ns.id)) {
-      changes.push(`曲「${ns.title || '曲名未入力'}」を追加`);
-    }
-  }
-  // Removed songs
-  for (const os of oldSongs) {
-    if (!newSongMap.has(os.id)) {
-      changes.push(`曲「${os.title || '曲名未入力'}」を削除`);
-    }
-  }
-  // Modified songs
+  // Modified songs (grouped by song number)
   for (const ns of newSongs) {
     const os = oldSongMap.get(ns.id);
     if (!os) continue;
-    if ((os.title || '') !== (ns.title || '')) changes.push(`曲名を「${os.title || '未入力'}」→「${ns.title || '未入力'}」に変更`);
-    if ((os.type || 'cover') !== (ns.type || 'cover')) changes.push(`「${ns.title || '曲名未入力'}」の種別を「${ns.type === 'original' ? 'オリジナル' : 'カバー'}」に変更`);
-    if ((os.duration || 0) !== (ns.duration || 0)) changes.push(`「${ns.title || '曲名未入力'}」の曲尺を「${formatDuration(ns.duration) || '未設定'}」に変更`);
-    if ((os.audioStatus || 'none') !== (ns.audioStatus || 'none')) changes.push(`「${ns.title || '曲名未入力'}」の音源ステータスを更新`);
-    if ((os.audioUrl || '') !== (ns.audioUrl || '')) changes.push(`「${ns.title || '曲名未入力'}」の音源URLを更新`);
-    if ((os.cue || '') !== (ns.cue || '')) changes.push(`「${ns.title || '曲名未入力'}」の演出リクエストを更新`);
-    if ((os.remarks || '') !== (ns.remarks || '')) changes.push(`「${ns.title || '曲名未入力'}」の備考を更新`);
-    if ((os.completedAudio || '') !== (ns.completedAudio || '')) changes.push(`「${ns.title || '曲名未入力'}」の完成音源を「${ns.completedAudio || '未設定'}」に更新`);
-    if ((os.audioConfirmed || false) !== (ns.audioConfirmed || false)) changes.push(`「${ns.title || '曲名未入力'}」の音源確認を${ns.audioConfirmed ? 'チェック' : '解除'}`);
-    if ((os.audioConfirmedHaremu || false) !== (ns.audioConfirmedHaremu || false)) changes.push(`「${ns.title || '曲名未入力'}」のはれむぅ確認を${ns.audioConfirmedHaremu ? 'チェック' : '解除'}`);
-    if ((os.promptNumber || '') !== (ns.promptNumber || '')) changes.push(`「${ns.title || '曲名未入力'}」のプロンプトを更新`);
-    if ((os.micCount || 1) !== (ns.micCount || 1)) changes.push(`「${ns.title || '曲名未入力'}」のマイク数を「${ns.micCount}」に変更`);
-    if ((os.key || '') !== (ns.key || '')) changes.push(`「${ns.title || '曲名未入力'}」のKeyを「${ns.key || '未設定'}」に変更`);
-    if ((os.count || '') !== (ns.count || '')) changes.push(`「${ns.title || '曲名未入力'}」のカウントを更新`);
+    const changes = [];
+    const songNum = newSongIndex.get(ns.id);
+    if ((os.title || '') !== (ns.title || '')) changes.push(`曲名: ${os.title || '(空)'} → ${ns.title || '(空)'}`);
+    if ((os.type || 'cover') !== (ns.type || 'cover')) changes.push(`種別 → ${ns.type === 'original' ? 'オリジナル' : 'カバー'}`);
+    if ((os.duration || 0) !== (ns.duration || 0)) changes.push(`曲尺 → ${formatDuration(ns.duration) || '(空)'}`);
+    if ((os.audioStatus || 'none') !== (ns.audioStatus || 'none')) changes.push('音源ステータスを更新');
+    if ((os.audioUrl || '') !== (ns.audioUrl || '')) changes.push('音源URLを更新');
+    if ((os.cue || '') !== (ns.cue || '')) changes.push('演出リクエストを更新');
+    if ((os.remarks || '') !== (ns.remarks || '')) changes.push('備考を更新');
+    if ((os.completedAudio || '') !== (ns.completedAudio || '')) changes.push(`完成音源 → ${ns.completedAudio || '(空)'}`);
+    if ((os.audioConfirmed || false) !== (ns.audioConfirmed || false)) changes.push(`音源確認 → ${ns.audioConfirmed ? 'チェック' : '解除'}`);
+    if ((os.audioConfirmedHaremu || false) !== (ns.audioConfirmedHaremu || false)) changes.push(`はれむぅ確認 → ${ns.audioConfirmedHaremu ? 'チェック' : '解除'}`);
+    if ((os.promptNumber || '') !== (ns.promptNumber || '')) changes.push(`プロンプト → ${ns.promptNumber || '(空)'}`);
+    if ((os.micCount || 1) !== (ns.micCount || 1)) changes.push(`マイク数 → ${ns.micCount}`);
+    if ((os.key || '') !== (ns.key || '')) changes.push(`Key → ${ns.key || '(空)'}`);
+    if ((os.count || '') !== (ns.count || '')) changes.push('カウントを更新');
+    if (changes.length > 0) {
+      sections.push(`[${songNum}曲目] ${ns.title || '曲名未入力'}\n` + changes.map(c => `  ・${c}`).join('\n'));
+    }
   }
 
-  return changes;
+  // Added songs
+  for (const ns of newSongs) {
+    if (oldSongMap.has(ns.id)) continue;
+    const songNum = newSongIndex.get(ns.id);
+    const info = [ns.type === 'original' ? 'オリジナル' : 'カバー'];
+    if (ns.duration) info.push(formatDuration(ns.duration));
+    sections.push(`[${songNum}曲目 / 新規追加] ${ns.title || '曲名未入力'} (${info.join(', ')})`);
+  }
+
+  // Removed songs
+  for (const os of oldSongs) {
+    if (newSongMap.has(os.id)) continue;
+    sections.push(`[削除] ${os.title || '曲名未入力'}`);
+  }
+
+  return sections.join('\n\n');
 }
 
-function _sendDiscordNotification(eventTitle, performerName, changes, type) {
+function _sendDiscordNotification(eventTitle, performerName, changeText, type) {
   if (!DISCORD_WEBHOOK_URL) return;
 
   const now = new Date();
@@ -85,12 +98,6 @@ function _sendDiscordNotification(eventTitle, performerName, changes, type) {
   if (type === 'add') title = '新規登録';
   if (type === 'delete') title = '出演者削除';
 
-  let changeText = '';
-  if (changes && changes.length > 0) {
-    const shown = changes.slice(0, 15);
-    changeText = shown.map(c => `- ${c}`).join('\n');
-    if (changes.length > 15) changeText += `\n  …他 ${changes.length - 15} 件`;
-  }
 
   const message = [
     '\u200B',  // 空白文字で前の通知との間にスペースを作る
@@ -107,27 +114,20 @@ function _sendDiscordNotification(eventTitle, performerName, changes, type) {
 }
 
 // Debounced notification — batches rapid inline edits (e.g. admin timetable fields)
-function _scheduleDiscordNotification(eventTitle, performerName, changes, type) {
-  if (!changes || changes.length === 0) return;
+function _scheduleDiscordNotification(eventTitle, performerName, changeText, type) {
+  if (!changeText) return;
 
-  // Merge with pending changes for same performer
-  if (_discordPendingChanges && _discordPendingChanges.performerName === performerName && _discordPendingChanges.eventTitle === eventTitle) {
-    // Merge changes, deduplicating
-    const existing = new Set(_discordPendingChanges.changes);
-    for (const c of changes) existing.add(c);
-    _discordPendingChanges.changes = [...existing];
-  } else {
-    // If there's a pending notification for a different performer, send it now
-    if (_discordPendingChanges) {
-      _sendDiscordNotification(_discordPendingChanges.eventTitle, _discordPendingChanges.performerName, _discordPendingChanges.changes, _discordPendingChanges.type);
-    }
-    _discordPendingChanges = { eventTitle, performerName, changes: [...changes], type };
+  // If there's a pending notification for a different performer, send it now
+  if (_discordPendingChanges && (_discordPendingChanges.performerName !== performerName || _discordPendingChanges.eventTitle !== eventTitle)) {
+    _sendDiscordNotification(_discordPendingChanges.eventTitle, _discordPendingChanges.performerName, _discordPendingChanges.changeText, _discordPendingChanges.type);
   }
+  // Always keep the latest diff (it includes all cumulative changes from snapshot)
+  _discordPendingChanges = { eventTitle, performerName, changeText, type };
 
   clearTimeout(_discordDebounceTimer);
   _discordDebounceTimer = setTimeout(() => {
     if (_discordPendingChanges) {
-      _sendDiscordNotification(_discordPendingChanges.eventTitle, _discordPendingChanges.performerName, _discordPendingChanges.changes, _discordPendingChanges.type);
+      _sendDiscordNotification(_discordPendingChanges.eventTitle, _discordPendingChanges.performerName, _discordPendingChanges.changeText, _discordPendingChanges.type);
       _discordPendingChanges = null;
     }
   }, 3000); // 3-second debounce
@@ -394,10 +394,9 @@ class SmileRTDatabase {
     this.saveEvent(event);
     // Discord notification for new performer
     if (performer.name) {
-      const songList = (performer.songs || []).filter(s => s.title).map(s => s.title).join('、');
-      const changes = [`出演者「${performer.name}」を新規登録`];
-      if (songList) changes.push(`セットリスト: ${songList}`);
-      _sendDiscordNotification(event.title, performer.name, changes, 'add');
+      const songList = (performer.songs || []).filter(s => s.title).map((s, i) => `${i+1}. ${s.title}`).join('\n');
+      const changeText = songList ? `セットリスト:\n${songList}` : '';
+      _sendDiscordNotification(event.title, performer.name, changeText, 'add');
     }
     return performer;
   }
@@ -413,9 +412,9 @@ class SmileRTDatabase {
       this.saveEvent(event);
       // Detect changes and notify Discord
       if (oldPerformer) {
-        const changes = _diffPerformer(oldPerformer, performer);
-        if (changes.length > 0) {
-          _scheduleDiscordNotification(event.title, performer.name || oldPerformer.name, changes, 'update');
+        const changeText = _diffPerformer(oldPerformer, performer);
+        if (changeText) {
+          _scheduleDiscordNotification(event.title, performer.name || oldPerformer.name, changeText, 'update');
         }
       }
       // Update snapshot to current state
@@ -432,7 +431,7 @@ class SmileRTDatabase {
     this.saveEvent(event);
     // Discord notification for deleted performer
     if (deletedPerformer && deletedPerformer.name) {
-      _sendDiscordNotification(event.title, deletedPerformer.name, [`出演者「${deletedPerformer.name}」を削除`], 'delete');
+      _sendDiscordNotification(event.title, deletedPerformer.name, '', 'delete');
     }
   }
 
