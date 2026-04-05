@@ -81,29 +81,22 @@ function _sendDiscordNotification(eventTitle, performerName, changes, type) {
   const now = new Date();
   const timestamp = `${now.getFullYear()}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getDate().toString().padStart(2,'0')} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
 
-  let emoji = '📝';
-  let title = 'セトリ更新通知';
-  if (type === 'add') { emoji = '🆕'; title = '新規出演者登録'; }
-  if (type === 'delete') { emoji = '🗑️'; title = '出演者削除'; }
+  let title = 'セトリ更新';
+  if (type === 'add') title = '新規登録';
+  if (type === 'delete') title = '出演者削除';
 
   let changeText = '';
   if (changes && changes.length > 0) {
-    // Limit to 15 items to avoid overly long messages
     const shown = changes.slice(0, 15);
-    changeText = shown.map(c => `• ${c}`).join('\n');
+    changeText = shown.map(c => `- ${c}`).join('\n');
     if (changes.length > 15) changeText += `\n  …他 ${changes.length - 15} 件`;
   }
 
   const message = [
-    '@everyone',
-    `${emoji} **${title}**`,
-    '━━━━━━━━━━━━━━━',
-    `📅 イベント: **${eventTitle || '不明'}**`,
-    `🎤 出演者: **${performerName || '不明'}**`,
-    '',
-    changeText ? `【変更内容】\n${changeText}` : '',
-    '━━━━━━━━━━━━━━━',
-    `⏰ ${timestamp}`
+    '\u200B',  // 空白文字で前の通知との間にスペースを作る
+    `@everyone **【${title}】** ${performerName || '不明'} ── ${eventTitle || ''}`,
+    changeText ? `\`\`\`\n${changeText}\n\`\`\`` : '',
+    `${timestamp}`
   ].filter(Boolean).join('\n');
 
   fetch(DISCORD_WEBHOOK_URL, {
