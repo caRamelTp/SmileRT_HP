@@ -295,6 +295,22 @@
                 -webkit-text-fill-color: #000 !important;
             }
 
+            /* Layout — force full width */
+            body {
+                width: 100% !important;
+                max-width: none !important;
+                overflow: visible !important;
+            }
+
+            .page-wrapper,
+            .container {
+                max-width: none !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+            }
+
             /* Timetable — force fit on page */
             .tt-wrap {
                 border: 1px solid #ccc !important;
@@ -304,13 +320,24 @@
                 overflow: visible !important;
                 max-width: none !important;
                 width: 100% !important;
+                border-radius: 0 !important;
             }
 
             .tt-wrap table {
                 min-width: 0 !important;
                 width: 100% !important;
-                table-layout: fixed !important;
-                font-size: 7pt !important;
+                table-layout: auto !important;
+                font-size: 6.5pt !important;
+            }
+
+            /* Force nowrap off on ALL cells (override inline styles too) */
+            .tt-wrap thead th,
+            .tt-wrap thead th[style],
+            .tt-wrap tbody td,
+            .tt-wrap tbody td[style] {
+                white-space: normal !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
             }
 
             .tt-wrap thead th {
@@ -319,10 +346,8 @@
                 -webkit-text-fill-color: #333 !important;
                 border-bottom: 2px solid #333 !important;
                 border-left: 1px solid #ccc !important;
-                font-size: 6.5pt !important;
-                padding: 2px 3px !important;
-                white-space: normal !important;
-                word-break: break-all !important;
+                font-size: 6pt !important;
+                padding: 1px 2px !important;
             }
 
             .tt-wrap tbody td {
@@ -330,11 +355,13 @@
                 -webkit-text-fill-color: #000 !important;
                 border-color: #ddd !important;
                 border-left: 1px solid #ddd !important;
-                font-size: 7pt !important;
-                padding: 2px 3px !important;
-                white-space: normal !important;
-                word-break: break-word !important;
-                overflow-wrap: break-word !important;
+                font-size: 6.5pt !important;
+                padding: 1px 2px !important;
+            }
+
+            /* Scale down table to fit — applied via JS class */
+            .tt-wrap.print-scaled {
+                transform-origin: top left;
             }
 
             /* Override inline styles with color */
@@ -702,7 +729,58 @@
             } else {
                 detailSection.classList.remove('hide-on-print');
             }
-            setTimeout(() => window.print(), 100);
+
+            // テーブルを用紙幅にフィットさせる（モバイル対策）
+            const wrap = document.getElementById('ttWrap');
+            const table = wrap?.querySelector('table');
+            if (table) {
+                // リセット
+                table.style.transform = '';
+                table.style.width = '';
+                wrap.style.height = '';
+
+                // テーブルの実際の幅を取得するため一時的にmin-width解除
+                const origMinWidth = table.style.minWidth;
+                table.style.minWidth = '0';
+                table.style.width = 'max-content';
+
+                requestAnimationFrame(() => {
+                    const tableW = table.scrollWidth || table.offsetWidth;
+                    // 横向き印刷の用紙幅を想定（A4横 ≒ 277mm - margins ≒ 960px相当）
+                    // 実際のビュー幅も考慮
+                    const pageW = Math.max(document.documentElement.clientWidth, 900);
+                    
+                    if (tableW > pageW) {
+                        const scale = pageW / tableW;
+                        table.style.transform = `scale(${scale})`;
+                        table.style.transformOrigin = 'top left';
+                        table.style.width = `${tableW}px`;
+                        // ラッパーの高さを調整（縮小後のテーブル高さ）
+                        wrap.style.height = (table.offsetHeight * scale) + 'px';
+                        wrap.style.width = (tableW * scale) + 'px';
+                        wrap.style.overflow = 'visible';
+                    } else {
+                        table.style.width = '100%';
+                    }
+                    table.style.minWidth = '0';
+
+                    setTimeout(() => {
+                        window.print();
+                        // 印刷後にリセット
+                        setTimeout(() => {
+                            table.style.transform = '';
+                            table.style.transformOrigin = '';
+                            table.style.width = '';
+                            table.style.minWidth = origMinWidth;
+                            wrap.style.height = '';
+                            wrap.style.width = '';
+                            wrap.style.overflow = '';
+                        }, 500);
+                    }, 200);
+                });
+            } else {
+                setTimeout(() => window.print(), 100);
+            }
         }
     </script>
 </body>

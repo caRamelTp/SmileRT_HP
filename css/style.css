@@ -1164,6 +1164,9 @@ body.modal-open {
   body {
     background: #fff !important;
     color: #000 !important;
+    overflow: visible !important;
+    max-width: none !important;
+    width: 100% !important;
   }
 
   body::before {
@@ -1219,16 +1222,19 @@ body.modal-open {
   }
 
   .container {
-    max-width: 100%;
-    padding: 0;
+    max-width: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
   }
 
   .page-wrapper {
     padding: 0;
+    overflow: visible !important;
+    max-width: none !important;
   }
 
   @page {
-    margin: 1cm;
+    margin: 0.8cm;
   }
 }
 
