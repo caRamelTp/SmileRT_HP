@@ -229,12 +229,16 @@
         .setlist-wrap tbody tr.tt-dragging {
             opacity: 0.35;
             background: rgba(255, 107, 157, 0.08) !important;
-            pointer-events: none;
         }
 
-        /* Insertion indicator: use box-shadow to avoid layout reflow */
+        /* Insertion indicator: visible top border + subtle background highlight */
         .setlist-wrap tbody tr.tt-drag-over {
-            box-shadow: 0 -3px 0 0 var(--accent-pink), 0 -6px 12px -3px rgba(255, 107, 157, 0.4);
+            box-shadow: 0 -3px 0 0 var(--accent-pink), 0 -8px 16px -4px rgba(255, 107, 157, 0.5);
+            background: rgba(255, 107, 157, 0.1) !important;
+        }
+
+        .setlist-wrap tbody tr.tt-drag-over td {
+            border-top-color: var(--accent-pink) !important;
         }
 
         /* Floating drag label */
