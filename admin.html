@@ -179,7 +179,7 @@
 
         .setlist-wrap thead th:first-child {
             z-index: 4;
-            background: var(--bg-glass-strong);
+            background: #1e1e3a;
         }
 
         .setlist-wrap tbody tr:hover td:first-child {
@@ -1076,6 +1076,8 @@
             }).join('')}</tbody></table>`;
             // Auto-resize textareas on initial render
             wrap.querySelectorAll('textarea.ie').forEach(ta => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+            // Init touch drag for mobile
+            initTouchDrag();
         }
 
         // Shorthand: Update Song Field
@@ -1172,7 +1174,6 @@
             ttDragIdx = idx;
             e.currentTarget.classList.add('tt-dragging');
             e.dataTransfer.effectAllowed = 'move';
-            // Required for Firefox
             e.dataTransfer.setData('text/plain', idx);
         }
         function ttDO(e) {
@@ -1189,24 +1190,102 @@
             e.preventDefault();
             e.currentTarget.classList.remove('tt-drag-over');
             if (ttDragIdx === null || ttDragIdx === targetIdx) return;
-            // Move the dragged row to the target position
-            const ev = db.getEvent(currentEventId);
-            if (!ev) return;
-            db._ensureTimetableOrder(ev);
-            const order = ev.timetableOrder;
-            if (ttDragIdx < 0 || targetIdx < 0 || ttDragIdx >= order.length || targetIdx >= order.length) return;
-            // Remove from old position and insert at new position
-            const [moved] = order.splice(ttDragIdx, 1);
-            order.splice(targetIdx, 0, moved);
-            db.saveEvent(ev);
-            clearSelection();
-            renderSetlistTable();
-            showToast('行を移動しました', 'success');
+            ttMoveRow(ttDragIdx, targetIdx);
         }
         function ttDE(e) {
             e.currentTarget.classList.remove('tt-dragging');
             document.querySelectorAll('.tt-drag-over').forEach(el => el.classList.remove('tt-drag-over'));
             ttDragIdx = null;
+        }
+        function ttMoveRow(fromIdx, toIdx) {
+            const ev = db.getEvent(currentEventId);
+            if (!ev) return;
+            db._ensureTimetableOrder(ev);
+            const order = ev.timetableOrder;
+            if (fromIdx < 0 || toIdx < 0 || fromIdx >= order.length || toIdx >= order.length) return;
+            const [moved] = order.splice(fromIdx, 1);
+            order.splice(toIdx, 0, moved);
+            db.saveEvent(ev);
+            clearSelection();
+            renderSetlistTable();
+            showToast('行を移動しました', 'success');
+        }
+
+        // === TOUCH DRAG & DROP (for iPhone / mobile) ===
+        let touchDragIdx = null;
+        let touchDragEl = null;
+        let touchStartY = 0;
+        let touchMoved = false;
+
+        function initTouchDrag() {
+            const wrap = document.getElementById('setlistWrap');
+            if (!wrap) return;
+            wrap.addEventListener('touchstart', onTouchDragStart, { passive: false });
+            wrap.addEventListener('touchmove', onTouchDragMove, { passive: false });
+            wrap.addEventListener('touchend', onTouchDragEnd);
+            wrap.addEventListener('touchcancel', onTouchDragEnd);
+        }
+
+        function onTouchDragStart(e) {
+            const handle = e.target.closest('.tt-drag-handle');
+            if (!handle) return;
+            const tr = handle.closest('tr[data-row]');
+            if (!tr) return;
+            touchDragIdx = parseInt(tr.dataset.row);
+            touchDragEl = tr;
+            touchStartY = e.touches[0].clientY;
+            touchMoved = false;
+            tr.classList.add('tt-dragging');
+        }
+
+        function onTouchDragMove(e) {
+            if (touchDragIdx === null) return;
+            const dy = Math.abs(e.touches[0].clientY - touchStartY);
+            if (dy > 8) {
+                touchMoved = true;
+                e.preventDefault(); // prevent scroll only when dragging
+            }
+            if (!touchMoved) return;
+            // Find which row we're over
+            const touch = e.touches[0];
+            const allRows = document.querySelectorAll('#setlistWrap tbody tr[data-row]');
+            document.querySelectorAll('.tt-drag-over').forEach(el => el.classList.remove('tt-drag-over'));
+            for (const row of allRows) {
+                const rect = row.getBoundingClientRect();
+                if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                    const rowIdx = parseInt(row.dataset.row);
+                    if (rowIdx !== touchDragIdx) {
+                        row.classList.add('tt-drag-over');
+                    }
+                    break;
+                }
+            }
+        }
+
+        function onTouchDragEnd(e) {
+            if (touchDragIdx === null) return;
+            if (touchDragEl) touchDragEl.classList.remove('tt-dragging');
+            document.querySelectorAll('.tt-drag-over').forEach(el => el.classList.remove('tt-drag-over'));
+            if (touchMoved) {
+                // Find the target row from the last touch position
+                const touch = e.changedTouches && e.changedTouches[0];
+                if (touch) {
+                    const allRows = document.querySelectorAll('#setlistWrap tbody tr[data-row]');
+                    for (const row of allRows) {
+                        const rect = row.getBoundingClientRect();
+                        if (touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                            const targetIdx = parseInt(row.dataset.row);
+                            if (targetIdx !== touchDragIdx) {
+                                ttMoveRow(touchDragIdx, targetIdx);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            touchDragIdx = null;
+            touchDragEl = null;
+            touchMoved = false;
         }
 
         // === CSV IMPORT ===
