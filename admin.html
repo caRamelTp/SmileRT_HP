@@ -72,6 +72,57 @@
             .sidebar {
                 width: 100%;
             }
+
+            /* 出演者詳細 — モバイルカード型レイアウト */
+            .detail-song-row {
+                grid-template-columns: 1fr !important;
+                gap: 4px !important;
+                padding: var(--space-sm) var(--space-md) !important;
+                position: relative;
+            }
+
+            .detail-song-row:not(.detail-song-header) {
+                display: flex !important;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: var(--space-xs) var(--space-sm) !important;
+                padding-left: 36px !important;
+            }
+
+            .detail-song-row:not(.detail-song-header) > div:first-child {
+                position: absolute;
+                left: var(--space-sm);
+                top: var(--space-sm);
+                width: 24px;
+                height: 24px;
+                border-radius: var(--radius-full);
+                background: rgba(255, 107, 157, 0.15);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.72rem;
+                font-weight: 700;
+                color: var(--accent-pink);
+            }
+
+            .detail-song-row:not(.detail-song-header) > div:nth-child(2) {
+                flex: 1 1 100%;
+                font-size: 0.85rem !important;
+            }
+
+            .detail-song-row:not(.detail-song-header) > div:nth-child(3),
+            .detail-song-row:not(.detail-song-header) > div:nth-child(4),
+            .detail-song-row:not(.detail-song-header) > div:nth-child(5) {
+                font-size: 0.72rem !important;
+            }
+
+            .detail-song-header {
+                display: none !important;
+            }
+
+            .detail-info-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+            }
         }
 
         .event-list-item {
@@ -598,10 +649,124 @@
             opacity: 0;
             cursor: pointer;
         }
+
+        /* パスワード認証オーバーレイ */
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(10, 10, 26, 0.97);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-lg);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .auth-overlay.hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .auth-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--space-2xl);
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .auth-box .auth-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-md);
+            opacity: 0.6;
+        }
+
+        .auth-box h2 {
+            font-size: 1.3rem;
+            margin-bottom: var(--space-xs);
+        }
+
+        .auth-box .auth-desc {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: var(--space-xl);
+        }
+
+        .auth-box .auth-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 0.3em;
+            outline: none;
+            transition: all var(--transition-fast);
+        }
+
+        .auth-box .auth-input:focus {
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.15);
+        }
+
+        .auth-box .auth-input.error {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+
+        .auth-box .auth-error-msg {
+            color: var(--accent-red);
+            font-size: 0.8rem;
+            margin-top: var(--space-sm);
+            min-height: 1.2em;
+        }
+
+        .auth-box .auth-submit {
+            margin-top: var(--space-lg);
+            width: 100%;
+        }
+
+        /* コンテンツ非表示（認証前） */
+        .content-hidden {
+            visibility: hidden;
+            pointer-events: none;
+        }
     </style>
 </head>
 
 <body>
+    <!-- パスワード認証オーバーレイ -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <div class="auth-icon">🔒</div>
+            <h2>管理ページ</h2>
+            <p class="auth-desc">アクセスにはパスワードが必要です</p>
+            <input type="password" class="auth-input" id="authPass" placeholder="パスワード" autocomplete="off" inputmode="numeric">
+            <div class="auth-error-msg" id="authError"></div>
+            <button class="btn btn-primary auth-submit" id="authSubmitBtn" onclick="checkAuth()">ログイン</button>
+        </div>
+    </div>
+
     <header class="site-header">
         <div class="container">
             <a href="index.html" class="site-logo"><span>SmileRT</span></a>
@@ -769,6 +934,62 @@
     <script src="js/firebase-config.js"></script>
     <script src="js/data.js"></script>
     <script>
+        // === パスワード認証 ===
+        const AUTH_KEY = 'smilert_admin_auth';
+        const AUTH_PASS = '2525';
+        const AUTH_DURATION = 10 * 60 * 1000; // 10分
+
+        function isAuthenticated() {
+            const stored = sessionStorage.getItem(AUTH_KEY);
+            if (!stored) return false;
+            const ts = parseInt(stored);
+            return (Date.now() - ts) < AUTH_DURATION;
+        }
+
+        function checkAuth() {
+            const input = document.getElementById('authPass');
+            const errEl = document.getElementById('authError');
+            if (input.value === AUTH_PASS) {
+                sessionStorage.setItem(AUTH_KEY, Date.now().toString());
+                grantAccess();
+            } else {
+                input.classList.add('error');
+                errEl.textContent = 'パスワードが違います';
+                setTimeout(() => input.classList.remove('error'), 500);
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        function grantAccess() {
+            document.getElementById('authOverlay').classList.add('hidden');
+            document.querySelector('.page-wrapper').classList.remove('content-hidden');
+            document.querySelector('.site-header').classList.remove('content-hidden');
+        }
+
+        // ページ読み込み時に認証チェック
+        (function() {
+            if (isAuthenticated()) {
+                // 認証済み — すぐにアクセス許可
+                document.addEventListener('DOMContentLoaded', () => {
+                    grantAccess();
+                });
+            } else {
+                // 未認証 — コンテンツを隠す
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelector('.page-wrapper').classList.add('content-hidden');
+                    document.querySelector('.site-header').classList.add('content-hidden');
+                    document.getElementById('authPass').focus();
+                });
+            }
+            // Enter キーでログイン
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('authPass').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') checkAuth();
+                });
+            });
+        })();
+
         let currentEventId = null, editingPerformerId = null, editingEventId = null;
         let selectedRows = new Set(); // For row swap feature
 
