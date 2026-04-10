@@ -212,41 +212,29 @@
             cursor: grabbing;
         }
 
-        /* Prevent text selection during drag */
+        /* Prevent text selection on entire timetable (especially mobile) */
+        .setlist-wrap table {
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* Also block during active drag on body */
         .tt-touch-dragging {
             user-select: none !important;
             -webkit-user-select: none !important;
+            -webkit-touch-callout: none !important;
         }
 
         .setlist-wrap tbody tr.tt-dragging {
             opacity: 0.35;
             background: rgba(255, 107, 157, 0.08) !important;
+            pointer-events: none;
         }
 
+        /* Insertion indicator: use box-shadow to avoid layout reflow */
         .setlist-wrap tbody tr.tt-drag-over {
-            position: relative;
-        }
-
-        .setlist-wrap tbody tr.tt-drag-over::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--accent-pink);
-            z-index: 10;
-            box-shadow: 0 0 8px rgba(255, 107, 157, 0.6);
-        }
-
-        .setlist-wrap tbody tr.tt-drag-over::after {
-            content: '▶';
-            position: absolute;
-            top: -9px;
-            left: -2px;
-            color: var(--accent-pink);
-            font-size: 0.7rem;
-            z-index: 11;
+            box-shadow: 0 -3px 0 0 var(--accent-pink), 0 -6px 12px -3px rgba(255, 107, 157, 0.4);
         }
 
         /* Floating drag label */
@@ -1224,11 +1212,23 @@
             e.currentTarget.classList.add('tt-dragging');
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', idx);
+            // Use a transparent drag image to prevent browser ghost
+            const img = new Image();
+            img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+            e.dataTransfer.setDragImage(img, 0, 0);
         }
         function ttDO(e) {
             e.preventDefault();
             const tr = e.currentTarget;
-            if (parseInt(tr.dataset.row) !== ttDragIdx) {
+            const rowIdx = parseInt(tr.dataset.row);
+            // Skip if hovering the dragged row itself
+            if (rowIdx === ttDragIdx) return;
+            // Only add class if not already set (avoid constant DOM thrashing)
+            if (!tr.classList.contains('tt-drag-over')) {
+                // Clear all other indicators first
+                document.querySelectorAll('.tt-drag-over').forEach(el => {
+                    if (el !== tr) el.classList.remove('tt-drag-over');
+                });
                 tr.classList.add('tt-drag-over');
             }
         }
