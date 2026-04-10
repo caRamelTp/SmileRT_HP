@@ -509,15 +509,64 @@
                 display: none !important;
             }
 
-            /* Detail grid — tighter layout for print */
+            /* Detail grid — single column for reliable page breaks */
             .detail-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
-                gap: 8px !important;
+                display: block !important;
+                columns: 1 !important;
             }
 
             .detail-card {
-                padding: 8px !important;
-                font-size: 8pt !important;
+                padding: 6px 8px !important;
+                font-size: 7.5pt !important;
+                margin-bottom: 6px !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                -webkit-column-break-inside: avoid !important;
+                break-before: auto !important;
+                overflow: visible !important;
+            }
+
+            .detail-card .card-header {
+                padding-bottom: 4px !important;
+                margin-bottom: 6px !important;
+                gap: 6px !important;
+            }
+
+            .detail-card .card-header .order-badge {
+                width: 24px !important;
+                height: 24px !important;
+                font-size: 9pt !important;
+            }
+
+            .detail-card .card-header div[style*="font-size:1.1rem"] {
+                font-size: 9pt !important;
+            }
+
+            .detail-card .song-item {
+                padding: 2px 0 !important;
+                font-size: 7pt !important;
+                gap: 4px !important;
+            }
+
+            .detail-card .song-item strong {
+                font-size: 7.5pt !important;
+            }
+
+            .detail-card .s-num {
+                width: 16px !important;
+                height: 16px !important;
+                font-size: 6pt !important;
+            }
+
+            /* タイムテーブル後に改ページしてから出演者詳細を開始 */
+            #detailSection {
+                break-before: page !important;
+                page-break-before: always !important;
+            }
+
+            #detailSection h2 {
+                font-size: 11pt !important;
+                margin-bottom: 6px !important;
             }
         }
     </style>
