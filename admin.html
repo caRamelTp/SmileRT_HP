@@ -167,6 +167,56 @@
             font-size: 0.85rem;
         }
 
+        /* Sticky first column (曲順) */
+        .setlist-wrap thead th:first-child,
+        .setlist-wrap tbody td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            background: var(--bg-secondary);
+            white-space: nowrap;
+        }
+
+        .setlist-wrap thead th:first-child {
+            z-index: 4;
+            background: var(--bg-glass-strong);
+        }
+
+        .setlist-wrap tbody tr:hover td:first-child {
+            background: var(--bg-card-hover);
+        }
+
+        .setlist-wrap tbody tr.special-row td:first-child {
+            background: #17162e;
+        }
+
+        .setlist-wrap tbody tr.row-selected td:first-child {
+            background: #1a1a40;
+        }
+
+        /* Row drag handle for timetable */
+        .tt-drag-handle {
+            cursor: grab;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            user-select: none;
+            display: inline-block;
+            margin-right: 2px;
+            vertical-align: middle;
+        }
+
+        .tt-drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .setlist-wrap tbody tr.tt-dragging {
+            opacity: 0.4;
+        }
+
+        .setlist-wrap tbody tr.tt-drag-over {
+            border-top: 2px solid var(--accent-pink) !important;
+        }
+
         /* Setlist Table */
         .setlist-wrap {
             overflow-x: auto;
@@ -981,7 +1031,7 @@
 
             wrap.innerHTML = `<table>
         <thead><tr>
-          <th style="width:35px">曲順</th>
+          <th style="width:50px">曲順</th>
           <th style="width:95px">時間</th>
           <th style="width:110px">演者名</th>
           <th>曲名</th>
@@ -998,13 +1048,13 @@
         </tr></thead>
         <tbody>${timeline.map((t, idx) => {
                 const isSpecial = t.slotType === 'break' || t.slotType === 'exchange' || t.slotType === 'mc';
-                if (isSpecial) return `<tr class="special-row" data-row="${idx}" onclick="toggleRowSelect(${idx},event)"><td>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="11"></td><td style="text-align:center"><button class="btn btn-ghost btn-sm" style="color:var(--accent-red);font-size:0.7rem;padding:2px 6px" onclick="event.stopPropagation();deleteSpecialSlot('${t.songId}','${escHtml(t.songTitle)}')" title="削除">✕</button></td></tr>`;
+                if (isSpecial) return `<tr class="special-row" data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)"><td><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="11"></td><td style="text-align:center"><button class="btn btn-ghost btn-sm" style="color:var(--accent-red);font-size:0.7rem;padding:2px 6px" onclick="event.stopPropagation();deleteSpecialSlot('${t.songId}','${escHtml(t.songTitle)}')" title="削除">✕</button></td></tr>`;
 
                 const micCls = 'ie-select mic-select';
                 const audioCls = 'ie-select audio-select' + (t.completedAudio === '完成済み' ? ' status-done' : t.completedAudio === '受け取り済み' ? ' status-received' : '');
 
-                return `<tr data-row="${idx}" onclick="toggleRowSelect(${idx},event)">
-            <td style="text-align:center;color:var(--text-muted);font-size:0.78rem">${t.order}</td>
+                return `<tr data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)">
+            <td style="text-align:center;color:var(--text-muted);font-size:0.78rem"><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${t.order}</td>
             <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
             <td><div class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</div></td>
             <td>${escHtml(t.songTitle)} ${t.type === 'original' ? '<span class="badge badge-purple" style="font-size:0.6rem">O</span>' : ''}</td>
@@ -1114,6 +1164,49 @@
             clearSelection();
             renderSetlistTable();
             showToast('行を入れ替えました', 'success');
+        }
+
+        // === ROW DRAG & DROP (timetable reorder) ===
+        let ttDragIdx = null;
+        function ttDS(e, idx) {
+            ttDragIdx = idx;
+            e.currentTarget.classList.add('tt-dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            // Required for Firefox
+            e.dataTransfer.setData('text/plain', idx);
+        }
+        function ttDO(e) {
+            e.preventDefault();
+            const tr = e.currentTarget;
+            if (parseInt(tr.dataset.row) !== ttDragIdx) {
+                tr.classList.add('tt-drag-over');
+            }
+        }
+        function ttDL(e) {
+            e.currentTarget.classList.remove('tt-drag-over');
+        }
+        function ttDP(e, targetIdx) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('tt-drag-over');
+            if (ttDragIdx === null || ttDragIdx === targetIdx) return;
+            // Move the dragged row to the target position
+            const ev = db.getEvent(currentEventId);
+            if (!ev) return;
+            db._ensureTimetableOrder(ev);
+            const order = ev.timetableOrder;
+            if (ttDragIdx < 0 || targetIdx < 0 || ttDragIdx >= order.length || targetIdx >= order.length) return;
+            // Remove from old position and insert at new position
+            const [moved] = order.splice(ttDragIdx, 1);
+            order.splice(targetIdx, 0, moved);
+            db.saveEvent(ev);
+            clearSelection();
+            renderSetlistTable();
+            showToast('行を移動しました', 'success');
+        }
+        function ttDE(e) {
+            e.currentTarget.classList.remove('tt-dragging');
+            document.querySelectorAll('.tt-drag-over').forEach(el => el.classList.remove('tt-drag-over'));
+            ttDragIdx = null;
         }
 
         // === CSV IMPORT ===

@@ -243,59 +243,220 @@
                 display: none !important
             }
 
-            .view-header h1 {
+            /* Force all text to dark colors */
+            body,
+            .page-wrapper,
+            .container,
+            div,
+            span,
+            p,
+            td,
+            th,
+            label,
+            strong,
+            a {
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
+            }
+
+            body::before {
+                display: none !important;
+            }
+
+            .view-header h1,
+            .text-gradient {
                 font-size: 1.5rem;
-                -webkit-text-fill-color: #000;
-                background: none
+                -webkit-text-fill-color: #000 !important;
+                background: none !important;
+                color: #000 !important;
             }
 
+            /* Schedule info */
             .schedule-info {
-                background: #f5f5f5;
-                border: 1px solid #ccc
+                background: #f5f5f5 !important;
+                border: 1px solid #ccc !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
             }
 
-            .schedule-info .si {
-                color: #333
+            .schedule-info .si,
+            .schedule-info .si-label {
+                color: #333 !important;
+                -webkit-text-fill-color: #333 !important;
             }
 
             .schedule-info .si-time {
-                color: #000
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
             }
 
+            /* Timetable */
             .tt-wrap {
-                border: 1px solid #ccc;
-                background: #fff;
-                backdrop-filter: none
+                border: 1px solid #ccc !important;
+                background: #fff !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                overflow: visible !important;
+                max-width: none !important;
+            }
+
+            .tt-wrap table {
+                min-width: 0 !important;
             }
 
             .tt-wrap thead th {
-                background: #eee;
-                color: #333;
-                border-bottom: 2px solid #333
+                background: #eee !important;
+                color: #333 !important;
+                -webkit-text-fill-color: #333 !important;
+                border-bottom: 2px solid #333 !important;
+                border-left: 1px solid #ccc !important;
             }
 
             .tt-wrap tbody td {
-                color: #000;
-                border-color: #ddd
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
+                border-color: #ddd !important;
+                border-left: 1px solid #ddd !important;
+            }
+
+            /* Override inline styles with color */
+            .tt-wrap tbody td[style],
+            .tt-wrap tbody td div,
+            .tt-wrap tbody td span {
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
             }
 
             .tt-wrap tbody tr:hover {
-                background: transparent
+                background: transparent !important
             }
 
-            .detail-card {
-                border: 1px solid #ccc;
-                background: #fff;
-                backdrop-filter: none;
+            /* Special rows (break/exchange) */
+            .tt-wrap tbody tr.special-row {
+                background: #f5f5dc !important;
+            }
+
+            .tt-wrap tbody tr.special-row td,
+            .tt-wrap tbody tr.special-row td span {
+                color: #8B6914 !important;
+                -webkit-text-fill-color: #8B6914 !important;
+            }
+
+            /* Audio status */
+            .audio-done {
+                color: #166534 !important;
+                -webkit-text-fill-color: #166534 !important;
+            }
+
+            .audio-received {
+                color: #92400e !important;
+                -webkit-text-fill-color: #92400e !important;
+            }
+
+            /* Badges */
+            .badge {
+                border: 1px solid #999 !important;
+                color: #333 !important;
+                -webkit-text-fill-color: #333 !important;
+                background: #f0f0f0 !important;
+            }
+
+            .badge-purple {
+                color: #6b21a8 !important;
+                -webkit-text-fill-color: #6b21a8 !important;
+                border-color: #6b21a8 !important;
+            }
+
+            .badge-blue {
+                color: #1e40af !important;
+                -webkit-text-fill-color: #1e40af !important;
+                border-color: #1e40af !important;
+            }
+
+            .badge-green {
+                color: #166534 !important;
+                -webkit-text-fill-color: #166534 !important;
+                border-color: #166534 !important;
+            }
+
+            .badge-yellow {
+                color: #92400e !important;
+                -webkit-text-fill-color: #92400e !important;
+                border-color: #92400e !important;
+            }
+
+            /* Detail cards */
+            .detail-card,
+            .glass-card {
+                border: 1px solid #ccc !important;
+                background: #fff !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                box-shadow: none !important;
                 break-inside: avoid
             }
 
-            .summary-bar .si {
-                color: #333
+            .detail-card .card-header,
+            .detail-card .card-header div {
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
+            }
+
+            .detail-card .song-item,
+            .detail-card .song-item div,
+            .detail-card .song-item span,
+            .detail-card .song-item strong {
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
+            }
+
+            .detail-card .s-num {
+                background: #eee !important;
+                color: #333 !important;
+                -webkit-text-fill-color: #333 !important;
+            }
+
+            .order-badge {
+                background: #333 !important;
+                color: #fff !important;
+                -webkit-text-fill-color: #fff !important;
+            }
+
+            .color-swatch {
+                border: 2px solid #333 !important;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+
+            /* Summary bar */
+            .summary-bar .si,
+            .summary-bar .si span {
+                color: #333 !important;
+                -webkit-text-fill-color: #333 !important;
             }
 
             .summary-bar .si strong {
-                color: #000
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
+            }
+
+            /* Column group borders */
+            .tt-wrap thead th.col-group-start,
+            .tt-wrap tbody td.col-group-start {
+                border-left: 2px solid #999 !important;
+            }
+
+            /* Tech requests */
+            .detail-card div[style*="border-top"] p {
+                color: #333 !important;
+                -webkit-text-fill-color: #333 !important;
+            }
+
+            /* Links */
+            a {
+                color: #1e40af !important;
+                -webkit-text-fill-color: #1e40af !important;
+                text-decoration: underline !important;
             }
         }
     </style>
