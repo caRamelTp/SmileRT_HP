@@ -458,6 +458,11 @@
                 -webkit-text-fill-color: #1e40af !important;
                 text-decoration: underline !important;
             }
+
+            /* Hide detail section when user opts out */
+            .hide-on-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -487,7 +492,13 @@
                         <button class="btn btn-secondary btn-sm" onclick="copyTSV()" title="Google Sheetsにそのままペーストできます">📋 Sheetsにコピー</button>
                         <button class="btn btn-secondary btn-sm" onclick="copyHTMLTable()" title="Excelに書式付きでペーストできます">📊 Excelにコピー</button>
                         <button class="btn btn-secondary btn-sm" onclick="exportCSV()">📄 CSV保存</button>
-                        <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ 印刷</button>
+                        <button class="btn btn-secondary btn-sm" onclick="doPrint()">🖨️ 印刷</button>
+                    </div>
+                    <div id="printOptions" class="mt-sm" style="display:none">
+                        <label class="form-check" style="font-size:0.85rem">
+                            <input type="checkbox" id="printDetailCheck" checked>
+                            印刷時に出演者詳細を含める
+                        </label>
                     </div>
                 </div>
             </div>
@@ -525,6 +536,7 @@
             const show = !!id;
             document.getElementById('noEvent').style.display = show ? 'none' : '';
             document.getElementById('exportBtns').style.display = show ? '' : 'none';
+            document.getElementById('printOptions').style.display = show ? '' : 'none';
             ['scheduleInfo', 'summaryBar', 'timetableSection', 'detailSection'].forEach(s => document.getElementById(s).style.display = show ? '' : 'none');
             if (show) renderView();
         }
@@ -652,6 +664,16 @@
             }).catch(() => {
                 showToast('コピーに失敗しました', 'error');
             });
+        }
+        function doPrint() {
+            const includeDetail = document.getElementById('printDetailCheck').checked;
+            const detailSection = document.getElementById('detailSection');
+            if (!includeDetail) {
+                detailSection.classList.add('hide-on-print');
+            } else {
+                detailSection.classList.remove('hide-on-print');
+            }
+            setTimeout(() => window.print(), 100);
         }
     </script>
 </body>

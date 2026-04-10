@@ -200,21 +200,70 @@
             color: var(--text-muted);
             font-size: 0.85rem;
             user-select: none;
+            -webkit-user-select: none;
             display: inline-block;
             margin-right: 2px;
             vertical-align: middle;
+            touch-action: none;
+            padding: 4px 2px;
         }
 
         .tt-drag-handle:active {
             cursor: grabbing;
         }
 
+        /* Prevent text selection during drag */
+        .tt-touch-dragging {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+        }
+
         .setlist-wrap tbody tr.tt-dragging {
-            opacity: 0.4;
+            opacity: 0.35;
+            background: rgba(255, 107, 157, 0.08) !important;
         }
 
         .setlist-wrap tbody tr.tt-drag-over {
-            border-top: 2px solid var(--accent-pink) !important;
+            position: relative;
+        }
+
+        .setlist-wrap tbody tr.tt-drag-over::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-pink);
+            z-index: 10;
+            box-shadow: 0 0 8px rgba(255, 107, 157, 0.6);
+        }
+
+        .setlist-wrap tbody tr.tt-drag-over::after {
+            content: '▶';
+            position: absolute;
+            top: -9px;
+            left: -2px;
+            color: var(--accent-pink);
+            font-size: 0.7rem;
+            z-index: 11;
+        }
+
+        /* Floating drag label */
+        .tt-drag-label {
+            position: fixed;
+            z-index: 9999;
+            background: var(--accent-pink);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 0.78rem;
+            font-weight: 600;
+            pointer-events: none;
+            box-shadow: 0 4px 16px rgba(255, 107, 157, 0.4);
+            white-space: nowrap;
+            transform: translate(-50%, -120%);
+            opacity: 0.95;
         }
 
         /* Setlist Table */
@@ -1215,11 +1264,21 @@
         let touchDragIdx = null;
         let touchDragEl = null;
         let touchStartY = 0;
+        let touchStartX = 0;
         let touchMoved = false;
+        let touchHoldTimer = null;
+        let touchDragActive = false;
+        let touchDragLabel = null;
 
         function initTouchDrag() {
             const wrap = document.getElementById('setlistWrap');
             if (!wrap) return;
+            // Remove old listeners to avoid duplicates
+            wrap.removeEventListener('touchstart', onTouchDragStart);
+            wrap.removeEventListener('touchmove', onTouchDragMove);
+            wrap.removeEventListener('touchend', onTouchDragEnd);
+            wrap.removeEventListener('touchcancel', onTouchDragEnd);
+            // Add fresh listeners
             wrap.addEventListener('touchstart', onTouchDragStart, { passive: false });
             wrap.addEventListener('touchmove', onTouchDragMove, { passive: false });
             wrap.addEventListener('touchend', onTouchDragEnd);
@@ -1231,23 +1290,62 @@
             if (!handle) return;
             const tr = handle.closest('tr[data-row]');
             if (!tr) return;
+            e.preventDefault(); // Prevent text selection immediately on handle
             touchDragIdx = parseInt(tr.dataset.row);
             touchDragEl = tr;
             touchStartY = e.touches[0].clientY;
+            touchStartX = e.touches[0].clientX;
             touchMoved = false;
-            tr.classList.add('tt-dragging');
+            touchDragActive = false;
+            // Activate drag after short hold (150ms)
+            touchHoldTimer = setTimeout(() => {
+                touchDragActive = true;
+                tr.classList.add('tt-dragging');
+                document.body.classList.add('tt-touch-dragging');
+                // Show floating label
+                const nameCell = tr.cells[2]; // performer name column
+                const orderCell = tr.cells[0];
+                const labelText = nameCell ? nameCell.textContent.trim() : orderCell.textContent.trim();
+                touchDragLabel = document.createElement('div');
+                touchDragLabel.className = 'tt-drag-label';
+                touchDragLabel.textContent = '↕ ' + labelText;
+                document.body.appendChild(touchDragLabel);
+                touchDragLabel.style.left = touchStartX + 'px';
+                touchDragLabel.style.top = touchStartY + 'px';
+                // Haptic feedback if available
+                if (navigator.vibrate) navigator.vibrate(30);
+            }, 150);
         }
 
         function onTouchDragMove(e) {
             if (touchDragIdx === null) return;
-            const dy = Math.abs(e.touches[0].clientY - touchStartY);
-            if (dy > 8) {
-                touchMoved = true;
-                e.preventDefault(); // prevent scroll only when dragging
-            }
-            if (!touchMoved) return;
-            // Find which row we're over
             const touch = e.touches[0];
+            const dy = Math.abs(touch.clientY - touchStartY);
+            // Cancel hold timer if moved before activation
+            if (!touchDragActive && dy > 5) {
+                clearTimeout(touchHoldTimer);
+                touchDragActive = true;
+                if (touchDragEl) touchDragEl.classList.add('tt-dragging');
+                document.body.classList.add('tt-touch-dragging');
+                if (!touchDragLabel) {
+                    const nameCell = touchDragEl.cells[2];
+                    const orderCell = touchDragEl.cells[0];
+                    const labelText = nameCell ? nameCell.textContent.trim() : orderCell.textContent.trim();
+                    touchDragLabel = document.createElement('div');
+                    touchDragLabel.className = 'tt-drag-label';
+                    touchDragLabel.textContent = '↕ ' + labelText;
+                    document.body.appendChild(touchDragLabel);
+                }
+            }
+            if (!touchDragActive) return;
+            touchMoved = true;
+            e.preventDefault(); // Prevent scroll
+            // Update floating label position
+            if (touchDragLabel) {
+                touchDragLabel.style.left = touch.clientX + 'px';
+                touchDragLabel.style.top = touch.clientY + 'px';
+            }
+            // Find which row we're over and show insertion indicator
             const allRows = document.querySelectorAll('#setlistWrap tbody tr[data-row]');
             document.querySelectorAll('.tt-drag-over').forEach(el => el.classList.remove('tt-drag-over'));
             for (const row of allRows) {
@@ -1260,14 +1358,25 @@
                     break;
                 }
             }
+            // Auto-scroll the setlistWrap container
+            const wrap = document.getElementById('setlistWrap');
+            if (wrap) {
+                const wrapRect = wrap.getBoundingClientRect();
+                const scrollZone = 40;
+                if (touch.clientY < wrapRect.top + scrollZone) {
+                    wrap.scrollTop -= 4;
+                } else if (touch.clientY > wrapRect.bottom - scrollZone) {
+                    wrap.scrollTop += 4;
+                }
+            }
         }
 
         function onTouchDragEnd(e) {
-            if (touchDragIdx === null) return;
+            clearTimeout(touchHoldTimer);
+            if (touchDragIdx === null) { cleanupTouchDrag(); return; }
             if (touchDragEl) touchDragEl.classList.remove('tt-dragging');
             document.querySelectorAll('.tt-drag-over').forEach(el => el.classList.remove('tt-drag-over'));
-            if (touchMoved) {
-                // Find the target row from the last touch position
+            if (touchMoved && touchDragActive) {
                 const touch = e.changedTouches && e.changedTouches[0];
                 if (touch) {
                     const allRows = document.querySelectorAll('#setlistWrap tbody tr[data-row]');
@@ -1283,9 +1392,16 @@
                     }
                 }
             }
+            cleanupTouchDrag();
+        }
+
+        function cleanupTouchDrag() {
+            document.body.classList.remove('tt-touch-dragging');
+            if (touchDragLabel) { touchDragLabel.remove(); touchDragLabel = null; }
             touchDragIdx = null;
             touchDragEl = null;
             touchMoved = false;
+            touchDragActive = false;
         }
 
         // === CSV IMPORT ===
