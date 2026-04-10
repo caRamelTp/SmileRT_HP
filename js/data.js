@@ -924,24 +924,42 @@ function showToast(message, type = 'info') {
 }
 
 // --- Modal Helpers ---
+let _modalScrollY = 0;
+function _lockBody() {
+  if (!document.body.classList.contains('modal-open')) {
+    _modalScrollY = window.scrollY;
+    document.body.classList.add('modal-open');
+    document.body.style.top = `-${_modalScrollY}px`;
+  }
+}
+function _unlockBody() {
+  if (document.body.classList.contains('modal-open')) {
+    document.body.classList.remove('modal-open');
+    document.body.style.top = '';
+    window.scrollTo(0, _modalScrollY);
+  }
+}
 function openModal(id) {
   const m = document.getElementById(id);
-  if (m) { m.classList.add('active'); document.body.style.overflow = 'hidden'; }
+  if (m) { m.classList.add('active'); _lockBody(); }
 }
 function closeModal(id) {
   const m = document.getElementById(id);
-  if (m) { m.classList.remove('active'); document.body.style.overflow = ''; }
+  if (m) { m.classList.remove('active'); }
+  // Only unlock if no other modals are active
+  if (!document.querySelector('.modal-overlay.active')) { _unlockBody(); }
 }
 document.addEventListener('click', e => {
   if (e.target.classList.contains('modal-overlay')) {
     e.target.classList.remove('active');
-    document.body.style.overflow = '';
+    if (!document.querySelector('.modal-overlay.active')) { _unlockBody(); }
   }
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => {
-    m.classList.remove('active'); document.body.style.overflow = '';
-  });
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
+    _unlockBody();
+  }
 });
 
 // --- URL Params ---

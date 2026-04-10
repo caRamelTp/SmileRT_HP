@@ -676,7 +676,8 @@ select option {
   width: 100%;
   max-width: 640px;
   max-height: 85vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: var(--shadow-lg);
   transform: translateY(20px) scale(0.97);
   transition: transform var(--transition-slow);
@@ -692,6 +693,7 @@ select option {
   justify-content: space-between;
   padding: var(--space-xl) var(--space-xl) var(--space-md);
   border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -700,6 +702,11 @@ select option {
 
 .modal-body {
   padding: var(--space-xl);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .modal-footer {
@@ -707,6 +714,24 @@ select option {
   justify-content: flex-end;
   gap: var(--space-sm);
   padding: var(--space-md) var(--space-xl) var(--space-xl);
+  flex-shrink: 0;
+  padding-bottom: calc(var(--space-xl) + env(safe-area-inset-bottom, 0px));
+}
+
+/* Prevent background scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* Prevent background scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 /* --- Toast / Notification --- */
@@ -1067,10 +1092,31 @@ select option {
     font-size: 1.1rem;
   }
 
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
   .modal {
-    max-height: 95vh;
+    max-height: 90vh;
+    max-height: 90dvh;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     margin-top: auto;
+  }
+
+  .modal-header {
+    padding: var(--space-lg) var(--space-lg) var(--space-md);
+  }
+
+  .modal-body {
+    padding: var(--space-lg);
+  }
+
+  .modal-footer {
+    padding: var(--space-md) var(--space-lg);
+    padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
   }
 
   .timetable-row {
@@ -1434,13 +1480,20 @@ select option {
     gap: var(--space-sm);
   }
 
-  /* Modal */
-  .modal-content {
-    width: 95vw;
-    max-width: 95vw;
+  /* Modal — bottom sheet on mobile */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
     max-height: 90vh;
-    margin: var(--space-sm);
-    padding: var(--space-md);
+    max-height: 90dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .modal-footer {
+    padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom, 0px));
   }
 
   /* Performer Items */
@@ -1573,12 +1626,14 @@ select option {
     padding: var(--space-sm);
   }
 
-  /* Modal full-width */
-  .modal-content {
-    width: 100vw;
-    max-width: 100vw;
+  /* Modal full-width on small phones */
+  .modal {
+    max-height: 92vh;
+    max-height: 92dvh;
     border-radius: var(--radius-md) var(--radius-md) 0 0;
-    margin: 0;
-    margin-top: auto;
+  }
+
+  .modal-footer {
+    padding-bottom: calc(var(--space-xl) + env(safe-area-inset-bottom, 0px));
   }
 }
