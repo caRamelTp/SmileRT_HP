@@ -218,11 +218,11 @@
                 const ev = db.getEvent(eventId);
                 if (ev) document.getElementById('pageSubtitle').textContent = ev.title || '';
                 document.getElementById('backBtn').href = `performer.html?event=${eventId}`;
-                addSong();
+                addSong(true);
             } else if (eventId && performerId) {
                 loadExistingData();
             } else {
-                addSong();
+                addSong(true);
             }
             document.getElementById('inputColor').addEventListener('input', e => document.getElementById('inputColorText').value = e.target.value);
             document.addEventListener('input', () => updatePreview());
@@ -230,7 +230,7 @@
 
         function loadExistingData() {
             const p = db.getPerformer(eventId, performerId);
-            if (!p) { document.getElementById('pageSubtitle').textContent = '出演者が見つかりません'; addSong(); return; }
+            if (!p) { document.getElementById('pageSubtitle').textContent = '出演者が見つかりません'; addSong(true); return; }
             const ev = db.getEvent(eventId);
             if (ev) document.getElementById('pageSubtitle').textContent = ev.title || '';
             document.getElementById('inputName').value = p.name || '';
@@ -245,7 +245,7 @@
             renderSongs(); updatePreview();
         }
 
-        function addSong() { songs.push(createSong()); renderSongs(); setTimeout(() => document.getElementById('songContainer').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100); }
+        function addSong(skipScroll) { songs.push(createSong()); renderSongs(); if (!skipScroll) setTimeout(() => document.getElementById('songContainer').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100); }
         function removeSong(idx) { if (songs.length <= 1) { showToast('最低1曲は必要です', 'info'); return; } songs.splice(idx, 1); renderSongs(); }
 
         function renderSongs() {
