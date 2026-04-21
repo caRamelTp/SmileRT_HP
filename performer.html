@@ -384,10 +384,14 @@
 
         function registerNew() {
             if (!selectedEventId) return;
-            // Create a new performer and navigate to input
-            const p = createPerformer({ name: '' });
-            db.addPerformer(selectedEventId, p);
-            goToInput(p.id);
+            // Navigate to input page in "new performer" mode — no DB write until user saves
+            document.getElementById('stepDot2').className = 'step-dot done';
+            document.getElementById('stepDot2').textContent = '✓';
+            document.getElementById('stepLine2').className = 'step-line done';
+            document.getElementById('stepDot3').className = 'step-dot active';
+            setTimeout(() => {
+                location.href = `input.html?event=${selectedEventId}&new=true`;
+            }, 300);
         }
     </script>
 </body>

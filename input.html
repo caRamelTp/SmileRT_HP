@@ -209,10 +209,21 @@
     <script src="js/firebase-config.js"></script>
     <script src="js/data.js"></script>
     <script>
-        let eventId = null, performerId = null, songs = [];
+        let eventId = null, performerId = null, songs = [], isNewMode = false;
         document.addEventListener('DOMContentLoaded', () => { db.init().then(() => {
             eventId = getParam('event'); performerId = getParam('performer');
-            if (eventId && performerId) loadExistingData(); else addSong();
+            isNewMode = getParam('new') === 'true';
+            if (isNewMode && eventId) {
+                // New performer mode — don't load existing data, just set up blank form
+                const ev = db.getEvent(eventId);
+                if (ev) document.getElementById('pageSubtitle').textContent = ev.title || '';
+                document.getElementById('backBtn').href = `performer.html?event=${eventId}`;
+                addSong();
+            } else if (eventId && performerId) {
+                loadExistingData();
+            } else {
+                addSong();
+            }
             document.getElementById('inputColor').addEventListener('input', e => document.getElementById('inputColorText').value = e.target.value);
             document.addEventListener('input', () => updatePreview());
         }); });
@@ -289,8 +300,19 @@
                 songs: songs.filter(s => s.title.trim())
             };
             if (eventId && performerId) {
+                // Existing performer — update
                 const ex = db.getPerformer(eventId, performerId);
                 if (ex) { Object.assign(ex, data); db.updatePerformer(eventId, ex); showToast('保存しました', 'success'); return; }
+            }
+            if (eventId && !performerId) {
+                // New performer for existing event
+                const p = createPerformer(data);
+                db.addPerformer(eventId, p);
+                performerId = p.id;
+                isNewMode = false;
+                setParams({ event: eventId, performer: performerId });
+                showToast('新しい出演者として登録しました！', 'success');
+                return;
             }
             if (!eventId) {
                 const ev = createEvent({ title: '入力データ (' + name + ')' });
