@@ -123,6 +123,37 @@
             margin-top: 2px;
         }
 
+        .event-pick.closed {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.4);
+        }
+
+        .event-pick.closed:hover {
+            border-color: var(--border-color);
+            background: var(--bg-glass);
+            transform: none;
+        }
+
+        .deadline-badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            margin-top: 4px;
+        }
+
+        .deadline-badge.open {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--accent-green);
+        }
+
+        .deadline-badge.closed {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-red);
+        }
+
         /* Performer list */
         .performer-pick {
             display: flex;
@@ -308,14 +339,21 @@
             grid.innerHTML = events.map(e => {
                 const pCount = e.performers.length;
                 const sCount = e.performers.reduce((sum, p) => sum + p.songs.length, 0);
+                const open = isSetlistOpen(e);
+                const deadlineInfo = e.setlistDeadline
+                    ? (open
+                        ? `<span class="deadline-badge open">受付中 〜${formatDeadline(e.setlistDeadline)}</span>`
+                        : `<span class="deadline-badge closed">受付終了</span>`)
+                    : '';
                 return `
-          <div class="event-pick" onclick="selectEvent('${e.id}')">
-            <div class="ev-emoji" style="font-size:1.5rem;font-weight:800;color:var(--accent-pink)">Live</div>
+          <div class="event-pick ${open ? '' : 'closed'}" onclick="${open ? `selectEvent('${e.id}')` : `showToast('セトリ受付は終了しました', 'error')`}">
+            <div class="ev-emoji" style="font-size:1.5rem;font-weight:800;color:${open ? 'var(--accent-pink)' : 'var(--text-muted)'}">Live</div>
             <div style="flex:1;min-width:0">
               <div class="ev-title">${escHtml(e.title || '無題')}</div>
               <div class="ev-meta">${e.date || '日付未定'} · ${pCount}人 · ${sCount}曲${e.venue ? ' · ' + escHtml(e.venue) : ''}</div>
+              ${deadlineInfo}
             </div>
-            <span style="font-size:1.2rem;color:var(--text-muted)">→</span>
+            <span style="font-size:1.2rem;color:var(--text-muted)">${open ? '→' : '×'}</span>
           </div>`;
             }).join('');
         }
@@ -324,6 +362,12 @@
             selectedEventId = eventId;
             const ev = db.getEvent(eventId);
             if (!ev) return;
+            // 期限チェック
+            if (!isSetlistOpen(ev)) {
+                showToast('セトリ受付は終了しました', 'error');
+                selectedEventId = null;
+                return;
+            }
             document.getElementById('selectedEventName').textContent = ev.title || '無題';
             // Update steps
             document.getElementById('stepDot1').className = 'step-dot done';

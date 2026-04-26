@@ -218,6 +218,7 @@ function createEvent(overrides = {}) {
     date: '',
     venue: '',
     startTime: '17:00',
+    setlistDeadline: '',      // セトリ受付期限 (ISO datetime-local 形式)
     schedule: {
       venueEntry: '',         // 会場入り
       rehearsalStart: '',     // リハ開始
@@ -961,6 +962,25 @@ document.addEventListener('keydown', e => {
     _unlockBody();
   }
 });
+
+// --- Setlist Deadline Helper ---
+// Returns true if setlist submission is still open (no deadline set, or deadline is in the future)
+function isSetlistOpen(event) {
+  if (!event || !event.setlistDeadline) return true;
+  return new Date(event.setlistDeadline) > new Date();
+}
+
+// Format deadline for display
+function formatDeadline(deadlineStr) {
+  if (!deadlineStr) return '';
+  const d = new Date(deadlineStr);
+  if (isNaN(d.getTime())) return '';
+  const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+  const dd = d.getDate().toString().padStart(2, '0');
+  const hh = d.getHours().toString().padStart(2, '0');
+  const mi = d.getMinutes().toString().padStart(2, '0');
+  return `${mm}/${dd} ${hh}:${mi}`;
+}
 
 // --- URL Params ---
 function getParam(key) { return new URLSearchParams(window.location.search).get(key); }

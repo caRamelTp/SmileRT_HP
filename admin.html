@@ -884,6 +884,12 @@
                         placeholder="ショーケース150分(15分×10人) など"></textarea>
                 </div>
                 <hr style="border-color:var(--border-color);margin:var(--space-lg) 0">
+                <div class="form-group">
+                    <label class="form-label">セトリ受付期限</label>
+                    <input type="datetime-local" class="form-input" id="evSetlistDeadline">
+                    <p class="text-muted" style="font-size:0.78rem;margin-top:4px">空欄の場合は期限なし（常時受付）になります</p>
+                </div>
+                <hr style="border-color:var(--border-color);margin:var(--space-lg) 0">
                 <h4 class="mb-md">スケジュール</h4>
                 <div class="schedule-grid">
                     <div class="form-group"><label class="form-label">会場入り</label><input type="time" class="form-input"
@@ -1027,7 +1033,7 @@
             editingEventId = null;
             document.getElementById('eventModalTitle').textContent = 'イベント新規作成';
             document.getElementById('evSaveBtn').textContent = '作成する';
-            ['evTitle', 'evDate', 'evVenue', 'evNotes', 'evSchVenue', 'evSchRehStart', 'evSchRehEnd', 'evSchMeet', 'evSchOpen', 'evSchStart', 'evSchExStart', 'evSchExEnd', 'evSchClear']
+            ['evTitle', 'evDate', 'evVenue', 'evNotes', 'evSetlistDeadline', 'evSchVenue', 'evSchRehStart', 'evSchRehEnd', 'evSchMeet', 'evSchOpen', 'evSchStart', 'evSchExStart', 'evSchExEnd', 'evSchClear']
                 .forEach(id => document.getElementById(id).value = '');
             document.getElementById('evSchStart').value = '17:00';
             openModal('createEventModal');
@@ -1042,6 +1048,7 @@
             document.getElementById('evDate').value = ev.date;
             document.getElementById('evVenue').value = ev.venue;
             document.getElementById('evNotes').value = ev.notes || '';
+            document.getElementById('evSetlistDeadline').value = ev.setlistDeadline || '';
             const s = ev.schedule || {};
             document.getElementById('evSchVenue').value = s.venueEntry || '';
             document.getElementById('evSchRehStart').value = s.rehearsalStart || '';
@@ -1070,16 +1077,18 @@
                 exchangeEnd: document.getElementById('evSchExEnd').value,
                 fullClear: document.getElementById('evSchClear').value
             };
+            const setlistDeadline = document.getElementById('evSetlistDeadline').value;
             if (editingEventId) {
                 const ev = db.getEvent(editingEventId);
                 ev.title = title; ev.date = document.getElementById('evDate').value;
                 ev.venue = document.getElementById('evVenue').value.trim();
                 ev.notes = document.getElementById('evNotes').value.trim();
                 ev.startTime = document.getElementById('evSchStart').value;
+                ev.setlistDeadline = setlistDeadline;
                 ev.schedule = schedule;
                 db.saveEvent(ev); showToast('更新しました', 'success');
             } else {
-                const ev = createEvent({ title, date: document.getElementById('evDate').value, venue: document.getElementById('evVenue').value.trim(), startTime: document.getElementById('evSchStart').value || '17:00', notes: document.getElementById('evNotes').value.trim(), schedule });
+                const ev = createEvent({ title, date: document.getElementById('evDate').value, venue: document.getElementById('evVenue').value.trim(), startTime: document.getElementById('evSchStart').value || '17:00', notes: document.getElementById('evNotes').value.trim(), setlistDeadline, schedule });
                 db.saveEvent(ev); currentEventId = ev.id; showToast('作成しました！', 'success');
             }
             closeModal('createEventModal'); renderEventList(); selectEvent(currentEventId);
@@ -1105,6 +1114,7 @@
               <span>開演 ${ev.startTime || '--:--'}</span>
               ${ev.venue ? `<span>${escHtml(ev.venue)}</span>` : ''}
               <span>${ev.performers.length}人</span>
+              ${ev.setlistDeadline ? `<span style="font-weight:600;color:${isSetlistOpen(ev) ? 'var(--accent-green)' : 'var(--accent-red)'}">${isSetlistOpen(ev) ? '🟢 セトリ受付中' : '🔴 セトリ受付終了'} (〜${formatDeadline(ev.setlistDeadline)})</span>` : '<span style="color:var(--text-muted)">セトリ期限: なし</span>'}
             </div>
             ${ev.notes ? `<div class="mt-sm text-muted" style="font-size:0.82rem">${escHtml(ev.notes)}</div>` : ''}
           </div>

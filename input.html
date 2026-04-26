@@ -122,6 +122,33 @@
             color: #fff;
             flex-shrink: 0;
         }
+
+        .deadline-closed-banner {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg) var(--space-xl);
+            text-align: center;
+            margin-bottom: var(--space-xl);
+            animation: fadeSlideUp 0.3s ease-out;
+        }
+
+        .deadline-closed-banner .banner-icon {
+            font-size: 2rem;
+            margin-bottom: var(--space-sm);
+        }
+
+        .deadline-closed-banner .banner-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-red);
+            margin-bottom: var(--space-xs);
+        }
+
+        .deadline-closed-banner .banner-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
     </style>
 </head>
 
@@ -218,15 +245,46 @@
                 const ev = db.getEvent(eventId);
                 if (ev) document.getElementById('pageSubtitle').textContent = ev.title || '';
                 document.getElementById('backBtn').href = `performer.html?event=${eventId}`;
+                checkDeadline();
                 addSong(true);
             } else if (eventId && performerId) {
                 loadExistingData();
+                checkDeadline();
             } else {
                 addSong(true);
             }
             document.getElementById('inputColor').addEventListener('input', e => document.getElementById('inputColorText').value = e.target.value);
             document.addEventListener('input', () => updatePreview());
         }); });
+
+        function checkDeadline() {
+            if (!eventId) return;
+            const ev = db.getEvent(eventId);
+            if (!ev || isSetlistOpen(ev)) return;
+            // 受付終了 — フォームを無効化
+            const banner = document.createElement('div');
+            banner.className = 'deadline-closed-banner';
+            banner.innerHTML = `
+                <div class="banner-icon">🔒</div>
+                <div class="banner-title">セトリ受付は終了しました</div>
+                <div class="banner-desc">受付期限: ${formatDeadline(ev.setlistDeadline)}<br>変更が必要な場合は主催者にお問い合わせください</div>
+            `;
+            const header = document.querySelector('.performer-header');
+            header.parentNode.insertBefore(banner, header.nextSibling);
+            // 全入力を無効化
+            document.querySelectorAll('.input-page input, .input-page select, .input-page textarea, .input-page button:not(#backBtn)').forEach(el => {
+                el.disabled = true;
+                el.style.opacity = '0.5';
+            });
+            // 保存ボタンを無効化
+            const saveBar = document.querySelector('.save-bar');
+            if (saveBar) {
+                saveBar.innerHTML = '<span style="color:var(--accent-red);font-weight:600;font-size:0.9rem">🔒 受付期限を過ぎているため、保存できません</span>';
+            }
+            // 曲追加ボタンも無効化
+            const addBtn = document.querySelector('.add-song-btn');
+            if (addBtn) { addBtn.disabled = true; addBtn.style.opacity = '0.5'; }
+        }
 
         function loadExistingData() {
             const p = db.getPerformer(eventId, performerId);
@@ -287,6 +345,14 @@
         }
 
         function saveInput() {
+            // 期限チェック
+            if (eventId) {
+                const ev = db.getEvent(eventId);
+                if (ev && !isSetlistOpen(ev)) {
+                    showToast('セトリ受付は終了しました', 'error');
+                    return;
+                }
+            }
             const name = document.getElementById('inputName').value.trim();
             if (!name) { showToast('出演者名を入力してください', 'error'); return; }
             document.querySelectorAll('[data-song]').forEach(el => { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i] || !f) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : el.value; });
