@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>管理ダッシュボード — SmileRT LIVE Manager</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css">\r
+    <script>if(localStorage.getItem('smilert-theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
     <style>
         .admin-layout {
             display: flex;
@@ -750,6 +751,20 @@
         .content-hidden {
             visibility: hidden;
             pointer-events: none;
+        }
+
+        /* Dark theme overrides */
+        [data-theme="dark"] .auth-overlay {
+            background: rgba(0, 0, 0, 0.92);
+        }
+
+        [data-theme="dark"] .auth-box {
+            background: var(--bg-secondary);
+        }
+
+        [data-theme="dark"] select.ie-select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
         }
     </style>
 </head>

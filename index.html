@@ -7,6 +7,7 @@
   <title>SmileRT LIVE Manager</title>
   <meta name="description" content="SmileRT イベント運営管理システム — セットリスト・タイムテーブル・技術資料を一元管理">
   <link rel="stylesheet" href="css/style.css">
+  <script>if(localStorage.getItem('smilert-theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
 </head>
 
 <body>
@@ -131,6 +132,16 @@
         </div>
       </div>
     </section>
+
+    <!-- Theme Toggle -->
+    <section class="container mt-xl page-enter" style="animation-delay: 0.35s">
+      <div style="display:flex;justify-content:center;padding:var(--space-md) 0">
+        <button onclick="toggleTheme()" id="themeToggle" class="btn btn-ghost" style="border:1px solid var(--border-color);border-radius:var(--radius-full);padding:0.5rem 1.5rem;font-size:0.85rem;gap:0.5rem">
+          <span id="themeIcon">🌙</span>
+          <span id="themeLabel">ダークモード</span>
+        </button>
+      </div>
+    </section>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -185,6 +196,28 @@
         recentContainer.innerHTML = `<div class="event-grid">${html}</div>`;
       }
     }); });
+
+    // --- Theme Toggle ---
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        html.removeAttribute('data-theme');
+        localStorage.setItem('smilert-theme', 'light');
+      } else {
+        html.setAttribute('data-theme', 'dark');
+        localStorage.setItem('smilert-theme', 'dark');
+      }
+      updateToggleBtn();
+    }
+    function updateToggleBtn() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+      if (label) label.textContent = isDark ? 'ライトモード' : 'ダークモード';
+    }
+    document.addEventListener('DOMContentLoaded', updateToggleBtn);
   </script>
 </body>
 

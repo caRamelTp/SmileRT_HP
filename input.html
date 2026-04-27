@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>セットリスト入力 — SmileRT LIVE Manager</title>
     <meta name="description" content="出演者向けセットリスト入力フォーム">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css">\r
+    <script>if(localStorage.getItem('smilert-theme')==='dark')document.documentElement.setAttribute('data-theme','dark')</script>
     <style>
         .input-page {
             max-width: 640px;
@@ -148,6 +149,11 @@
         .deadline-closed-banner .banner-desc {
             font-size: 0.85rem;
             color: var(--text-secondary);
+        }
+
+        /* Dark theme overrides */
+        [data-theme="dark"] .save-bar {
+            background: rgba(17, 17, 17, 0.95);
         }
     </style>
 </head>
