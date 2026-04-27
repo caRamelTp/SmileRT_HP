@@ -6,45 +6,45 @@
 
 /* --- CSS Custom Properties (Design Tokens) --- */
 :root {
-  /* Color Palette */
-  --bg-primary: #0a0a1a;
-  --bg-secondary: #12122a;
-  --bg-tertiary: #1a1a3e;
-  --bg-card: rgba(255, 255, 255, 0.04);
-  --bg-card-hover: rgba(255, 255, 255, 0.08);
-  --bg-glass: rgba(255, 255, 255, 0.06);
-  --bg-glass-strong: rgba(255, 255, 255, 0.1);
-  --bg-input: rgba(255, 255, 255, 0.07);
-  --bg-input-focus: rgba(255, 255, 255, 0.12);
+  /* Color Palette — Minimal B&W + Light Blue Accent */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7f8fa;
+  --bg-tertiary: #eef0f4;
+  --bg-card: rgba(0, 0, 0, 0.02);
+  --bg-card-hover: rgba(0, 0, 0, 0.04);
+  --bg-glass: rgba(0, 0, 0, 0.02);
+  --bg-glass-strong: rgba(0, 0, 0, 0.05);
+  --bg-input: rgba(0, 0, 0, 0.03);
+  --bg-input-focus: rgba(0, 0, 0, 0.05);
 
-  --text-primary: #f0f0ff;
-  --text-secondary: rgba(240, 240, 255, 0.7);
-  --text-muted: rgba(240, 240, 255, 0.4);
-  --text-accent: #ff6b9d;
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --text-accent: #7cb9cc;
 
-  --accent-pink: #ff6b9d;
-  --accent-blue: #4ecdc4;
-  --accent-purple: #a855f7;
-  --accent-yellow: #fbbf24;
-  --accent-green: #34d399;
-  --accent-orange: #fb923c;
-  --accent-red: #ef4444;
+  --accent-pink: #7cb9cc;
+  --accent-blue: #7cb9cc;
+  --accent-purple: #7cb9cc;
+  --accent-yellow: #d4a853;
+  --accent-green: #5fad8e;
+  --accent-orange: #c9956a;
+  --accent-red: #c45c5c;
 
-  --gradient-primary: linear-gradient(135deg, #ff6b9d 0%, #a855f7 50%, #4ecdc4 100%);
-  --gradient-pink: linear-gradient(135deg, #ff6b9d 0%, #ff8a65 100%);
-  --gradient-blue: linear-gradient(135deg, #4ecdc4 0%, #44b8e0 100%);
-  --gradient-purple: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+  --gradient-primary: #7cb9cc;
+  --gradient-pink: #7cb9cc;
+  --gradient-blue: #7cb9cc;
+  --gradient-purple: #7cb9cc;
 
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-color-hover: rgba(255, 255, 255, 0.15);
-  --border-accent: rgba(255, 107, 157, 0.3);
+  --border-color: rgba(0, 0, 0, 0.08);
+  --border-color-hover: rgba(0, 0, 0, 0.15);
+  --border-accent: rgba(124, 185, 204, 0.3);
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
-  --shadow-glow-pink: 0 0 20px rgba(255, 107, 157, 0.2);
-  --shadow-glow-blue: 0 0 20px rgba(78, 205, 196, 0.2);
-  --shadow-glow-purple: 0 0 20px rgba(168, 85, 247, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-glow-pink: 0 2px 8px rgba(124, 185, 204, 0.1);
+  --shadow-glow-blue: 0 2px 8px rgba(124, 185, 204, 0.1);
+  --shadow-glow-purple: 0 2px 8px rgba(124, 185, 204, 0.1);
 
   /* Typography */
   --font-sans: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -113,22 +113,19 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background:
-    radial-gradient(ellipse at 20% 0%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(78, 205, 196, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(255, 107, 157, 0.04) 0%, transparent 60%);
+  background: none;
   pointer-events: none;
   z-index: 0;
 }
 
 a {
-  color: var(--accent-blue);
+  color: var(--text-primary);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--accent-pink);
+  color: var(--accent-blue);
 }
 
 img {
@@ -165,10 +162,11 @@ h4 {
 }
 
 .text-gradient {
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: var(--text-primary);
+  background-clip: unset;
+  color: var(--text-primary);
 }
 
 .text-muted {
@@ -199,7 +197,7 @@ h4 {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(10, 10, 26, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-color);
@@ -260,7 +258,7 @@ h4 {
 
 .site-nav a.active {
   background: var(--bg-glass-strong);
-  color: var(--accent-pink);
+  color: var(--text-primary);
 }
 
 /* --- Hero Section --- */
@@ -356,15 +354,16 @@ h4 {
 }
 
 .btn-primary {
-  background: var(--gradient-primary);
+  background: var(--text-primary);
   color: #fff;
-  box-shadow: 0 4px 15px rgba(255, 107, 157, 0.25);
+  box-shadow: none;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 25px rgba(255, 107, 157, 0.35);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
   color: #fff;
+  background: #333;
 }
 
 .btn-secondary {
@@ -441,7 +440,7 @@ h4 {
 }
 
 .form-label .required {
-  color: var(--accent-pink);
+  color: var(--accent-red);
   margin-left: 2px;
 }
 
@@ -464,8 +463,8 @@ h4 {
 .form-select:focus,
 .form-textarea:focus {
   background: var(--bg-input-focus);
-  border-color: var(--accent-pink);
-  box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.1);
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(124, 185, 204, 0.15);
 }
 
 .form-input::placeholder,
@@ -484,8 +483,8 @@ h4 {
 
 .form-select option,
 select option {
-  background: #1a1a3e;
-  color: #f0f0ff;
+  background: #ffffff;
+  color: #1a1a1a;
 }
 
 .form-textarea {
@@ -528,8 +527,8 @@ select option {
 }
 
 .form-check input[type="checkbox"]:checked {
-  background: var(--accent-pink);
-  border-color: var(--accent-pink);
+  background: var(--accent-blue);
+  border-color: var(--accent-blue);
 }
 
 .form-check input[type="checkbox"]:checked::after {
@@ -618,32 +617,32 @@ select option {
 }
 
 .badge-pink {
-  background: rgba(255, 107, 157, 0.15);
-  color: var(--accent-pink);
+  background: rgba(124, 185, 204, 0.12);
+  color: #5a9aab;
 }
 
 .badge-blue {
-  background: rgba(78, 205, 196, 0.15);
-  color: var(--accent-blue);
+  background: rgba(124, 185, 204, 0.12);
+  color: #5a9aab;
 }
 
 .badge-purple {
-  background: rgba(168, 85, 247, 0.15);
-  color: var(--accent-purple);
+  background: rgba(124, 185, 204, 0.12);
+  color: #5a9aab;
 }
 
 .badge-green {
-  background: rgba(52, 211, 153, 0.15);
+  background: rgba(95, 173, 142, 0.12);
   color: var(--accent-green);
 }
 
 .badge-yellow {
-  background: rgba(251, 191, 36, 0.15);
+  background: rgba(212, 168, 83, 0.12);
   color: var(--accent-yellow);
 }
 
 .badge-red {
-  background: rgba(239, 68, 68, 0.15);
+  background: rgba(196, 92, 92, 0.12);
   color: var(--accent-red);
 }
 
@@ -670,7 +669,7 @@ select option {
 }
 
 .modal {
-  background: var(--bg-secondary);
+  background: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-xl);
   width: 100%;
@@ -746,7 +745,7 @@ body.modal-open {
 }
 
 .toast {
-  background: var(--bg-secondary);
+  background: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--space-md) var(--space-lg);
@@ -863,7 +862,7 @@ body.modal-open {
   width: 28px;
   height: 28px;
   border-radius: var(--radius-full);
-  background: var(--gradient-primary);
+  background: var(--accent-blue);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -915,7 +914,7 @@ body.modal-open {
   position: absolute;
   top: -10px;
   left: var(--space-lg);
-  background: var(--gradient-primary);
+  background: var(--accent-blue);
   color: #fff;
   padding: 0.15rem 0.75rem;
   border-radius: var(--radius-full);
@@ -958,6 +957,7 @@ body.modal-open {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--accent-blue);
+
   font-weight: 600;
 }
 
@@ -1116,7 +1116,7 @@ body.modal-open {
     padding: var(--space-md) var(--space-lg);
     padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--border-color);
-    background: var(--bg-secondary);
+    background: #ffffff;
   }
 
   .timetable-row {
@@ -1343,7 +1343,7 @@ body.modal-open {
 
 /* Drag over indicator */
 .drag-over {
-  border-top: 2px solid var(--accent-pink) !important;
+  border-top: 2px solid var(--accent-blue) !important;
 }
 
 /* --- Scrollbar Styling --- */
@@ -1357,12 +1357,12 @@ body.modal-open {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.12);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 /* ============================================================

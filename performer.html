@@ -60,9 +60,9 @@
         }
 
         .step-dot.active {
-            background: var(--gradient-primary);
+            background: var(--accent-blue);
             color: #fff;
-            border-color: var(--accent-pink);
+            border-color: var(--accent-blue);
             box-shadow: var(--shadow-glow-pink);
         }
 
@@ -103,7 +103,7 @@
         }
 
         .event-pick:hover {
-            border-color: var(--accent-pink);
+            border-color: var(--accent-blue);
             background: var(--bg-glass-strong);
             transform: translateY(-2px);
         }
@@ -177,7 +177,7 @@
             width: 32px;
             height: 32px;
             border-radius: var(--radius-full);
-            background: var(--gradient-primary);
+            background: var(--accent-blue);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -211,10 +211,10 @@
             width: 100%;
             padding: var(--space-lg);
             margin-top: var(--space-md);
-            border: 2px dashed var(--accent-pink);
+            border: 2px dashed var(--accent-blue);
             border-radius: var(--radius-lg);
             background: transparent;
-            color: var(--accent-pink);
+            color: var(--accent-blue);
             font-family: var(--font-sans);
             font-size: 1rem;
             font-weight: 700;
@@ -223,7 +223,7 @@
         }
 
         .new-register-btn:hover {
-            background: rgba(255, 107, 157, 0.08);
+            background: rgba(124, 185, 204, 0.06);
             transform: translateY(-2px);
         }
 
@@ -233,7 +233,7 @@
             gap: var(--space-md);
             padding: var(--space-md) var(--space-lg);
             background: var(--bg-glass-strong);
-            border: 1px solid var(--accent-pink);
+            border: 1px solid var(--accent-blue);
             border-radius: var(--radius-md);
             margin-bottom: var(--space-xl);
         }
@@ -304,7 +304,7 @@
                         <button class="btn btn-ghost btn-sm" onclick="goToStep1()">変更</button>
                     </div>
                     <h2 class="mb-sm" style="text-align:center;font-size:1.2rem">自分の名前がある場合はクリック</h2>
-                    <p style="text-align:center;font-size:1rem;font-weight:700;color:var(--accent-pink);margin-bottom:var(--space-lg)">
+                    <p style="text-align:center;font-size:1rem;font-weight:700;color:var(--accent-blue);margin-bottom:var(--space-lg)">
                         名前がない場合は、一番下の「新しく登録する」を押してください</p>
                     <div id="performerPickList"></div>
                     <button class="new-register-btn" onclick="registerNew()" style="font-size:1.1rem;padding:1rem;font-weight:700">+ 新しく登録する</button>
@@ -347,7 +347,7 @@
                     : '';
                 return `
           <div class="event-pick ${open ? '' : 'closed'}" onclick="${open ? `selectEvent('${e.id}')` : `showToast('セトリ受付は終了しました', 'error')`}">
-            <div class="ev-emoji" style="font-size:1.5rem;font-weight:800;color:${open ? 'var(--accent-pink)' : 'var(--text-muted)'}">Live</div>
+            <div class="ev-emoji" style="font-size:1.5rem;font-weight:800;color:${open ? 'var(--accent-blue)' : 'var(--text-muted)'}">Live</div>
             <div style="flex:1;min-width:0">
               <div class="ev-title">${escHtml(e.title || '無題')}</div>
               <div class="ev-meta">${e.date || '日付未定'} · ${pCount}人 · ${sCount}曲${e.venue ? ' · ' + escHtml(e.venue) : ''}</div>
