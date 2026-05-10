@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>出演者ガイド — SmileRT LIVE Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #f8fafc; }
+    .guide-wrapper { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+    .guide-hero { text-align: center; padding: 3rem 0 2rem; }
+    .guide-hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .guide-hero p { color: #6b7280; font-size: 1.05rem; }
+
+    /* Section */
+    .guide-section { margin-bottom: 3.5rem; }
+    .guide-section h2 {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 1.4rem; font-weight: 800; margin-bottom: 1.2rem;
+      padding-bottom: 0.6rem; border-bottom: 2px solid #e5e7eb;
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #7cb9cc, #5ba3b5);
+      color: #fff; font-weight: 800; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .guide-desc { color: #374151; font-size: 0.95rem; line-height: 1.7; margin-bottom: 1rem; }
+    .guide-desc strong { color: #1f2937; }
+
+    /* Annotated screenshot container */
+    .annotated-img {
+      position: relative; display: inline-block; width: 100%;
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;
+    }
+    .annotated-img img { width: 100%; display: block; }
+
+    /* Annotation markers */
+    .marker {
+      position: absolute; pointer-events: none;
+    }
+    /* Red rounded rectangle callout */
+    .callout {
+      position: absolute; pointer-events: none;
+      background: rgba(239, 68, 68, 0.92); color: #fff;
+      padding: 6px 14px; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 700; white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(239,68,68,0.3);
+      z-index: 10;
+    }
+    .callout.blue {
+      background: rgba(59, 130, 246, 0.92);
+      box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+    }
+    .callout.green {
+      background: rgba(16, 185, 129, 0.92);
+      box-shadow: 0 2px 8px rgba(16,185,129,0.3);
+    }
+    .callout.purple {
+      background: rgba(139, 92, 246, 0.92);
+      box-shadow: 0 2px 8px rgba(139,92,246,0.3);
+    }
+    .callout.orange {
+      background: rgba(245, 158, 11, 0.95);
+      box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+    }
+
+    /* Highlight ring */
+    .ring {
+      position: absolute; pointer-events: none;
+      border: 3px solid #ef4444; border-radius: 12px;
+      box-shadow: 0 0 0 4px rgba(239,68,68,0.15);
+      z-index: 5;
+    }
+    .ring.blue { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.15); }
+    .ring.green { border-color: #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,0.15); }
+    .ring.purple { border-color: #8b5cf6; box-shadow: 0 0 0 4px rgba(139,92,246,0.15); }
+    .ring.orange { border-color: #f59e0b; box-shadow: 0 0 0 4px rgba(245,158,11,0.15); }
+
+    /* Numbered circle */
+    .num-circle {
+      position: absolute; pointer-events: none; z-index: 10;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: #ef4444; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.85rem;
+      box-shadow: 0 2px 6px rgba(239,68,68,0.4);
+    }
+
+    /* Arrow (CSS triangle + line) */
+    .arrow-down {
+      position: absolute; pointer-events: none; z-index: 8;
+      width: 3px; height: 30px; background: #ef4444;
+    }
+    .arrow-down::after {
+      content: ''; position: absolute; bottom: -8px; left: -5px;
+      border-left: 7px solid transparent; border-right: 7px solid transparent;
+      border-top: 10px solid #ef4444;
+    }
+
+    /* Tips box */
+    .tip-box {
+      background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+      border: 1px solid #bfdbfe; border-radius: 12px;
+      padding: 1rem 1.2rem; margin-top: 1rem;
+      font-size: 0.88rem; color: #1e40af; line-height: 1.6;
+    }
+    .tip-box::before { content: '💡 '; font-size: 1rem; }
+
+    .warn-box {
+      background: linear-gradient(135deg, #fef3c7, #fff7ed);
+      border: 1px solid #fcd34d; border-radius: 12px;
+      padding: 1rem 1.2rem; margin-top: 1rem;
+      font-size: 0.88rem; color: #92400e; line-height: 1.6;
+    }
+    .warn-box::before { content: '⚠️ '; font-size: 1rem; }
+
+    /* Divider */
+    .guide-divider {
+      height: 2px; background: linear-gradient(90deg, transparent, #d1d5db, transparent);
+      margin: 3rem 0;
+    }
+
+    /* Tech docs special section */
+    .tech-section { margin-top: 4rem; }
+    .tech-section h2 { color: #7c3aed; border-color: #c4b5fd; }
+
+    /* Legend */
+    .legend {
+      display: flex; gap: 1.2rem; flex-wrap: wrap;
+      margin-bottom: 1.5rem; font-size: 0.82rem; color: #6b7280;
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-dot { width: 14px; height: 14px; border-radius: 4px; }
+
+    @media (max-width: 640px) {
+      .guide-hero h1 { font-size: 1.6rem; }
+      .guide-section h2 { font-size: 1.15rem; }
+      .callout { font-size: 0.7rem; padding: 4px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="site-logo"><span>SmileRT</span></a>
+      <nav class="site-nav">
+        <a href="index.html">ホーム</a>
+        <a href="performer.html">出演者</a>
+        <a href="admin.html">管理</a>
+        <a href="view.html">技術資料</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="guide-wrapper">
+    <!-- Hero -->
+    <div class="guide-hero">
+      <h1>📖 出演者ガイド</h1>
+      <p>セットリストの入力方法と技術資料ページの見かたを図付きで解説します</p>
+    </div>
+
+    <!-- ===== PART 1: 出演者ページの使い方 ===== -->
+    <h2 style="font-size:1.6rem; font-weight:800; color:#0f766e; margin-bottom:0.5rem;">
+      🎤 セットリスト入力の流れ
+    </h2>
+    <p class="guide-desc" style="margin-bottom: 2rem;">出演者ページでは <strong>3ステップ</strong> で入力が完了します。</p>
+
+    <!-- STEP 1 -->
+    <div class="guide-section">
+      <h2><span class="step-num">1</span> イベントを選択する</h2>
+      <p class="guide-desc">
+        ナビゲーションの <strong>「出演者」</strong> をタップすると出演者ポータルが開きます。<br>
+        参加する<strong>イベントをタップ</strong>して選択してください。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/step1_event_select.png" alt="ステップ1: イベント選択">
+        <!-- ナビの「出演者」を囲む -->
+        <div class="ring" style="top:2.2%; left:74.5%; width:7.5%; height:4.5%;"></div>
+        <div class="callout" style="top:8%; left:66%;">← ここをタップ！</div>
+        <!-- ステップインジケーター -->
+        <div class="callout blue" style="top:25%; left:55%;">現在のステップ</div>
+        <div class="ring blue" style="top:26.5%; left:38%; width:23%; height:4%; border-radius:20px;"></div>
+        <!-- イベントカード -->
+        <div class="ring green" style="top:50%; left:19%; width:62%; height:14%;"></div>
+        <div class="callout green" style="top:46%; left:30%;">参加するイベントをタップ！</div>
+        <!-- 受付中バッジ -->
+        <div class="callout orange" style="top:64%; right:6%;">「受付中」= 入力OK</div>
+      </div>
+
+      <div class="tip-box">
+        <strong>「受付中」</strong>と表示されているイベントだけ選択できます。期限が過ぎると「受付終了」になり入力できなくなります。
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="guide-section">
+      <h2><span class="step-num">2</span> 自分の名前を選ぶ／新規登録する</h2>
+      <p class="guide-desc">
+        イベントを選ぶと出演者一覧が表示されます。<br>
+        <strong>自分の名前がある場合</strong> → その名前をタップ<br>
+        <strong>名前がない場合</strong> → 一番下の <strong>「+ 新しく登録する」</strong> をタップ
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/step2_performer_select.png" alt="ステップ2: 出演者選択">
+        <!-- 選択中のイベント表示 -->
+        <div class="ring blue" style="top:37.5%; left:20%; width:60%; height:7%;"></div>
+        <div class="callout blue" style="top:34%; right:8%;">選択したイベント名</div>
+        <!-- 名前一覧 -->
+        <div class="ring green" style="top:57.5%; left:20%; width:60%; height:22%;"></div>
+        <div class="callout green" style="top:55%; left:22%;">自分の名前をタップ</div>
+        <!-- 新しく登録ボタン -->
+        <div class="ring" style="top:82%; left:20%; width:60%; height:8%; border-radius:14px;"></div>
+        <div class="callout" style="top:91%; left:28%;">名前がなければここ！</div>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="guide-section">
+      <h2><span class="step-num">3</span> プロフィールを入力する</h2>
+      <p class="guide-desc">
+        入力フォームが開きます。まず上部の <strong>プロフィール</strong> を入力してください。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/step3_profile_input.png" alt="ステップ3: プロフィール入力">
+        <!-- 出演者名 -->
+        <div class="ring" style="top:40.5%; left:26%; width:51%; height:8%;"></div>
+        <div class="callout" style="top:38%; right:5%;">必須！ステージネームを入力</div>
+        <!-- Discord / Twitter -->
+        <div class="ring blue" style="top:53%; left:26%; width:51%; height:8%;"></div>
+        <div class="callout blue" style="top:52%; right:5%;">任意：連絡先</div>
+        <!-- サイリウムカラー -->
+        <div class="ring green" style="top:65%; left:26%; width:23%; height:10%;"></div>
+        <div class="callout green" style="top:75.5%; left:5%;">色を選択 or 色名入力</div>
+        <!-- パーカーサイズ -->
+        <div class="ring purple" style="top:65%; left:50%; width:27%; height:10%;"></div>
+        <div class="callout purple" style="top:75.5%; right:5%;">パーカーサイズ選択</div>
+      </div>
+
+      <div class="legend" style="margin-top: 0.8rem;">
+        <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div><span>必須項目</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div><span>任意項目</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div><span>推奨項目</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6;"></div><span>該当者のみ</span></div>
+      </div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="guide-section">
+      <h2><span class="step-num">4</span> セットリスト（曲）を入力する</h2>
+      <p class="guide-desc">
+        下にスクロールすると <strong>セットリスト入力欄</strong> があります。<br>
+        曲名・尺・カバー/オリジナルなどを入力し、複数曲ある場合は <strong>「+ 曲を追加する」</strong> をタップ。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/step4_song_input.png" alt="ステップ4: セットリスト入力">
+        <!-- 曲名 -->
+        <div class="ring" style="top:30%; left:26%; width:56%; height:8%;"></div>
+        <div class="callout" style="top:27%; right:3%;">必須！曲名を入力</div>
+        <!-- カバー/オリジナル & 尺 -->
+        <div class="ring blue" style="top:43.5%; left:26%; width:56%; height:8%;"></div>
+        <div class="callout blue" style="top:42%; right:3%;">カバー or オリジナル ＆ 曲の尺</div>
+        <!-- 音源 -->
+        <div class="ring green" style="top:56%; left:26%; width:56%; height:8%;"></div>
+        <div class="callout green" style="top:64.5%; right:3%;">完成音源がある場合は「あり」</div>
+        <!-- 演出リクエスト -->
+        <div class="ring purple" style="top:69%; left:26%; width:56%; height:16%;"></div>
+        <div class="callout purple" style="top:86%; left:26%;">照明・演出のリクエストを記入</div>
+        <!-- 保存ボタン -->
+        <div class="ring" style="bottom:0.5%; left:35%; width:30%; height:7%; border-radius:14px; border-color:#f59e0b; box-shadow:0 0 0 4px rgba(245,158,11,0.2);"></div>
+        <div class="callout orange" style="bottom:8.5%; left:68%;">最後に必ず保存！</div>
+      </div>
+
+      <div class="warn-box">
+        入力が終わったら必ず画面下の <strong>「保存する」ボタン</strong> をタップしてください。保存しないとデータが消えてしまいます！
+      </div>
+
+      <div class="tip-box" style="margin-top:0.8rem;">
+        曲を2曲以上演奏する場合は、「+ 曲を追加する」ボタンで曲を追加できます。曲順はドラッグで入れ替えられます。
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="guide-divider"></div>
+
+    <!-- ===== PART 2: 技術資料ページの見方 ===== -->
+    <div class="tech-section">
+      <h2 style="font-size:1.6rem; font-weight:800; color:#7c3aed; margin-bottom:0.5rem; border:none; padding:0;">
+        📋 技術資料ページの見かた
+      </h2>
+      <p class="guide-desc" style="margin-bottom: 2rem;">
+        技術資料ページでは、入力された情報が<strong>タイムテーブル形式</strong>で自動的にまとまります。<br>
+        自分の入力内容が正しく反映されているか確認できます。
+      </p>
+
+      <div class="guide-section">
+        <h2 style="border-color:#c4b5fd;"><span class="step-num" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">📋</span> 技術資料の各エリア</h2>
+
+        <div class="annotated-img">
+          <img src="guide/step5_tech_docs.png" alt="技術資料ページ">
+          <!-- イベント選択 -->
+          <div class="ring blue" style="top:24%; left:4%; width:92%; height:5%;"></div>
+          <div class="callout blue" style="top:20%; right:3%;">イベントを選択するドロップダウン</div>
+          <!-- スケジュール情報 -->
+          <div class="ring green" style="top:39.5%; left:4%; width:92%; height:11%;"></div>
+          <div class="callout green" style="top:37%; right:3%;">当日のスケジュール一覧</div>
+          <!-- サマリー -->
+          <div class="ring purple" style="top:54.5%; left:4%; width:50%; height:5%;"></div>
+          <div class="callout purple" style="top:53%; left:56%;">出演者数・曲数・総尺のサマリー</div>
+          <!-- タイムテーブル -->
+          <div class="ring" style="top:65%; left:4%; width:92%; height:25%;"></div>
+          <div class="callout" style="top:62%; left:4%;">タイムテーブル：曲順・時間・演者・曲名が一覧</div>
+          <!-- エクスポートボタン -->
+          <div class="ring orange" style="top:31%; left:4%; width:42%; height:4.5%; border-radius:8px;"></div>
+          <div class="callout orange" style="top:30%; left:48%;">コピー・CSV・印刷ボタン</div>
+        </div>
+
+        <div class="tip-box" style="margin-top:1rem;">
+          技術資料は<strong>スタッフ・PA向け</strong>の資料ですが、出演者も自分の入力内容を確認するのに使えます。「自分の曲名や尺が正しいか」チェックしてみてください。
+        </div>
+
+        <div style="margin-top:1.5rem;">
+          <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.8rem;">📊 タイムテーブルの列の意味</h3>
+          <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="padding:8px 12px; text-align:left; border-bottom:2px solid #d1d5db;">列名</th>
+                <th style="padding:8px 12px; text-align:left; border-bottom:2px solid #d1d5db;">意味</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">曲順</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">全体の通し番号</td></tr>
+              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">時間</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">出番の開始〜終了時刻</td></tr>
+              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">演者名</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">出演者名（サイリウムカラー付き）</td></tr>
+              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">曲名</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">楽曲名（オリジナルは O バッジ）</td></tr>
+              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">きっかけ・照明・音響</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">演出リクエストの内容</td></tr>
+              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">曲尺</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">曲の長さ（分:秒）</td></tr>
+              <tr><td style="padding:6px 12px; font-weight:600;">完成音源</td><td style="padding:6px 12px;">音源の提出ステータス</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="guide-divider"></div>
+    <div class="guide-section">
+      <h2 style="border-color:#fcd34d;"><span class="step-num" style="background:linear-gradient(135deg,#f59e0b,#d97706);">？</span> よくある質問</h2>
+      <div style="display:grid; gap:1rem;">
+        <div class="tip-box">
+          <strong>Q. 入力を間違えたらどうすればいい？</strong><br>
+          → 出演者ページから同じイベント → 自分の名前を選ぶと、もう一度編集できます。修正後に「保存する」を忘れずに！
+        </div>
+        <div class="tip-box">
+          <strong>Q. 曲を追加・削除したい</strong><br>
+          → 「+ 曲を追加する」で追加、各曲カードの右上「✕」で削除できます（最低1曲は必要です）。
+        </div>
+        <div class="tip-box">
+          <strong>Q. 受付終了と表示されて入力できない</strong><br>
+          → 主催者が設定した締切を過ぎています。変更が必要な場合は主催者にご連絡ください。
+        </div>
+        <div class="tip-box">
+          <strong>Q. 音源はどうやって提出する？</strong><br>
+          → GigaFile便などにアップロードし、そのURLを「音源アップロード」の欄に貼り付けてください。
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding:2rem 0; color:#9ca3af; font-size:0.85rem;">
+      SmileRT LIVE Manager — 出演者ガイド
+    </div>
+  </div>
+</body>
+</html>
