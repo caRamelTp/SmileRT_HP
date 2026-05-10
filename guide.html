@@ -44,8 +44,8 @@
     .callout {
       position: absolute; pointer-events: none;
       background: rgba(239, 68, 68, 0.92); color: #fff;
-      padding: 6px 14px; border-radius: 8px;
-      font-size: 0.82rem; font-weight: 700; white-space: nowrap;
+      padding: 5px 12px; border-radius: 8px;
+      font-size: 0.78rem; font-weight: 700; white-space: nowrap;
       box-shadow: 0 2px 8px rgba(239,68,68,0.3);
       z-index: 10;
     }
@@ -179,15 +179,12 @@
         <img src="guide/step1_event_select.png" alt="ステップ1: イベント選択">
         <!-- ナビの「出演者」を囲む -->
         <div class="ring" style="top:1.5%; left:76.5%; width:6.5%; height:4.5%;"></div>
-        <div class="callout" style="top:7%; left:68%;">← ここをタップ！</div>
-        <!-- ステップインジケーター -->
-        <div class="ring blue" style="top:29%; left:39%; width:21%; height:4.5%; border-radius:20px;"></div>
-        <div class="callout blue" style="top:27%; left:62%;">現在のステップ</div>
+        <div class="callout" style="top:7%; left:76%;">↑ ここをタップ</div>
         <!-- イベントカード -->
         <div class="ring green" style="top:49%; left:21%; width:57%; height:12%;"></div>
-        <div class="callout green" style="top:46%; left:30%;">参加するイベントをタップ！</div>
+        <div class="callout green" style="top:62%; left:35%;">参加するイベントをタップ ↑</div>
         <!-- 受付中バッジ -->
-        <div class="callout orange" style="top:62%; right:5%;">「受付中」= 入力OK</div>
+        <div class="callout orange" style="top:58%; left:5%;">「受付中」表示 = 入力OK</div>
       </div>
 
       <div class="tip-box">
@@ -208,13 +205,13 @@
         <img src="guide/step2_performer_select.png" alt="ステップ2: 出演者選択">
         <!-- 選択中のイベント表示 -->
         <div class="ring blue" style="top:40%; left:21%; width:57%; height:11%;"></div>
-        <div class="callout blue" style="top:37%; right:4%;">選択したイベント名</div>
+        <div class="callout blue" style="top:42%; left:80%;">← 選択中</div>
         <!-- 名前一覧 -->
         <div class="ring green" style="top:63%; left:21%; width:57%; height:24%;"></div>
-        <div class="callout green" style="top:60%; left:18%;">自分の名前をタップ</div>
+        <div class="callout green" style="top:70%; left:5%;">自分の名前 →</div>
         <!-- 新しく登録ボタン -->
         <div class="ring" style="top:88%; left:21%; width:57%; height:8%; border-radius:14px;"></div>
-        <div class="callout" style="top:96.5%; left:32%;">名前がなければここ！</div>
+        <div class="callout" style="top:88.5%; left:5%;">名前がない場合はここ →</div>
       </div>
     </div>
 
@@ -229,16 +226,16 @@
         <img src="guide/step3_profile_input.png" alt="ステップ3: プロフィール入力">
         <!-- 出演者名 -->
         <div class="ring" style="top:43%; left:27%; width:46%; height:9%;"></div>
-        <div class="callout" style="top:40%; right:4%;">必須！ステージネームを入力</div>
+        <div class="callout" style="top:43.5%; left:74%;">← 必須</div>
         <!-- Discord / Twitter -->
         <div class="ring blue" style="top:55%; left:27%; width:46%; height:10%;"></div>
-        <div class="callout blue" style="top:53%; right:4%;">任意：連絡先</div>
+        <div class="callout blue" style="top:57%; left:74%;">← 任意</div>
         <!-- サイリウムカラー -->
         <div class="ring green" style="top:68%; left:27%; width:22%; height:10%;"></div>
-        <div class="callout green" style="top:78.5%; left:4%;">色を選択 or 色名入力</div>
+        <div class="callout green" style="top:79%; left:27%;">↑ 色を選択</div>
         <!-- パーカーサイズ -->
         <div class="ring purple" style="top:68%; left:50%; width:23%; height:10%;"></div>
-        <div class="callout purple" style="top:78.5%; right:4%;">パーカーサイズ選択</div>
+        <div class="callout purple" style="top:79%; left:52%;">↑ サイズ選択</div>
       </div>
 
       <div class="legend" style="margin-top: 0.8rem;">
@@ -261,19 +258,19 @@
         <img src="guide/step4_song_input.png" alt="ステップ4: セットリスト入力">
         <!-- 曲名 -->
         <div class="ring" style="top:35%; left:26%; width:48%; height:11%;"></div>
-        <div class="callout" style="top:33%; right:3%;">必須！曲名を入力</div>
+        <div class="callout" style="top:37%; left:75%;">← 必須</div>
         <!-- カバー/オリジナル & 尺 -->
         <div class="ring blue" style="top:49%; left:26%; width:48%; height:10%;"></div>
-        <div class="callout blue" style="top:47%; right:3%;">カバー or オリジナル ＆ 曲の尺</div>
+        <div class="callout blue" style="top:51%; left:75%;">← カバー/尺</div>
         <!-- 音源 -->
         <div class="ring green" style="top:61%; left:26%; width:48%; height:8%;"></div>
-        <div class="callout green" style="top:59%; right:3%;">完成音源がある場合は「あり」</div>
+        <div class="callout green" style="top:62%; left:75%;">← 音源</div>
         <!-- 演出リクエスト -->
         <div class="ring purple" style="top:72%; left:26%; width:48%; height:16%;"></div>
-        <div class="callout purple" style="top:89%; left:26%;">照明・演出のリクエストを記入</div>
+        <div class="callout purple" style="top:75%; left:75%;">← 演出リクエスト</div>
         <!-- 保存ボタン -->
         <div class="ring" style="top:92.5%; left:43%; width:15%; height:5.5%; border-radius:14px; border-color:#f59e0b; box-shadow:0 0 0 4px rgba(245,158,11,0.2);"></div>
-        <div class="callout orange" style="top:91%; left:60%;">最後に必ず保存！</div>
+        <div class="callout orange" style="top:92%; left:5%;">最後に必ず保存 →</div>
       </div>
 
       <div class="warn-box">
@@ -281,7 +278,7 @@
       </div>
 
       <div class="tip-box" style="margin-top:0.8rem;">
-        曲を2曲以上演奏する場合は、「+ 曲を追加する」ボタンで曲を追加できます。曲順はドラッグで入れ替えられます。
+        曲を2曲以上演奏する場合は、「+ 曲を追加する」ボタンで曲を追加できます。
       </div>
     </div>
 
@@ -305,19 +302,19 @@
           <img src="guide/step5_tech_docs.png" alt="技術資料ページ">
           <!-- イベント選択 -->
           <div class="ring blue" style="top:24.5%; left:4.5%; width:91%; height:4.5%;"></div>
-          <div class="callout blue" style="top:21%; right:3%;">イベントを選択するドロップダウン</div>
+          <div class="callout blue" style="top:19%; left:4.5%;">イベント選択 ↓</div>
           <!-- エクスポートボタン -->
           <div class="ring orange" style="top:32%; left:4.5%; width:38%; height:4.5%; border-radius:8px;"></div>
-          <div class="callout orange" style="top:30.5%; left:44%;">コピー・CSV・印刷ボタン</div>
+          <div class="callout orange" style="top:33%; left:44%;">← コピー・印刷</div>
           <!-- スケジュール情報 -->
           <div class="ring green" style="top:40%; left:4.5%; width:91%; height:12%;"></div>
-          <div class="callout green" style="top:38%; right:3%;">当日のスケジュール一覧</div>
+          <div class="callout green" style="top:42%; left:80%;">← スケジュール</div>
           <!-- サマリー -->
           <div class="ring purple" style="top:56%; left:4.5%; width:43%; height:4.5%;"></div>
-          <div class="callout purple" style="top:55%; left:50%;">出演者数・曲数・総尺のサマリー</div>
+          <div class="callout purple" style="top:55.5%; left:49%;">← サマリー</div>
           <!-- タイムテーブル -->
           <div class="ring" style="top:71.5%; left:4.5%; width:91%; height:18%;"></div>
-          <div class="callout" style="top:69%; left:4.5%;">タイムテーブル：曲順・時間・演者・曲名が一覧</div>
+          <div class="callout" style="top:64%; left:4.5%;">タイムテーブル ↓</div>
         </div>
 
         <div class="tip-box" style="margin-top:1rem;">
