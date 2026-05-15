@@ -28,76 +28,13 @@
     .guide-desc { color: #374151; font-size: 0.95rem; line-height: 1.7; margin-bottom: 1rem; }
     .guide-desc strong { color: #1f2937; }
 
-    /* Annotated screenshot container */
+    /* Annotated screenshot (baked images) */
     .annotated-img {
-      position: relative; display: inline-block; width: 100%;
+      width: 100%;
       border-radius: 12px; overflow: hidden;
       box-shadow: 0 4px 24px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;
     }
     .annotated-img img { width: 100%; display: block; }
-
-    /* Annotation markers */
-    .marker {
-      position: absolute; pointer-events: none;
-    }
-    /* Red rounded rectangle callout */
-    .callout {
-      position: absolute; pointer-events: none;
-      background: rgba(239, 68, 68, 0.92); color: #fff;
-      padding: 5px 12px; border-radius: 8px;
-      font-size: 0.78rem; font-weight: 700; white-space: nowrap;
-      box-shadow: 0 2px 8px rgba(239,68,68,0.3);
-      z-index: 10;
-    }
-    .callout.blue {
-      background: rgba(59, 130, 246, 0.92);
-      box-shadow: 0 2px 8px rgba(59,130,246,0.3);
-    }
-    .callout.green {
-      background: rgba(16, 185, 129, 0.92);
-      box-shadow: 0 2px 8px rgba(16,185,129,0.3);
-    }
-    .callout.purple {
-      background: rgba(139, 92, 246, 0.92);
-      box-shadow: 0 2px 8px rgba(139,92,246,0.3);
-    }
-    .callout.orange {
-      background: rgba(245, 158, 11, 0.95);
-      box-shadow: 0 2px 8px rgba(245,158,11,0.3);
-    }
-
-    /* Highlight ring */
-    .ring {
-      position: absolute; pointer-events: none;
-      border: 3px solid #ef4444; border-radius: 12px;
-      box-shadow: 0 0 0 4px rgba(239,68,68,0.15);
-      z-index: 5;
-    }
-    .ring.blue { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.15); }
-    .ring.green { border-color: #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,0.15); }
-    .ring.purple { border-color: #8b5cf6; box-shadow: 0 0 0 4px rgba(139,92,246,0.15); }
-    .ring.orange { border-color: #f59e0b; box-shadow: 0 0 0 4px rgba(245,158,11,0.15); }
-
-    /* Numbered circle */
-    .num-circle {
-      position: absolute; pointer-events: none; z-index: 10;
-      width: 28px; height: 28px; border-radius: 50%;
-      background: #ef4444; color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 0.85rem;
-      box-shadow: 0 2px 6px rgba(239,68,68,0.4);
-    }
-
-    /* Arrow (CSS triangle + line) */
-    .arrow-down {
-      position: absolute; pointer-events: none; z-index: 8;
-      width: 3px; height: 30px; background: #ef4444;
-    }
-    .arrow-down::after {
-      content: ''; position: absolute; bottom: -8px; left: -5px;
-      border-left: 7px solid transparent; border-right: 7px solid transparent;
-      border-top: 10px solid #ef4444;
-    }
 
     /* Tips box */
     .tip-box {
@@ -176,15 +113,7 @@
       </p>
 
       <div class="annotated-img">
-        <img src="guide/step1_event_select.png" alt="ステップ1: イベント選択">
-        <!-- ナビの「出演者」を囲む -->
-        <div class="ring" style="top:1.5%; left:76.5%; width:6.5%; height:4.5%;"></div>
-        <div class="callout" style="top:7%; left:76%;">↑ ここをタップ</div>
-        <!-- イベントカード -->
-        <div class="ring green" style="top:49%; left:21%; width:57%; height:12%;"></div>
-        <div class="callout green" style="top:62%; left:35%;">参加するイベントをタップ ↑</div>
-        <!-- 受付中バッジ -->
-        <div class="callout orange" style="top:58%; left:5%;">「受付中」表示 = 入力OK</div>
+        <img src="guide/step1_annotated.png" alt="ステップ1: イベント選択">
       </div>
 
       <div class="tip-box">
@@ -202,16 +131,7 @@
       </p>
 
       <div class="annotated-img">
-        <img src="guide/step2_performer_select.png" alt="ステップ2: 出演者選択">
-        <!-- 選択中のイベント表示 -->
-        <div class="ring blue" style="top:40%; left:21%; width:57%; height:11%;"></div>
-        <div class="callout blue" style="top:42%; left:80%;">← 選択中</div>
-        <!-- 名前一覧 -->
-        <div class="ring green" style="top:63%; left:21%; width:57%; height:24%;"></div>
-        <div class="callout green" style="top:70%; left:5%;">自分の名前 →</div>
-        <!-- 新しく登録ボタン -->
-        <div class="ring" style="top:88%; left:21%; width:57%; height:8%; border-radius:14px;"></div>
-        <div class="callout" style="top:88.5%; left:5%;">名前がない場合はここ →</div>
+        <img src="guide/step2_annotated.png" alt="ステップ2: 出演者選択">
       </div>
     </div>
 
@@ -223,19 +143,7 @@
       </p>
 
       <div class="annotated-img">
-        <img src="guide/step3_profile_input.png" alt="ステップ3: プロフィール入力">
-        <!-- 出演者名 -->
-        <div class="ring" style="top:43%; left:27%; width:46%; height:9%;"></div>
-        <div class="callout" style="top:43.5%; left:74%;">← 必須</div>
-        <!-- Discord / Twitter -->
-        <div class="ring blue" style="top:55%; left:27%; width:46%; height:10%;"></div>
-        <div class="callout blue" style="top:57%; left:74%;">← 任意</div>
-        <!-- サイリウムカラー -->
-        <div class="ring green" style="top:68%; left:27%; width:22%; height:10%;"></div>
-        <div class="callout green" style="top:79%; left:27%;">↑ 色を選択</div>
-        <!-- パーカーサイズ -->
-        <div class="ring purple" style="top:68%; left:50%; width:23%; height:10%;"></div>
-        <div class="callout purple" style="top:79%; left:52%;">↑ サイズ選択</div>
+        <img src="guide/step3_annotated.png" alt="ステップ3: プロフィール入力">
       </div>
 
       <div class="legend" style="margin-top: 0.8rem;">
@@ -255,22 +163,7 @@
       </p>
 
       <div class="annotated-img">
-        <img src="guide/step4_song_input.png" alt="ステップ4: セットリスト入力">
-        <!-- 曲名 -->
-        <div class="ring" style="top:35%; left:26%; width:48%; height:11%;"></div>
-        <div class="callout" style="top:37%; left:75%;">← 必須</div>
-        <!-- カバー/オリジナル & 尺 -->
-        <div class="ring blue" style="top:49%; left:26%; width:48%; height:10%;"></div>
-        <div class="callout blue" style="top:51%; left:75%;">← カバー/尺</div>
-        <!-- 音源 -->
-        <div class="ring green" style="top:61%; left:26%; width:48%; height:8%;"></div>
-        <div class="callout green" style="top:62%; left:75%;">← 音源</div>
-        <!-- 演出リクエスト -->
-        <div class="ring purple" style="top:72%; left:26%; width:48%; height:16%;"></div>
-        <div class="callout purple" style="top:75%; left:75%;">← 演出リクエスト</div>
-        <!-- 保存ボタン -->
-        <div class="ring" style="top:92.5%; left:43%; width:15%; height:5.5%; border-radius:14px; border-color:#f59e0b; box-shadow:0 0 0 4px rgba(245,158,11,0.2);"></div>
-        <div class="callout orange" style="top:92%; left:5%;">最後に必ず保存 →</div>
+        <img src="guide/step4_annotated.png" alt="ステップ4: セットリスト入力">
       </div>
 
       <div class="warn-box">
@@ -299,22 +192,7 @@
         <h2 style="border-color:#c4b5fd;"><span class="step-num" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">📋</span> 技術資料の各エリア</h2>
 
         <div class="annotated-img">
-          <img src="guide/step5_tech_docs.png" alt="技術資料ページ">
-          <!-- イベント選択 -->
-          <div class="ring blue" style="top:24.5%; left:4.5%; width:91%; height:4.5%;"></div>
-          <div class="callout blue" style="top:19%; left:4.5%;">イベント選択 ↓</div>
-          <!-- エクスポートボタン -->
-          <div class="ring orange" style="top:32%; left:4.5%; width:38%; height:4.5%; border-radius:8px;"></div>
-          <div class="callout orange" style="top:33%; left:44%;">← コピー・印刷</div>
-          <!-- スケジュール情報 -->
-          <div class="ring green" style="top:40%; left:4.5%; width:91%; height:12%;"></div>
-          <div class="callout green" style="top:42%; left:80%;">← スケジュール</div>
-          <!-- サマリー -->
-          <div class="ring purple" style="top:56%; left:4.5%; width:43%; height:4.5%;"></div>
-          <div class="callout purple" style="top:55.5%; left:49%;">← サマリー</div>
-          <!-- タイムテーブル -->
-          <div class="ring" style="top:71.5%; left:4.5%; width:91%; height:18%;"></div>
-          <div class="callout" style="top:64%; left:4.5%;">タイムテーブル ↓</div>
+          <img src="guide/step5_annotated.png" alt="技術資料ページ">
         </div>
 
         <div class="tip-box" style="margin-top:1rem;">

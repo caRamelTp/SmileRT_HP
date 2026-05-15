@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>運営ガイド — SmileRT LIVE Manager</title>
+  <meta name="description" content="SmileRT 管理画面の使い方ガイド — イベント作成からタイムテーブル管理まで">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #f8fafc; }
+    .guide-wrapper { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+    .guide-hero { text-align: center; padding: 3rem 0 2rem; }
+    .guide-hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .guide-hero p { color: #6b7280; font-size: 1.05rem; }
+
+    .guide-section { margin-bottom: 3.5rem; }
+    .guide-section h2 {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 1.4rem; font-weight: 800; margin-bottom: 1.2rem;
+      padding-bottom: 0.6rem; border-bottom: 2px solid #e5e7eb;
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #6d28d9);
+      color: #fff; font-weight: 800; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .guide-desc { color: #374151; font-size: 0.95rem; line-height: 1.7; margin-bottom: 1rem; }
+    .guide-desc strong { color: #1f2937; }
+
+    .annotated-img {
+      width: 100%;
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;
+    }
+    .annotated-img img { width: 100%; display: block; }
+
+    .tip-box {
+      background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+      border: 1px solid #bfdbfe; border-radius: 12px;
+      padding: 1rem 1.2rem; margin-top: 1rem;
+      font-size: 0.88rem; color: #1e40af; line-height: 1.6;
+    }
+    .tip-box::before { content: '💡 '; font-size: 1rem; }
+
+    .warn-box {
+      background: linear-gradient(135deg, #fef3c7, #fff7ed);
+      border: 1px solid #fcd34d; border-radius: 12px;
+      padding: 1rem 1.2rem; margin-top: 1rem;
+      font-size: 0.88rem; color: #92400e; line-height: 1.6;
+    }
+    .warn-box::before { content: '⚠️ '; font-size: 1rem; }
+
+    .guide-divider {
+      height: 2px; background: linear-gradient(90deg, transparent, #d1d5db, transparent);
+      margin: 3rem 0;
+    }
+
+    /* Feature list */
+    .feature-list { list-style: none; padding: 0; margin: 1rem 0; }
+    .feature-list li {
+      padding: 0.6rem 0; border-bottom: 1px solid #f3f4f6;
+      font-size: 0.92rem; color: #374151;
+      display: flex; align-items: flex-start; gap: 0.5rem;
+    }
+    .feature-list li::before { content: '▸'; color: #7c3aed; font-weight: 700; flex-shrink: 0; }
+
+    /* Keyboard shortcut badge */
+    .kbd {
+      display: inline-block; background: #f3f4f6; border: 1px solid #d1d5db;
+      border-radius: 4px; padding: 1px 6px; font-size: 0.78rem;
+      font-family: monospace; color: #374151;
+    }
+
+    @media (max-width: 640px) {
+      .guide-hero h1 { font-size: 1.6rem; }
+      .guide-section h2 { font-size: 1.15rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="site-logo"><span>SmileRT</span></a>
+      <nav class="site-nav">
+        <a href="index.html">ホーム</a>
+        <a href="performer.html">出演者</a>
+        <a href="admin.html">管理</a>
+        <a href="view.html">技術資料</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="guide-wrapper">
+    <!-- Hero -->
+    <div class="guide-hero">
+      <h1>🛠️ 運営ガイド</h1>
+      <p>管理画面の使い方と運営の流れを解説します</p>
+    </div>
+
+    <!-- ===== 全体の流れ ===== -->
+    <h2 style="font-size:1.6rem; font-weight:800; color:#7c3aed; margin-bottom:0.5rem;">
+      📋 イベント運営の流れ
+    </h2>
+    <p class="guide-desc" style="margin-bottom: 2rem;">
+      管理画面では <strong>イベント作成 → 出演者管理 → タイムテーブル編集 → 技術資料出力</strong> の流れで進めます。
+    </p>
+
+    <!-- STEP 1: ログイン & イベント一覧 -->
+    <div class="guide-section">
+      <h2><span class="step-num">1</span> ログイン ＆ イベント一覧</h2>
+      <p class="guide-desc">
+        ナビゲーションの <strong>「管理」</strong> をタップするとパスワード入力画面が表示されます。<br>
+        ログイン後、左側のサイドバーにイベント一覧が表示されます。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/admin_overview.png" alt="管理画面：イベント一覧">
+      </div>
+
+      <ul class="feature-list">
+        <li><strong>「+ 新規」ボタン</strong>でイベントを新規作成できます</li>
+        <li>イベント名をクリックすると詳細画面が開きます</li>
+        <li>各イベントの日付・出演者数が一覧で確認できます</li>
+      </ul>
+
+      <div class="tip-box">
+        イベント作成時に <strong>セトリ締切日時</strong> を設定すると、期限を過ぎた出演者の入力を自動で締め切ります。
+      </div>
+    </div>
+
+    <!-- STEP 2: イベント詳細 & 出演者管理 -->
+    <div class="guide-section">
+      <h2><span class="step-num">2</span> 出演者の管理</h2>
+      <p class="guide-desc">
+        イベントを選択すると、<strong>出演者一覧</strong> タブが表示されます。<br>
+        各出演者の曲名・サイリウムカラー・パーカーサイズなどが一覧で確認できます。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/admin_event_detail.png" alt="管理画面：出演者一覧">
+      </div>
+
+      <ul class="feature-list">
+        <li><strong>「+ 出演者を追加」</strong>で運営側から出演者を追加できます</li>
+        <li><strong>「▼ 詳細」</strong>をクリックすると入力内容の全項目が表示されます</li>
+        <li><strong>「フォーム」</strong>をクリックすると、その出演者の入力フォームが開きます</li>
+        <li><strong>「編集」</strong>で出演者名やプロフィールを直接修正できます</li>
+        <li><strong>「削除」</strong>で出演者を削除できます（取り消し不可）</li>
+      </ul>
+
+      <div class="warn-box">
+        出演者の <strong>「削除」は取り消せません</strong>。セットリストや演出リクエストも全て消えるため、慎重に操作してください。
+      </div>
+    </div>
+
+    <!-- STEP 3: タイムテーブル -->
+    <div class="guide-section">
+      <h2><span class="step-num">3</span> タイムテーブルの編集</h2>
+      <p class="guide-desc">
+        <strong>「タイムテーブル」</strong>タブに切り替えると、全出演者の曲が時系列で一覧表示されます。<br>
+        ここで曲順の入れ替え・休憩の挿入・演出情報の編集が可能です。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/admin_timetable.png" alt="管理画面：タイムテーブル">
+      </div>
+
+      <ul class="feature-list">
+        <li><strong>開演時間</strong>を設定すると、各曲の開始・終了時刻が自動計算されます</li>
+        <li>行左の <strong>⠿ ハンドル</strong> をドラッグして曲順を入れ替えられます</li>
+        <li><strong>「+ 休憩」「+ 交流会」</strong>で特殊スロットを挿入できます</li>
+        <li>各セルを直接クリックして <strong>きっかけ・照明・音響・備考</strong> を編集できます</li>
+        <li><strong>マイク番号</strong>・<strong>カウント</strong>・<strong>Key</strong> もセル内で選択可能です</li>
+        <li><strong>完成音源</strong>のステータスを「未提出 / 受領 / 完了」で管理できます</li>
+      </ul>
+
+      <div class="tip-box">
+        2行をクリックして選択し、<strong>「入れ替える」ボタン</strong>で曲順を一括で入れ替えることもできます。
+      </div>
+    </div>
+
+    <div class="guide-divider"></div>
+
+    <!-- ===== CSV取込 ===== -->
+    <div class="guide-section">
+      <h2 style="border-color:#f59e0b;">
+        <span class="step-num" style="background:linear-gradient(135deg,#f59e0b,#d97706);">📥</span>
+        CSVからの一括取込
+      </h2>
+      <p class="guide-desc">
+        Googleフォームで事前に集めた情報を <strong>CSV形式</strong> で一括取り込みできます。
+      </p>
+      <ul class="feature-list">
+        <li>Googleフォーム → スプレッドシート → <strong>「ファイル → ダウンロード → CSV」</strong> で取得</li>
+        <li>「CSV取込」タブにCSVファイルをドラッグ＆ドロップ</li>
+        <li>取り込み後、出演者とセットリストが自動的に登録されます</li>
+      </ul>
+      <div class="warn-box">
+        CSV取込は <strong>追加</strong> 操作です。既に登録済みの出演者とは重複する可能性があるため、取り込み前に確認してください。
+      </div>
+    </div>
+
+    <div class="guide-divider"></div>
+
+    <!-- ===== 技術資料 ===== -->
+    <div class="guide-section">
+      <h2 style="border-color:#10b981;">
+        <span class="step-num" style="background:linear-gradient(135deg,#10b981,#059669);">📊</span>
+        技術資料の活用
+      </h2>
+      <p class="guide-desc">
+        ナビの <strong>「技術資料」</strong> ページでは、タイムテーブル・スケジュール・出演者情報をまとめて確認・エクスポートできます。
+      </p>
+      <ul class="feature-list">
+        <li><strong>Sheetsにコピー / Excelにコピー</strong> — スプレッドシートに直接貼り付け可能</li>
+        <li><strong>CSV保存</strong> — タイムテーブルをCSVファイルとしてダウンロード</li>
+        <li><strong>印刷</strong> — PA・照明スタッフ向けにプリントアウト</li>
+        <li>当日のスケジュール（会場入り・リハ・開演等）も一覧表示</li>
+      </ul>
+      <div class="tip-box">
+        技術資料ページは <strong>パスワード不要</strong> で誰でもアクセスできます。PA・照明スタッフにURLを共有してください。
+      </div>
+    </div>
+
+    <div class="guide-divider"></div>
+
+    <!-- ===== 出演者への案内 ===== -->
+    <div class="guide-section">
+      <h2 style="border-color:#3b82f6;">
+        <span class="step-num" style="background:linear-gradient(135deg,#3b82f6,#2563eb);">📢</span>
+        出演者への案内
+      </h2>
+      <p class="guide-desc">
+        出演者にセットリストを入力してもらう際は、以下の情報を共有してください。
+      </p>
+      <ul class="feature-list">
+        <li><strong>SmileRTのURL</strong> を共有（ホームページのリンク）</li>
+        <li>出演者は <strong>「出演者」ページ</strong> からイベント選択 → 名前選択 → 入力の流れで完結します</li>
+        <li>詳しい操作手順は <a href="guide.html" style="color:#3b82f6; font-weight:600;">📖 出演者ガイド</a> にまとめてあります</li>
+        <li>出演者ガイドのURLを直接共有するのも効果的です</li>
+      </ul>
+      <div class="tip-box">
+        セトリ締切を設定している場合は、<strong>締切日時も合わせて出演者に伝えてください</strong>。期限を過ぎると入力・修正ができなくなります。
+      </div>
+    </div>
+
+    <div class="guide-divider"></div>
+
+    <!-- ===== Tips ===== -->
+    <div class="guide-section">
+      <h2 style="border-color:#fcd34d;">
+        <span class="step-num" style="background:linear-gradient(135deg,#f59e0b,#d97706);">💡</span>
+        運営のコツ
+      </h2>
+      <div style="display:grid; gap:1rem;">
+        <div class="tip-box">
+          <strong>イベント編集のポイント</strong><br>
+          → イベントヘッダーの「編集」ボタンから、イベント名・日付・会場・開演時間・スケジュール（会場入り・リハ等）を一括設定できます。
+        </div>
+        <div class="tip-box">
+          <strong>出演者の並び順</strong><br>
+          → 出演者一覧の左にある <strong>⠿ ハンドル</strong> をドラッグすると出演順を変更できます。タイムテーブルの曲順にも反映されます。
+        </div>
+        <div class="tip-box">
+          <strong>Discord通知</strong><br>
+          → セットリストが更新されるとDiscordに自動通知が届きます（設定済みの場合）。変更内容を即座に把握できます。
+        </div>
+        <div class="tip-box">
+          <strong>データのバックアップ</strong><br>
+          → 技術資料ページの「CSV保存」で定期的にデータをエクスポートしておくと安心です。
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding:2rem 0; color:#9ca3af; font-size:0.85rem;">
+      SmileRT LIVE Manager — 運営ガイド
+    </div>
+  </div>
+</body>
+</html>
