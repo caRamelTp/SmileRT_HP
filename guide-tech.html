@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>技術資料ガイド — SmileRT LIVE Manager</title>
+  <meta name="description" content="SmileRT 技術資料ページの見方ガイド — PA・照明・会場スタッフ向け">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { background: #f8fafc; }
+    .guide-wrapper { max-width: 900px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+    .guide-hero { text-align: center; padding: 3rem 0 2rem; }
+    .guide-hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .guide-hero p { color: #6b7280; font-size: 1.05rem; }
+
+    .guide-section { margin-bottom: 3.5rem; }
+    .guide-section h2 {
+      display: flex; align-items: center; gap: 0.75rem;
+      font-size: 1.4rem; font-weight: 800; margin-bottom: 1.2rem;
+      padding-bottom: 0.6rem; border-bottom: 2px solid #e5e7eb;
+    }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: #fff; font-weight: 800; font-size: 1.1rem; flex-shrink: 0;
+    }
+    .guide-desc { color: #374151; font-size: 0.95rem; line-height: 1.7; margin-bottom: 1rem; }
+    .guide-desc strong { color: #1f2937; }
+
+    .annotated-img {
+      width: 100%;
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1); border: 1px solid #e5e7eb;
+    }
+    .annotated-img img { width: 100%; display: block; }
+
+    .tip-box {
+      background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+      border: 1px solid #bfdbfe; border-radius: 12px;
+      padding: 1rem 1.2rem; margin-top: 1rem;
+      font-size: 0.88rem; color: #1e40af; line-height: 1.6;
+    }
+    .tip-box::before { content: '💡 '; font-size: 1rem; }
+
+    .warn-box {
+      background: linear-gradient(135deg, #fef3c7, #fff7ed);
+      border: 1px solid #fcd34d; border-radius: 12px;
+      padding: 1rem 1.2rem; margin-top: 1rem;
+      font-size: 0.88rem; color: #92400e; line-height: 1.6;
+    }
+    .warn-box::before { content: '⚠️ '; font-size: 1rem; }
+
+    .guide-divider {
+      height: 2px; background: linear-gradient(90deg, transparent, #d1d5db, transparent);
+      margin: 3rem 0;
+    }
+
+    .feature-list { list-style: none; padding: 0; margin: 1rem 0; }
+    .feature-list li {
+      padding: 0.6rem 0; border-bottom: 1px solid #f3f4f6;
+      font-size: 0.92rem; color: #374151;
+      display: flex; align-items: flex-start; gap: 0.5rem;
+    }
+    .feature-list li::before { content: '▸'; color: #0ea5e9; font-weight: 700; flex-shrink: 0; }
+
+    /* Column table */
+    .col-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 0.8rem; }
+    .col-table th { padding: 8px 12px; text-align: left; border-bottom: 2px solid #d1d5db; background: #f3f4f6; }
+    .col-table td { padding: 6px 12px; border-bottom: 1px solid #e5e7eb; }
+    .col-table td:first-child { font-weight: 600; white-space: nowrap; }
+
+    @media (max-width: 640px) {
+      .guide-hero h1 { font-size: 1.6rem; }
+      .guide-section h2 { font-size: 1.15rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a href="index.html" class="site-logo"><span>SmileRT</span></a>
+      <nav class="site-nav">
+        <a href="index.html">ホーム</a>
+        <a href="performer.html">出演者</a>
+        <a href="admin.html">管理</a>
+        <a href="view.html">技術資料</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="guide-wrapper">
+    <!-- Hero -->
+    <div class="guide-hero">
+      <h1>📊 技術資料ガイド</h1>
+      <p>PA・照明・会場スタッフ向け — 技術資料ページの見方と活用方法</p>
+    </div>
+
+    <!-- ===== 概要 ===== -->
+    <h2 style="font-size:1.6rem; font-weight:800; color:#0284c7; margin-bottom:0.5rem;">
+      🎛️ 技術資料ページとは
+    </h2>
+    <p class="guide-desc" style="margin-bottom: 2rem;">
+      技術資料ページには、イベントの <strong>タイムテーブル・スケジュール・出演者情報</strong> がすべてまとまっています。<br>
+      <strong>パスワード不要</strong> で誰でもアクセスできるので、PA・照明・会場スタッフへのURL共有に最適です。
+    </p>
+
+    <!-- STEP 1: アクセス & イベント選択 -->
+    <div class="guide-section">
+      <h2><span class="step-num">1</span> アクセス ＆ イベント選択</h2>
+      <p class="guide-desc">
+        ナビゲーションの <strong>「技術資料」</strong> をタップするとページが開きます。<br>
+        上部のドロップダウンから <strong>確認したいイベント</strong> を選択してください。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/tech_overview.png" alt="技術資料：イベント選択とスケジュール">
+      </div>
+
+      <div class="tip-box">
+        URLにイベントIDを含めて共有すれば、開いた時点で自動的にそのイベントが選択されます。
+      </div>
+    </div>
+
+    <!-- STEP 2: スケジュール & サマリー -->
+    <div class="guide-section">
+      <h2><span class="step-num">2</span> スケジュール ＆ サマリー</h2>
+      <p class="guide-desc">
+        イベントを選択すると、まず <strong>当日のスケジュール</strong> と <strong>サマリー</strong> が表示されます。
+      </p>
+
+      <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.8rem; margin-top:1.5rem;">📅 スケジュール欄</h3>
+      <table class="col-table">
+        <thead>
+          <tr><th>項目</th><th>内容</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>会場入り</td><td>スタッフの集合時間</td></tr>
+          <tr><td>リハ開始</td><td>リハーサル開始時刻</td></tr>
+          <tr><td>リハ終了</td><td>リハーサル終了時刻</td></tr>
+          <tr><td>顔合わせ</td><td>出演者顔合わせの時刻</td></tr>
+          <tr><td>オープン</td><td>開場時刻（お客さん入場）</td></tr>
+          <tr><td>スタート</td><td>開演時刻（ライブ開始）</td></tr>
+          <tr><td>完全撤収</td><td>撤収完了の目標時刻</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.8rem; margin-top:1.5rem;">📋 サマリー欄</h3>
+      <ul class="feature-list">
+        <li><strong>日付・会場</strong> — イベントの基本情報</li>
+        <li><strong>出演者数</strong> — 登録されている出演者の人数</li>
+        <li><strong>全曲数</strong> — 全出演者の合計曲数</li>
+        <li><strong>総尺</strong> — 全曲の合計時間（休憩含まず）</li>
+      </ul>
+    </div>
+
+    <!-- STEP 3: タイムテーブル -->
+    <div class="guide-section">
+      <h2><span class="step-num">3</span> タイムテーブルの見方</h2>
+      <p class="guide-desc">
+        全出演者の曲が <strong>時系列順</strong> に並んだタイムテーブルです。<br>
+        横スクロールで全列を確認できます。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/tech_timetable.png" alt="技術資料：タイムテーブル">
+      </div>
+
+      <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.8rem; margin-top:1.5rem;">📊 各列の説明</h3>
+      <table class="col-table">
+        <thead>
+          <tr><th>列名</th><th>内容</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>曲順</td><td>全体の通し番号</td></tr>
+          <tr><td>時間</td><td>各曲の開始〜終了時刻（開演時間から自動計算）</td></tr>
+          <tr><td>演者名</td><td>出演者名（サイリウムカラー付き）</td></tr>
+          <tr><td>曲名</td><td>楽曲名</td></tr>
+          <tr><td>プロンプト</td><td>曲の出だし・きっかけの説明</td></tr>
+          <tr><td>きっかけ・照明・音響</td><td>演出リクエスト（照明の色味、音響の要望など）</td></tr>
+          <tr><td>備考・要望</td><td>その他の特記事項</td></tr>
+          <tr><td>マイク</td><td>使用マイク番号</td></tr>
+          <tr><td>カウント</td><td>マイク本数</td></tr>
+          <tr><td>Key</td><td>キー変更がある場合の指定</td></tr>
+          <tr><td>曲尺</td><td>曲の長さ（分:秒）</td></tr>
+          <tr><td>完成音源</td><td>音源の提出ステータス（未提出 / 受領 / 完了）</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        タイムテーブル内の <strong>黄色い行</strong> は「休憩」や「交流会」などの特殊スロットです。
+      </div>
+    </div>
+
+    <!-- STEP 4: 出演者詳細 -->
+    <div class="guide-section">
+      <h2><span class="step-num">4</span> 出演者詳細</h2>
+      <p class="guide-desc">
+        タイムテーブルの下には、各出演者ごとの <strong>詳細カード</strong> が表示されます。<br>
+        出演者個別の情報をまとめて確認したい場合に便利です。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/tech_performer_detail.png" alt="技術資料：出演者詳細カード">
+      </div>
+
+      <ul class="feature-list">
+        <li><strong>出演者名</strong>・サイリウムカラー・パーカーサイズ</li>
+        <li><strong>SNSアカウント</strong>（X / Discord）</li>
+        <li><strong>セットリスト</strong> — 曲名・カバー/オリジナル・尺</li>
+        <li><strong>演出リクエスト</strong> — 照明・音響・きっかけの詳細</li>
+        <li><strong>音源URL</strong> — アップロード済みの音源リンク</li>
+      </ul>
+    </div>
+
+    <div class="guide-divider"></div>
+
+    <!-- ===== エクスポート機能 ===== -->
+    <div class="guide-section">
+      <h2 style="border-color:#10b981;">
+        <span class="step-num" style="background:linear-gradient(135deg,#10b981,#059669);">📤</span>
+        データのエクスポート
+      </h2>
+      <p class="guide-desc">
+        イベントを選択すると表示される <strong>エクスポートボタン</strong> で、データを様々な形式で出力できます。
+      </p>
+
+      <table class="col-table">
+        <thead>
+          <tr><th>ボタン</th><th>用途</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>📋 Sheetsにコピー</td><td>クリップボードにTSV形式でコピー。Google Sheetsにそのまま貼り付け可能</td></tr>
+          <tr><td>📊 Excelにコピー</td><td>クリップボードにHTML表形式でコピー。Excelに書式付きで貼り付け可能</td></tr>
+          <tr><td>📄 CSV保存</td><td>タイムテーブルをCSVファイルとしてダウンロード</td></tr>
+          <tr><td>🖨️ 印刷</td><td>横向きレイアウトで印刷。PA卓や照明卓に置く紙資料として最適</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        印刷時に <strong>「印刷時に出演者詳細を含める」</strong> のチェックボックスで、詳細カードの印刷有無を選択できます。
+      </div>
+    </div>
+
+    <div class="guide-divider"></div>
+
+    <!-- ===== 当日の活用 ===== -->
+    <div class="guide-section">
+      <h2 style="border-color:#f59e0b;">
+        <span class="step-num" style="background:linear-gradient(135deg,#f59e0b,#d97706);">🎤</span>
+        当日の活用イメージ
+      </h2>
+      <div style="display:grid; gap:1rem;">
+        <div class="tip-box">
+          <strong>PA（音響）スタッフ</strong><br>
+          → タイムテーブルの「音源ステータス」「マイク番号」「Key」列を中心にチェック。音源URLから当日使用する音源をダウンロードしておく。
+        </div>
+        <div class="tip-box">
+          <strong>照明スタッフ</strong><br>
+          → 「きっかけ・照明・音響」列の照明リクエストを確認。出演者ごとのサイリウムカラーも参考に。
+        </div>
+        <div class="tip-box">
+          <strong>会場スタッフ</strong><br>
+          → スケジュール欄で会場入り・開場・開演・撤収の時間を確認。サマリーで出演者数・総尺から全体の流れを把握。
+        </div>
+        <div class="tip-box">
+          <strong>主催者（MC）</strong><br>
+          → タイムテーブルで曲順と時間配分を確認。出演者詳細カードでMC紹介用のプロフィール情報を確認。
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-divider"></div>
+
+    <!-- FAQ -->
+    <div class="guide-section">
+      <h2 style="border-color:#fcd34d;">
+        <span class="step-num" style="background:linear-gradient(135deg,#f59e0b,#d97706);">？</span>
+        よくある質問
+      </h2>
+      <div style="display:grid; gap:1rem;">
+        <div class="tip-box">
+          <strong>Q. 技術資料にアクセスするのにパスワードは必要？</strong><br>
+          → いいえ、パスワード不要で誰でもアクセスできます。URLを共有するだけでOKです。
+        </div>
+        <div class="tip-box">
+          <strong>Q. データはリアルタイムで更新される？</strong><br>
+          → はい。出演者がセットリストを変更すると、技術資料にも即座に反映されます。
+        </div>
+        <div class="tip-box">
+          <strong>Q. スマホでも見られる？</strong><br>
+          → はい。タイムテーブルは横スクロールで全列を確認できます。印刷はPC推奨です。
+        </div>
+        <div class="tip-box">
+          <strong>Q. 印刷時にテーブルが見切れる</strong><br>
+          → 自動的に横向き・縮小印刷されます。PCのブラウザから印刷すると最も綺麗に出力されます。
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center; padding:2rem 0; color:#9ca3af; font-size:0.85rem;">
+      SmileRT LIVE Manager — 技術資料ガイド
+    </div>
+  </div>
+</body>
+</html>
