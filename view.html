@@ -240,16 +240,37 @@
 
             @page {
                 size: landscape;
-                margin: 0.8cm;
+                margin: 0.6cm;
             }
 
+            /* ===== 非表示要素 ===== */
             .site-header,
             .event-selector,
-            .no-print {
-                display: none !important
+            .no-print,
+            .export-btns,
+            #printOptions {
+                display: none !important;
             }
 
-            /* Force all text to dark colors */
+            /* body::before 疑似要素を完全除去（変な線の原因） */
+            body::before,
+            body::after {
+                content: none !important;
+                display: none !important;
+            }
+
+            /* glass系の疑似要素による装飾線を除去 */
+            .glass-card::before,
+            .glass-card::after,
+            .page-wrapper::before,
+            .page-wrapper::after,
+            .site-header::before,
+            .site-header::after {
+                content: none !important;
+                display: none !important;
+            }
+
+            /* ===== 全テキスト黒色化 ===== */
             body,
             .page-wrapper,
             .container,
@@ -260,50 +281,43 @@
             th,
             label,
             strong,
-            a {
+            h1, h2, h3, h4, h5, h6 {
                 color: #000 !important;
                 -webkit-text-fill-color: #000 !important;
             }
 
-            body::before {
-                display: none !important;
-            }
-
+            /* ===== タイトル ===== */
             .view-header h1,
             .text-gradient {
-                font-size: 1.5rem;
+                font-size: 1.2rem !important;
                 -webkit-text-fill-color: #000 !important;
                 background: none !important;
                 color: #000 !important;
+                margin-bottom: 0.3rem !important;
             }
 
-            /* Schedule info */
-            .schedule-info {
-                background: #f5f5f5 !important;
-                border: 1px solid #ccc !important;
-                backdrop-filter: none !important;
-                -webkit-backdrop-filter: none !important;
+            .view-header {
+                padding: 0.3cm 0 0.2cm !important;
             }
 
-            .schedule-info .si,
-            .schedule-info .si-label {
-                color: #333 !important;
-                -webkit-text-fill-color: #333 !important;
-            }
-
-            .schedule-info .si-time {
-                color: #000 !important;
-                -webkit-text-fill-color: #000 !important;
-            }
-
-            /* Layout — force full width */
-            body {
+            /* ===== レイアウト — 幅制御 ===== */
+            html, body {
                 width: 100% !important;
                 max-width: none !important;
                 overflow: visible !important;
+                background: #fff !important;
             }
 
-            .page-wrapper,
+            .page-wrapper {
+                max-width: none !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                min-height: auto !important;
+                padding-bottom: 0 !important;
+            }
+
             .container {
                 max-width: none !important;
                 width: 100% !important;
@@ -312,26 +326,85 @@
                 overflow: visible !important;
             }
 
-            /* Timetable — force fit on page */
+            /* ===== Glassmorphism 完全除去 ===== */
+            .glass-card,
+            .detail-card,
+            .schedule-info,
             .tt-wrap {
-                border: 1px solid #ccc !important;
-                background: #fff !important;
                 backdrop-filter: none !important;
                 -webkit-backdrop-filter: none !important;
+                box-shadow: none !important;
+                background: #fff !important;
+            }
+
+            /* ===== スケジュール情報 ===== */
+            .schedule-info {
+                background: #f5f5f5 !important;
+                border: 1px solid #bbb !important;
+                border-radius: 0 !important;
+                margin-bottom: 0.3cm !important;
+                padding: 0.2cm 0.3cm !important;
+            }
+
+            .schedule-info .si,
+            .schedule-info .si-label {
+                color: #333 !important;
+                -webkit-text-fill-color: #333 !important;
+                font-size: 7pt !important;
+            }
+
+            .schedule-info .si-time {
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
+            }
+
+            /* ===== サマリーバー ===== */
+            .summary-bar {
+                margin: 0.15cm 0 0.2cm !important;
+            }
+
+            .summary-bar .si,
+            .summary-bar .si span {
+                color: #333 !important;
+                -webkit-text-fill-color: #333 !important;
+                font-size: 7.5pt !important;
+            }
+
+            .summary-bar .si strong {
+                color: #000 !important;
+                -webkit-text-fill-color: #000 !important;
+            }
+
+            /* ===== タイムテーブル セクション ===== */
+            #timetableSection {
+                break-after: auto !important;
+                page-break-after: auto !important;
+            }
+
+            #timetableSection h2 {
+                font-size: 10pt !important;
+                margin-bottom: 0.15cm !important;
+            }
+
+            .tt-wrap {
+                border: 1px solid #999 !important;
+                border-radius: 0 !important;
                 overflow: visible !important;
                 max-width: none !important;
                 width: 100% !important;
-                border-radius: 0 !important;
             }
 
             .tt-wrap table {
                 min-width: 0 !important;
                 width: 100% !important;
                 table-layout: auto !important;
-                font-size: 6.5pt !important;
+                font-size: 6pt !important;
+                border-collapse: collapse !important;
+                /* transform は JS で制御しない — CSS で幅を制御 */
+                transform: none !important;
             }
 
-            /* Force nowrap off on ALL cells (override inline styles too) */
+            /* セル: 折り返し許可 + コンパクト化 */
             .tt-wrap thead th,
             .tt-wrap thead th[style],
             .tt-wrap tbody td,
@@ -339,33 +412,39 @@
                 white-space: normal !important;
                 word-break: break-word !important;
                 overflow-wrap: break-word !important;
+                overflow: visible !important;
             }
 
             .tt-wrap thead th {
-                background: #eee !important;
+                background: #e8e8e8 !important;
                 color: #333 !important;
                 -webkit-text-fill-color: #333 !important;
-                border-bottom: 2px solid #333 !important;
-                border-left: 1px solid #ccc !important;
-                font-size: 6pt !important;
+                border-bottom: 1.5px solid #333 !important;
+                border-left: 1px solid #bbb !important;
+                font-size: 5.5pt !important;
                 padding: 1px 2px !important;
+                position: static !important;
+            }
+
+            .tt-wrap thead th:first-child {
+                border-left: none !important;
             }
 
             .tt-wrap tbody td {
                 color: #000 !important;
                 -webkit-text-fill-color: #000 !important;
-                border-color: #ddd !important;
-                border-left: 1px solid #ddd !important;
-                font-size: 6.5pt !important;
+                border-bottom: 1px solid #ccc !important;
+                border-left: 1px solid #ccc !important;
+                font-size: 6pt !important;
                 padding: 1px 2px !important;
+                line-height: 1.3 !important;
             }
 
-            /* Scale down table to fit — applied via JS class */
-            .tt-wrap.print-scaled {
-                transform-origin: top left;
+            .tt-wrap tbody td:first-child {
+                border-left: none !important;
             }
 
-            /* Override inline styles with color */
+            /* インラインスタイルの色を上書き */
             .tt-wrap tbody td[style],
             .tt-wrap tbody td div,
             .tt-wrap tbody td span {
@@ -374,10 +453,10 @@
             }
 
             .tt-wrap tbody tr:hover {
-                background: transparent !important
+                background: transparent !important;
             }
 
-            /* Special rows (break/exchange) */
+            /* 特殊行（休憩・交流会） */
             .tt-wrap tbody tr.special-row {
                 background: #f5f5dc !important;
             }
@@ -388,7 +467,13 @@
                 -webkit-text-fill-color: #8B6914 !important;
             }
 
-            /* Audio status */
+            /* 列グループ境界 */
+            .tt-wrap thead th.col-group-start,
+            .tt-wrap tbody td.col-group-start {
+                border-left: 1.5px solid #888 !important;
+            }
+
+            /* ===== 音源ステータス ===== */
             .audio-done {
                 color: #166534 !important;
                 -webkit-text-fill-color: #166534 !important;
@@ -399,7 +484,7 @@
                 -webkit-text-fill-color: #92400e !important;
             }
 
-            /* Badges */
+            /* ===== バッジ ===== */
             .badge {
                 border: 1px solid #999 !important;
                 color: #333 !important;
@@ -431,21 +516,83 @@
                 border-color: #92400e !important;
             }
 
-            /* Detail cards */
+            /* ===== カラースウォッチ ===== */
+            .color-swatch {
+                border: 2px solid #333 !important;
+                print-color-adjust: exact !important;
+                -webkit-print-color-adjust: exact !important;
+            }
+
+            /* ===== リンク ===== */
+            a {
+                color: #1e40af !important;
+                -webkit-text-fill-color: #1e40af !important;
+                text-decoration: underline !important;
+            }
+
+            /* ===== 出演者詳細を非表示にするオプション ===== */
+            .hide-on-print {
+                display: none !important;
+            }
+
+            /* ===== 出演者詳細セクション ===== */
+            /* タイムテーブルと出演者詳細の間で必ず改ページ */
+            #detailSection {
+                break-before: page !important;
+                page-break-before: always !important;
+            }
+
+            #detailSection h2 {
+                font-size: 10pt !important;
+                margin-bottom: 0.15cm !important;
+                margin-top: 0 !important;
+            }
+
+            /* 1カラム化 */
+            .detail-grid {
+                display: block !important;
+                columns: 1 !important;
+            }
+
+            /* カード */
             .detail-card,
             .glass-card {
-                border: 1px solid #ccc !important;
+                border: 1px solid #bbb !important;
                 background: #fff !important;
-                backdrop-filter: none !important;
-                -webkit-backdrop-filter: none !important;
                 box-shadow: none !important;
-                break-inside: avoid
+                border-radius: 0 !important;
+                padding: 4px 6px !important;
+                font-size: 7pt !important;
+                margin-bottom: 4px !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                -webkit-column-break-inside: avoid !important;
+                overflow: visible !important;
             }
 
             .detail-card .card-header,
             .detail-card .card-header div {
                 color: #000 !important;
                 -webkit-text-fill-color: #000 !important;
+            }
+
+            .detail-card .card-header {
+                padding-bottom: 3px !important;
+                margin-bottom: 4px !important;
+                gap: 4px !important;
+            }
+
+            .detail-card .card-header .order-badge {
+                width: 20px !important;
+                height: 20px !important;
+                font-size: 8pt !important;
+                background: #333 !important;
+                color: #fff !important;
+                -webkit-text-fill-color: #fff !important;
+            }
+
+            .detail-card .card-header div[style*="font-size:1.1rem"] {
+                font-size: 8pt !important;
             }
 
             .detail-card .song-item,
@@ -456,118 +603,45 @@
                 -webkit-text-fill-color: #000 !important;
             }
 
+            .detail-card .song-item {
+                padding: 1px 0 !important;
+                font-size: 6.5pt !important;
+                gap: 3px !important;
+            }
+
+            .detail-card .song-item strong {
+                font-size: 7pt !important;
+            }
+
             .detail-card .s-num {
+                width: 14px !important;
+                height: 14px !important;
+                font-size: 5.5pt !important;
                 background: #eee !important;
                 color: #333 !important;
                 -webkit-text-fill-color: #333 !important;
             }
 
-            .order-badge {
-                background: #333 !important;
-                color: #fff !important;
-                -webkit-text-fill-color: #fff !important;
-            }
-
-            .color-swatch {
-                border: 2px solid #333 !important;
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-            }
-
-            /* Summary bar */
-            .summary-bar .si,
-            .summary-bar .si span {
-                color: #333 !important;
-                -webkit-text-fill-color: #333 !important;
-            }
-
-            .summary-bar .si strong {
-                color: #000 !important;
-                -webkit-text-fill-color: #000 !important;
-            }
-
-            /* Column group borders */
-            .tt-wrap thead th.col-group-start,
-            .tt-wrap tbody td.col-group-start {
-                border-left: 2px solid #999 !important;
-            }
-
-            /* Tech requests */
+            /* テクリクエスト */
             .detail-card div[style*="border-top"] p {
                 color: #333 !important;
                 -webkit-text-fill-color: #333 !important;
             }
 
-            /* Links */
-            a {
-                color: #1e40af !important;
-                -webkit-text-fill-color: #1e40af !important;
-                text-decoration: underline !important;
+            /* ===== ページ分割制御 ===== */
+            /* タイムテーブルのテーブル内で改ページしない */
+            .tt-wrap,
+            .tt-wrap table,
+            .tt-wrap thead,
+            .tt-wrap tbody {
+                break-inside: auto !important;
+                page-break-inside: auto !important;
             }
 
-            /* Hide detail section when user opts out */
-            .hide-on-print {
-                display: none !important;
-            }
-
-            /* Detail grid — single column for reliable page breaks */
-            .detail-grid {
-                display: block !important;
-                columns: 1 !important;
-            }
-
-            .detail-card {
-                padding: 6px 8px !important;
-                font-size: 7.5pt !important;
-                margin-bottom: 6px !important;
+            /* テーブル行の途中で切れないようにする */
+            .tt-wrap tbody tr {
                 break-inside: avoid !important;
                 page-break-inside: avoid !important;
-                -webkit-column-break-inside: avoid !important;
-                break-before: auto !important;
-                overflow: visible !important;
-            }
-
-            .detail-card .card-header {
-                padding-bottom: 4px !important;
-                margin-bottom: 6px !important;
-                gap: 6px !important;
-            }
-
-            .detail-card .card-header .order-badge {
-                width: 24px !important;
-                height: 24px !important;
-                font-size: 9pt !important;
-            }
-
-            .detail-card .card-header div[style*="font-size:1.1rem"] {
-                font-size: 9pt !important;
-            }
-
-            .detail-card .song-item {
-                padding: 2px 0 !important;
-                font-size: 7pt !important;
-                gap: 4px !important;
-            }
-
-            .detail-card .song-item strong {
-                font-size: 7.5pt !important;
-            }
-
-            .detail-card .s-num {
-                width: 16px !important;
-                height: 16px !important;
-                font-size: 6pt !important;
-            }
-
-            /* タイムテーブル後に改ページしてから出演者詳細を開始 */
-            #detailSection {
-                break-before: page !important;
-                page-break-before: always !important;
-            }
-
-            #detailSection h2 {
-                font-size: 11pt !important;
-                margin-bottom: 6px !important;
             }
         }
     </style>
@@ -788,57 +862,23 @@
                 detailSection.classList.remove('hide-on-print');
             }
 
-            // テーブルを用紙幅にフィットさせる（モバイル対策）
+            // テーブルのstickyヘッダーを印刷前に無効化（レイアウト崩れ防止）
             const wrap = document.getElementById('ttWrap');
             const table = wrap?.querySelector('table');
             if (table) {
-                // リセット
-                table.style.transform = '';
-                table.style.width = '';
-                wrap.style.height = '';
-
-                // テーブルの実際の幅を取得するため一時的にmin-width解除
-                const origMinWidth = table.style.minWidth;
                 table.style.minWidth = '0';
-                table.style.width = 'max-content';
-
-                requestAnimationFrame(() => {
-                    const tableW = table.scrollWidth || table.offsetWidth;
-                    // 横向き印刷の用紙幅を想定（A4横 ≒ 277mm - margins ≒ 960px相当）
-                    // 実際のビュー幅も考慮
-                    const pageW = Math.max(document.documentElement.clientWidth, 900);
-                    
-                    if (tableW > pageW) {
-                        const scale = pageW / tableW;
-                        table.style.transform = `scale(${scale})`;
-                        table.style.transformOrigin = 'top left';
-                        table.style.width = `${tableW}px`;
-                        // ラッパーの高さを調整（縮小後のテーブル高さ）
-                        wrap.style.height = (table.offsetHeight * scale) + 'px';
-                        wrap.style.width = (tableW * scale) + 'px';
-                        wrap.style.overflow = 'visible';
-                    } else {
-                        table.style.width = '100%';
-                    }
-                    table.style.minWidth = '0';
-
-                    setTimeout(() => {
-                        window.print();
-                        // 印刷後にリセット
-                        setTimeout(() => {
-                            table.style.transform = '';
-                            table.style.transformOrigin = '';
-                            table.style.width = '';
-                            table.style.minWidth = origMinWidth;
-                            wrap.style.height = '';
-                            wrap.style.width = '';
-                            wrap.style.overflow = '';
-                        }, 500);
-                    }, 200);
-                });
-            } else {
-                setTimeout(() => window.print(), 100);
             }
+
+            // 少し遅延して印刷ダイアログを表示（DOM更新待ち）
+            setTimeout(() => {
+                window.print();
+                // 印刷後にリセット
+                setTimeout(() => {
+                    if (table) {
+                        table.style.minWidth = '';
+                    }
+                }, 500);
+            }, 150);
         }
     </script>
 </body>
