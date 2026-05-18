@@ -333,6 +333,13 @@
 
         function renderEventList() {
             const events = db.getEvents();
+            // 開催日時が近い順にソート（昇順）
+            events.sort((a, b) => {
+                if (a.date && b.date) return new Date(a.date) - new Date(b.date);
+                if (a.date) return -1;
+                if (b.date) return 1;
+                return 0;
+            });
             const grid = document.getElementById('eventPickGrid');
             const empty = document.getElementById('noEvents');
             if (!events.length) { grid.style.display = 'none'; empty.style.display = ''; return; }

@@ -171,8 +171,10 @@
       document.getElementById('performerCount').textContent = totalPerformers;
       document.getElementById('songCount').textContent = totalSongs;
 
-      // Next event
-      const upcoming = events.find(e => e.date && new Date(e.date) >= new Date(new Date().toDateString()));
+      // Next event — 一番開催日時が近いものを表示
+      const upcomingList = events.filter(e => e.date && new Date(e.date) >= new Date(new Date().toDateString()));
+      upcomingList.sort((a, b) => new Date(a.date) - new Date(b.date));
+      const upcoming = upcomingList[0] || null;
       if (upcoming) {
         document.getElementById('nextEvent').textContent = upcoming.title || '無題のイベント';
         document.getElementById('nextEventDate').textContent = upcoming.date;
