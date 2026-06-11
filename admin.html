@@ -753,6 +753,58 @@
             pointer-events: none;
         }
 
+        /* Override badge */
+        .override-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            background: rgba(251, 191, 36, 0.15);
+            color: #d97706;
+            white-space: nowrap;
+        }
+
+        .override-badge.expired {
+            background: rgba(156, 163, 175, 0.15);
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .override-btn {
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: var(--font-sans);
+            font-weight: 600;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .override-btn:hover {
+            border-color: #d97706;
+            color: #d97706;
+            background: rgba(251, 191, 36, 0.08);
+        }
+
+        .override-btn.active {
+            border-color: #d97706;
+            background: rgba(251, 191, 36, 0.15);
+            color: #d97706;
+        }
+
+        .override-btn.active:hover {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
         /* Dark theme overrides */
         [data-theme="dark"] .auth-overlay {
             background: rgba(0, 0, 0, 0.92);
@@ -1137,6 +1189,7 @@
               ${ev.venue ? `<span>${escHtml(ev.venue)}</span>` : ''}
               <span>${ev.performers.length}人</span>
               ${ev.setlistDeadline ? `<span style="font-weight:600;color:${isSetlistOpen(ev) ? 'var(--accent-green)' : 'var(--accent-red)'}">${isSetlistOpen(ev) ? '🟢 セトリ受付中' : '🔴 セトリ受付終了'} (〜${formatDeadline(ev.setlistDeadline)})</span>` : '<span style="color:var(--text-muted)">セトリ期限: なし</span>'}
+              ${!isSetlistOpen(ev) && ev.setlistOverrides && ev.setlistOverrides.length ? (() => { const active = ev.setlistOverrides.filter(o => !o.deadline || new Date(o.deadline) > new Date()); return active.length ? `<span class="override-badge">🔓 個別許可: ${active.length}名</span>` : ''; })() : ''}
             </div>
             ${ev.notes ? `<div class="mt-sm text-muted" style="font-size:0.82rem">${escHtml(ev.notes)}</div>` : ''}
           </div>
@@ -1174,6 +1227,14 @@
             <div class="performer-songs">${p.songs.length ? p.songs.map(s => s.title || '曲名未入力').join(' / ') : '曲なし'}${p.hoodie ? ` | ${escHtml(p.hoodie)}` : ''}</div>
           </div>
           <div class="performer-actions">
+            ${(!isSetlistOpen(ev) && ev.setlistDeadline) ? (() => {
+              const ov = getSetlistOverride(ev, p.id);
+              const isActive = ov && (!ov.deadline || new Date(ov.deadline) > new Date());
+              const isExpired = ov && ov.deadline && new Date(ov.deadline) <= new Date();
+              if (isActive) return `<span class="override-badge">🔓 変更許可中 〜${formatDeadline(ov.deadline)}</span><button class="override-btn active" onclick="event.stopPropagation();revokeSetlistOverride('${p.id}')" title="変更許可を取り消す">取消</button>`;
+              if (isExpired) return `<span class="override-badge expired">期限切れ</span><button class="override-btn" onclick="event.stopPropagation();showOverrideModal('${p.id}','${escHtml(p.name)}')" title="セトリ変更を許可">🔓 変更許可</button>`;
+              return `<button class="override-btn" onclick="event.stopPropagation();showOverrideModal('${p.id}','${escHtml(p.name)}')" title="セトリ変更を許可">🔓 変更許可</button>`;
+            })() : ''}
             <button class="performer-detail-toggle" onclick="event.stopPropagation();togglePerformerDetail('${p.id}')">▼ 詳細</button>
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();window.open('input.html?event=${currentEventId}&performer=${p.id}','_blank')">フォーム</button>
             <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showEditPerformerModal('${p.id}')">編集</button>
@@ -1218,6 +1279,68 @@
         }
 
         function delPerformer(id) { if (!confirm('削除しますか？')) return; db.deletePerformer(currentEventId, id); renderEventDetail(); }
+
+        // === SETLIST OVERRIDE (個別セトリ変更許可) ===
+        function showOverrideModal(performerId, performerName) {
+            // デフォルトの期限を3日後に設定
+            const defaultDeadline = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+            const defaultVal = defaultDeadline.getFullYear() + '-'
+              + (defaultDeadline.getMonth()+1).toString().padStart(2,'0') + '-'
+              + defaultDeadline.getDate().toString().padStart(2,'0') + 'T'
+              + defaultDeadline.getHours().toString().padStart(2,'0') + ':'
+              + defaultDeadline.getMinutes().toString().padStart(2,'0');
+            const html = `
+              <div style="text-align:center;padding:var(--space-lg)">
+                <div style="font-size:1.5rem;margin-bottom:var(--space-sm)">🔓</div>
+                <h3 style="margin-bottom:var(--space-xs)">${escHtml(performerName)} にセトリ変更を許可</h3>
+                <p class="text-muted" style="font-size:0.85rem;margin-bottom:var(--space-xl)">受付期限後でもセットリストの変更が可能になります</p>
+                <div class="form-group" style="max-width:300px;margin:0 auto var(--space-lg)">
+                  <label class="form-label">変更許可の期限</label>
+                  <input type="datetime-local" class="form-input" id="overrideDeadlineInput" value="${defaultVal}">
+                  <p class="text-muted" style="font-size:0.72rem;margin-top:4px">この日時を過ぎると再び変更不可になります</p>
+                </div>
+                <div class="flex gap-sm justify-center">
+                  <button class="btn btn-ghost" onclick="closeModal('overrideModal')">キャンセル</button>
+                  <button class="btn btn-primary" onclick="applySetlistOverride('${performerId}')">許可する</button>
+                </div>
+              </div>`;
+            // Create or reuse modal
+            let modal = document.getElementById('overrideModal');
+            if (!modal) {
+              modal = document.createElement('div');
+              modal.className = 'modal-overlay';
+              modal.id = 'overrideModal';
+              modal.innerHTML = `<div class="modal" style="max-width:440px"></div>`;
+              document.body.appendChild(modal);
+            }
+            modal.querySelector('.modal').innerHTML = html;
+            openModal('overrideModal');
+        }
+
+        function applySetlistOverride(performerId) {
+            const ev = db.getEvent(currentEventId);
+            if (!ev) return;
+            if (!ev.setlistOverrides) ev.setlistOverrides = [];
+            const deadline = document.getElementById('overrideDeadlineInput').value;
+            // Remove existing override for this performer
+            ev.setlistOverrides = ev.setlistOverrides.filter(o => o.performerId !== performerId);
+            ev.setlistOverrides.push({ performerId, deadline });
+            db.saveEvent(ev);
+            closeModal('overrideModal');
+            renderEventDetail();
+            showToast('セトリ変更を許可しました', 'success');
+        }
+
+        function revokeSetlistOverride(performerId) {
+            if (!confirm('セトリ変更許可を取り消しますか？')) return;
+            const ev = db.getEvent(currentEventId);
+            if (!ev) return;
+            if (!ev.setlistOverrides) return;
+            ev.setlistOverrides = ev.setlistOverrides.filter(o => o.performerId !== performerId);
+            db.saveEvent(ev);
+            renderEventDetail();
+            showToast('変更許可を取り消しました', 'info');
+        }
 
         // Drag & Drop
         let dragPid = null;

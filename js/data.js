@@ -219,6 +219,7 @@ function createEvent(overrides = {}) {
     venue: '',
     startTime: '17:00',
     setlistDeadline: '',      // セトリ受付期限 (ISO datetime-local 形式)
+    setlistOverrides: [],     // 個別セトリ変更許可 [{ performerId, deadline }]
     schedule: {
       venueEntry: '',         // 会場入り
       rehearsalStart: '',     // リハ開始
@@ -338,6 +339,7 @@ class SmileRTDatabase {
     if (!Array.isArray(e.performers)) e.performers = e.performers ? Object.values(e.performers) : [];
     if (!Array.isArray(e.specialSlots)) e.specialSlots = e.specialSlots ? Object.values(e.specialSlots) : [];
     if (!Array.isArray(e.timetableOrder)) e.timetableOrder = e.timetableOrder ? Object.values(e.timetableOrder) : [];
+    if (!Array.isArray(e.setlistOverrides)) e.setlistOverrides = e.setlistOverrides ? Object.values(e.setlistOverrides) : [];
     e.performers.forEach(p => {
       if (!Array.isArray(p.songs)) p.songs = p.songs ? Object.values(p.songs) : [];
     });
@@ -968,6 +970,29 @@ document.addEventListener('keydown', e => {
 function isSetlistOpen(event) {
   if (!event || !event.setlistDeadline) return true;
   return new Date(event.setlistDeadline) > new Date();
+}
+
+// Returns true if setlist is open for a specific performer (global deadline OR individual override)
+function isSetlistOpenFor(event, performerId) {
+  if (isSetlistOpen(event)) return true;
+  if (!performerId || !event.setlistOverrides) return false;
+  const override = event.setlistOverrides.find(o => o.performerId === performerId);
+  if (!override) return false;
+  // If override has a deadline, check it; if no deadline, always open
+  if (!override.deadline) return true;
+  return new Date(override.deadline) > new Date();
+}
+
+// Returns true if the event has any active overrides (for UI display)
+function hasActiveOverrides(event) {
+  if (!event || !event.setlistOverrides || !event.setlistOverrides.length) return false;
+  return event.setlistOverrides.some(o => !o.deadline || new Date(o.deadline) > new Date());
+}
+
+// Get the override entry for a specific performer
+function getSetlistOverride(event, performerId) {
+  if (!event || !event.setlistOverrides) return null;
+  return event.setlistOverrides.find(o => o.performerId === performerId) || null;
 }
 
 // Format deadline for display

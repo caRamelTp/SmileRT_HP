@@ -267,6 +267,23 @@
             if (!eventId) return;
             const ev = db.getEvent(eventId);
             if (!ev || isSetlistOpen(ev)) return;
+            // 個別許可チェック
+            if (performerId && isSetlistOpenFor(ev, performerId)) {
+                // 個別許可されている — 許可バナーを表示
+                const override = getSetlistOverride(ev, performerId);
+                const banner = document.createElement('div');
+                banner.className = 'deadline-closed-banner';
+                banner.style.background = 'rgba(251, 191, 36, 0.12)';
+                banner.style.borderColor = 'rgba(251, 191, 36, 0.3)';
+                banner.innerHTML = `
+                    <div class="banner-icon">🔓</div>
+                    <div class="banner-title" style="color:#d97706">管理者によりセトリ変更が許可されています</div>
+                    <div class="banner-desc">${override && override.deadline ? `変更期限: ${formatDeadline(override.deadline)}` : '期限なし'}</div>
+                `;
+                const header = document.querySelector('.performer-header');
+                header.parentNode.insertBefore(banner, header.nextSibling);
+                return; // フォームは有効のまま
+            }
             // 受付終了 — フォームを無効化
             const banner = document.createElement('div');
             banner.className = 'deadline-closed-banner';
@@ -354,7 +371,7 @@
             // 期限チェック
             if (eventId) {
                 const ev = db.getEvent(eventId);
-                if (ev && !isSetlistOpen(ev)) {
+                if (ev && !isSetlistOpenFor(ev, performerId)) {
                     showToast('セトリ受付は終了しました', 'error');
                     return;
                 }

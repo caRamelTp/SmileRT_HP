@@ -348,20 +348,22 @@
                 const pCount = e.performers.length;
                 const sCount = e.performers.reduce((sum, p) => sum + p.songs.length, 0);
                 const open = isSetlistOpen(e);
+                const hasOverrides = !open && hasActiveOverrides(e);
                 const deadlineInfo = e.setlistDeadline
                     ? (open
                         ? `<span class="deadline-badge open">受付中 〜${formatDeadline(e.setlistDeadline)}</span>`
                         : `<span class="deadline-badge closed">受付終了</span>`)
                     : '';
+                const clickable = open || hasOverrides;
                 return `
-          <div class="event-pick ${open ? '' : 'closed'}" onclick="${open ? `selectEvent('${e.id}')` : `showToast('セトリ受付は終了しました', 'error')`}">
-            <div class="ev-emoji" style="font-size:1.5rem;font-weight:800;color:${open ? 'var(--accent-blue)' : 'var(--text-muted)'}">Live</div>
+          <div class="event-pick ${clickable ? '' : 'closed'}" onclick="${clickable ? `selectEvent('${e.id}')` : `showToast('セトリ受付は終了しました', 'error')`}">
+            <div class="ev-emoji" style="font-size:1.5rem;font-weight:800;color:${clickable ? 'var(--accent-blue)' : 'var(--text-muted)'}">Live</div>
             <div style="flex:1;min-width:0">
               <div class="ev-title">${escHtml(e.title || '無題')}</div>
               <div class="ev-meta">${e.date || '日付未定'} · ${pCount}人 · ${sCount}曲${e.venue ? ' · ' + escHtml(e.venue) : ''}</div>
               ${deadlineInfo}
             </div>
-            <span style="font-size:1.2rem;color:var(--text-muted)">${open ? '→' : '×'}</span>
+            <span style="font-size:1.2rem;color:var(--text-muted)">${clickable ? '→' : '×'}</span>
           </div>`;
             }).join('');
         }
@@ -371,7 +373,7 @@
             const ev = db.getEvent(eventId);
             if (!ev) return;
             // 期限チェック
-            if (!isSetlistOpen(ev)) {
+            if (!isSetlistOpen(ev) && !hasActiveOverrides(ev)) {
                 showToast('セトリ受付は終了しました', 'error');
                 selectedEventId = null;
                 return;
@@ -401,6 +403,7 @@
 
         function renderPerformerList(ev) {
             const list = document.getElementById('performerPickList');
+            const globalOpen = isSetlistOpen(ev);
             if (!ev.performers.length) {
                 list.innerHTML = `
           <div class="glass-card" style="text-align:center;padding:var(--space-2xl)">
@@ -410,16 +413,22 @@
           </div>`;
                 return;
             }
-            list.innerHTML = ev.performers.map((p, i) => `
-        <div class="performer-pick" onclick="goToInput('${p.id}')">
+            list.innerHTML = ev.performers.map((p, i) => {
+                const canEdit = globalOpen || isSetlistOpenFor(ev, p.id);
+                return `
+        <div class="performer-pick ${canEdit ? '' : 'closed'}" onclick="${canEdit ? `goToInput('${p.id}')` : `showToast('この出演者のセトリ変更は許可されていません', 'error')`}" style="${canEdit ? '' : 'opacity:0.45;cursor:not-allowed;'}">
           <span class="p-order">${i + 1}</span>
           ${p.cyalumeColor ? `<span class="color-swatch" style="background:${p.cyalumeColor}"></span>` : ''}
           <div style="flex:1;min-width:0">
             <div class="p-name">${escHtml(p.name || '未入力')}</div>
             <div class="p-songs">${p.songs.length ? p.songs.map(s => s.title || '曲名未入力').join(' / ') : '曲なし'}</div>
           </div>
-          <span class="p-arrow">→</span>
-        </div>`).join('');
+          <span class="p-arrow">${canEdit ? '→' : '×'}</span>
+        </div>`;
+            }).join('');
+            // 受付終了の場合は新規登録ボタンを非表示
+            const newBtn = document.querySelector('.new-register-btn');
+            if (newBtn) newBtn.style.display = globalOpen ? '' : 'none';
         }
 
         function goToInput(performerId) {
