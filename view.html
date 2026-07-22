@@ -861,34 +861,30 @@
             const timeline = db.calculateTimetable(ev), wrap = document.getElementById('ttWrap');
             if (!timeline.length) { wrap.innerHTML = '<p class="text-muted text-center" style="padding:var(--space-lg)">データなし</p>'; return; }
 
-            // リハーサル開始時間の取得と経過時間計算
-            const rehearsalStart = ev.schedule && ev.schedule.rehearsalStart ? parseTime(ev.schedule.rehearsalStart) : null;
+            // リハーサル開始時間の有無を確認（トグル表示制御用）
+            const rehearsalStart = ev.schedule && ev.schedule.rehearsalStart ? ev.schedule.rehearsalStart : null;
             const toggleBtn = document.getElementById('rehearsalToggle');
             toggleBtn.style.display = rehearsalStart ? '' : 'none';
             if (!rehearsalStart) showRehearsalTime = false;
             toggleBtn.classList.toggle('active', showRehearsalTime);
 
-            function calcRehearsalElapsed(timeStr) {
-                if (!rehearsalStart || !timeStr) return '';
-                const t = parseTime(timeStr);
-                if (!t) return '';
-                const diffMs = t.getTime() - rehearsalStart.getTime();
-                const diffMin = Math.floor(diffMs / 60000);
-                if (diffMin < 0) return '';
-                const h = Math.floor(diffMin / 60);
-                const m = diffMin % 60;
-                return `${h}:${m.toString().padStart(2, '0')}`;
-            }
-
             const rCol = showRehearsalTime;
             const rTh = rCol ? '<th class="col-rehearsal">リハ経過</th>' : '';
+
+            // 曲尺累積でリハ経過時間を計算
+            let rehearsalElapsedSec = 0;
 
             wrap.innerHTML = `<table><thead><tr>
         <th>曲順</th><th>時間</th>${rTh}<th>演者名</th><th>曲名</th><th class="col-group-start">プロンプト</th>
         <th>きっかけ・照明・音響</th><th>備考</th><th class="col-group-start">マイク</th><th>カウント</th><th>Key</th>
         <th class="col-group-start">曲尺</th><th class="col-group-start">完成音源</th><th>音源確認</th><th>はれむぅ確認</th>
       </tr></thead><tbody>${timeline.map(t => {
-                const rTd = rCol ? `<td class="col-rehearsal">${calcRehearsalElapsed(t.startTime)}</td>` : '';
+                const elapsedMin = Math.floor(rehearsalElapsedSec / 60);
+                const elapsedH = Math.floor(elapsedMin / 60);
+                const elapsedM = elapsedMin % 60;
+                const elapsedStr = `${elapsedH}:${elapsedM.toString().padStart(2, '0')}`;
+                const rTd = rCol ? `<td class="col-rehearsal">${elapsedStr}</td>` : '';
+                rehearsalElapsedSec += (t.duration || 0);
                 const specialColspan = rCol ? 13 : 12;
                 if (t.slotType !== 'song') return `<tr class="special-row"><td>${escHtml(t.songTitle || t.slotType)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td>${rTd}<td colspan="${specialColspan}"></td></tr>`;
                 return `<tr>
