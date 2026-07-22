@@ -344,6 +344,10 @@
               </select></div>
             <div class="form-group"><label class="form-label">曲の尺</label>
               <input type="text" class="form-input" data-song="${i}" data-field="duration" value="${formatDuration(s.duration)}" placeholder="4:30" oninput="onSI(this)"></div>
+            <div class="form-group"><label class="form-label">🎤 マイク本数</label>
+              <select class="form-select" data-song="${i}" data-field="micCount" onchange="onSI(this)">
+                ${[1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${(s.micCount || 1) === n ? 'selected' : ''}>${n}本</option>`).join('')}
+              </select></div>
           </div>
           <div class="form-group"><label class="form-label">音源アップロード</label>
             <div class="flex gap-md mb-sm">
@@ -357,14 +361,14 @@
         </div>`).join('');
         }
 
-        function onSI(el) { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i]) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : el.value; updatePreview(); }
+        function onSI(el) { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i]) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : f === 'micCount' ? parseInt(el.value) || 1 : el.value; updatePreview(); }
         function onAC(idx, v) { songs[idx].audioStatus = v; const u = document.getElementById(`aUrl_${idx}`); if (u) u.style.display = v === 'uploaded' ? '' : 'none'; }
 
         function updatePreview() {
             const name = document.getElementById('inputName').value || '未入力';
             document.getElementById('previewContent').innerHTML = `
         <p style="font-weight:600;margin-bottom:var(--space-sm)">${escHtml(name)}</p>
-        ${songs.filter(s => s.title).map((s, i) => `<div class="preview-song"><span class="num">${i + 1}</span><span style="flex:1">${escHtml(s.title)}</span><span class="badge ${s.type === 'original' ? 'badge-purple' : 'badge-blue'}" style="font-size:0.65rem">${s.type === 'original' ? 'O' : 'C'}</span>${s.duration ? `<span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">${formatDuration(s.duration)}</span>` : ''}</div>`).join('') || '<p class="text-muted" style="font-size:0.85rem">曲を入力してください</p>'}`;
+        ${songs.filter(s => s.title).map((s, i) => `<div class="preview-song"><span class="num">${i + 1}</span><span style="flex:1">${escHtml(s.title)}</span><span class="badge ${s.type === 'original' ? 'badge-purple' : 'badge-blue'}" style="font-size:0.65rem">${s.type === 'original' ? 'O' : 'C'}</span>${(s.micCount || 1) > 1 ? `<span style="font-size:0.72rem;color:var(--text-muted)">🎤${s.micCount}</span>` : ''}${s.duration ? `<span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">${formatDuration(s.duration)}</span>` : ''}</div>`).join('') || '<p class="text-muted" style="font-size:0.85rem">曲を入力してください</p>'}`;
         }
 
         function saveInput() {
@@ -378,7 +382,7 @@
             }
             const name = document.getElementById('inputName').value.trim();
             if (!name) { showToast('出演者名を入力してください', 'error'); return; }
-            document.querySelectorAll('[data-song]').forEach(el => { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i] || !f) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : el.value; });
+            document.querySelectorAll('[data-song]').forEach(el => { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i] || !f) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : f === 'micCount' ? parseInt(el.value) || 1 : el.value; });
             const data = {
                 name, discord: document.getElementById('inputDiscord').value.trim(),
                 twitter: document.getElementById('inputTwitter').value.trim(),
