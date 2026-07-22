@@ -226,6 +226,83 @@
             font-size: 1.1rem
         }
 
+        /* ===== リハ時間トグル ===== */
+        .tt-header-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+        }
+
+        .rehearsal-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+            padding: 0.3rem 0.7rem;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border-color);
+            background: var(--bg-glass);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .rehearsal-toggle:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .rehearsal-toggle.active {
+            background: rgba(124, 185, 204, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .rehearsal-toggle .toggle-icon {
+            display: inline-block;
+            width: 28px;
+            height: 16px;
+            border-radius: 8px;
+            background: var(--border-color);
+            position: relative;
+            transition: background 0.2s ease;
+        }
+
+        .rehearsal-toggle .toggle-icon::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform 0.2s ease;
+        }
+
+        .rehearsal-toggle.active .toggle-icon {
+            background: var(--accent-blue);
+        }
+
+        .rehearsal-toggle.active .toggle-icon::after {
+            transform: translateX(12px);
+        }
+
+        .tt-wrap .col-rehearsal {
+            color: var(--accent-blue);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .tt-wrap thead th.col-rehearsal {
+            background: rgba(124, 185, 204, 0.10);
+        }
+
         @media (max-width:768px) {
             .tt-wrap table {
                 min-width: 600px
@@ -473,6 +550,21 @@
                 border-left: 1.5px solid #888 !important;
             }
 
+            /* リハ経過列 */
+            .tt-wrap thead th.col-rehearsal {
+                background: #e0f0f5 !important;
+                color: #1a6d82 !important;
+                -webkit-text-fill-color: #1a6d82 !important;
+                font-size: 5.5pt !important;
+            }
+
+            .tt-wrap tbody td.col-rehearsal {
+                color: #1a6d82 !important;
+                -webkit-text-fill-color: #1a6d82 !important;
+                font-family: monospace !important;
+                font-size: 6pt !important;
+            }
+
             /* ===== 音源ステータス ===== */
             .audio-done {
                 color: #166534 !important;
@@ -685,7 +777,13 @@
             <div id="scheduleInfo" class="schedule-info" style="display:none"></div>
             <div class="summary-bar" id="summaryBar" style="display:none"></div>
             <div id="timetableSection" style="display:none">
-                <h2 class="mb-md">タイムテーブル</h2>
+                <div class="tt-header-row mb-md">
+                    <h2 style="margin:0">タイムテーブル</h2>
+                    <button type="button" class="rehearsal-toggle no-print" id="rehearsalToggle" style="display:none" onclick="toggleRehearsalTime()">
+                        <span class="toggle-icon"></span>
+                        リハ時間
+                    </button>
+                </div>
                 <div class="tt-wrap" id="ttWrap"></div>
             </div>
             <div id="detailSection" style="display:none">
@@ -713,6 +811,7 @@
     <script src="js/data.js"></script>
     <script>
         let selectedEventId = null;
+        let showRehearsalTime = false;
         document.addEventListener('DOMContentLoaded', () => { db.init().then(() => {
             const events = db.getEvents(), sel = document.getElementById('eventSelect');
             events.forEach(e => { const o = document.createElement('option'); o.value = e.id; o.textContent = `${e.title || '無題'} (${e.date || '日付未定'})`; sel.appendChild(o) });
@@ -761,15 +860,41 @@
         function renderTimetable(ev) {
             const timeline = db.calculateTimetable(ev), wrap = document.getElementById('ttWrap');
             if (!timeline.length) { wrap.innerHTML = '<p class="text-muted text-center" style="padding:var(--space-lg)">データなし</p>'; return; }
+
+            // リハーサル開始時間の取得と経過時間計算
+            const rehearsalStart = ev.schedule && ev.schedule.rehearsalStart ? parseTime(ev.schedule.rehearsalStart) : null;
+            const toggleBtn = document.getElementById('rehearsalToggle');
+            toggleBtn.style.display = rehearsalStart ? '' : 'none';
+            if (!rehearsalStart) showRehearsalTime = false;
+            toggleBtn.classList.toggle('active', showRehearsalTime);
+
+            function calcRehearsalElapsed(timeStr) {
+                if (!rehearsalStart || !timeStr) return '';
+                const t = parseTime(timeStr);
+                if (!t) return '';
+                const diffMs = t.getTime() - rehearsalStart.getTime();
+                const diffMin = Math.floor(diffMs / 60000);
+                if (diffMin < 0) return '';
+                const h = Math.floor(diffMin / 60);
+                const m = diffMin % 60;
+                return `${h}:${m.toString().padStart(2, '0')}`;
+            }
+
+            const rCol = showRehearsalTime;
+            const rTh = rCol ? '<th class="col-rehearsal">リハ経過</th>' : '';
+
             wrap.innerHTML = `<table><thead><tr>
-        <th>曲順</th><th>時間</th><th>演者名</th><th>曲名</th><th class="col-group-start">プロンプト</th>
+        <th>曲順</th><th>時間</th>${rTh}<th>演者名</th><th>曲名</th><th class="col-group-start">プロンプト</th>
         <th>きっかけ・照明・音響</th><th>備考</th><th class="col-group-start">マイク</th><th>カウント</th><th>Key</th>
         <th class="col-group-start">曲尺</th><th class="col-group-start">完成音源</th><th>音源確認</th><th>はれむぅ確認</th>
       </tr></thead><tbody>${timeline.map(t => {
-                if (t.slotType !== 'song') return `<tr class="special-row"><td>${escHtml(t.songTitle || t.slotType)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="12"></td></tr>`;
+                const rTd = rCol ? `<td class="col-rehearsal">${calcRehearsalElapsed(t.startTime)}</td>` : '';
+                const specialColspan = rCol ? 13 : 12;
+                if (t.slotType !== 'song') return `<tr class="special-row"><td>${escHtml(t.songTitle || t.slotType)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td>${rTd}<td colspan="${specialColspan}"></td></tr>`;
                 return `<tr>
           <td style="text-align:center;font-size:0.78rem;color:var(--text-muted)">${t.order}</td>
           <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
+          ${rTd}
           <td><span class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</span></td>
           <td>${escHtml(t.songTitle)}${t.type === 'original' ? ' <span class="badge badge-purple" style="font-size:0.6rem">O</span>' : ''}</td>
           <td class="col-group-start" style="text-align:center">${escHtml(t.promptNumber)}</td>
@@ -784,6 +909,11 @@
           <td style="text-align:center">${t.audioConfirmedHaremu ? '✓' : ''}</td>
         </tr>`;
             }).join('')}</tbody></table>`;
+        }
+
+        function toggleRehearsalTime() {
+            showRehearsalTime = !showRehearsalTime;
+            renderView();
         }
 
         function renderDetailCards(ev) {
