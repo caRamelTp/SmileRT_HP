@@ -1,10 +1,11 @@
 /* ============================================================
    SmileRT Reminder Bot — Slash Command: /register
    ============================================================
-   Posts a registration message with buttons in #出演者登録
+   Posts a registration message with buttons + user select menu
+   in #出演者登録
    ============================================================ */
 
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, UserSelectMenuBuilder, MessageFlags } = require('discord.js');
 const firebase = require('../firebase');
 const config = require('../config');
 
@@ -22,14 +23,14 @@ module.exports = {
     const event = await firebase.findEventByTitle(eventName);
 
     if (!event) {
-      return interaction.reply({ content: `❌ イベント「${eventName}」が見つかりません`, ephemeral: true });
+      return interaction.reply({ content: `❌ イベント「${eventName}」が見つかりません`, flags: MessageFlags.Ephemeral });
     }
 
     if (!event.performers || event.performers.length === 0) {
-      return interaction.reply({ content: `❌ 「${event.title}」に出演者が登録されていません`, ephemeral: true });
+      return interaction.reply({ content: `❌ 「${event.title}」に出演者が登録されていません`, flags: MessageFlags.Ephemeral });
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Get existing mappings to show ✅ on already-registered performers
     const mappings = await firebase.getMappingsByEvent(event.id);
@@ -44,12 +45,14 @@ module.exports = {
       .setColor(0x00D4AA)
       .setTitle(`🎤 ${event.title} 出演者登録`)
       .setDescription(
-        '下のボタンから **自分の名前** を押して\nDiscord アカウントを登録してください。\n\n' +
+        '**方法①**: 下のボタンから **自分の名前** を押して登録\n' +
+        '**方法②**: 一番下のメニューから **サーバーメンバーを選択** して登録\n\n' +
         `⏰ セトリ提出期限: **${deadlineText}**`
       )
       .setFooter({ text: 'ボタンを押すと登録、もう一度押すと解除できます' });
 
-    // Build button rows (max 5 buttons per row, max 5 rows = 25 buttons)
+    // Build button rows (max 5 buttons per row, reserve last row for select menu)
+    const maxButtonRows = 4; // Reserve 1 row for UserSelectMenu
     const rows = [];
     let currentRow = new ActionRowBuilder();
     let buttonCount = 0;
@@ -59,7 +62,7 @@ module.exports = {
         rows.push(currentRow);
         currentRow = new ActionRowBuilder();
       }
-      if (rows.length >= 5) break; // Discord limit: max 5 rows
+      if (rows.length >= maxButtonRows) break;
 
       const isRegistered = registeredPerformerIds.has(performer.id);
       const label = isRegistered ? `✅ ${performer.name}` : performer.name;
@@ -67,7 +70,7 @@ module.exports = {
       currentRow.addComponents(
         new ButtonBuilder()
           .setCustomId(`reg_${event.id}_${performer.id}`)
-          .setLabel(label.slice(0, 80)) // Discord label max: 80 chars
+          .setLabel(label.slice(0, 80))
           .setStyle(isRegistered ? ButtonStyle.Success : ButtonStyle.Secondary)
       );
       buttonCount++;
@@ -76,10 +79,20 @@ module.exports = {
       rows.push(currentRow);
     }
 
+    // Add UserSelectMenu as the last row
+    const userSelectRow = new ActionRowBuilder().addComponents(
+      new UserSelectMenuBuilder()
+        .setCustomId(`userselect_${event.id}`)
+        .setPlaceholder('サーバーメンバーを選んで登録...')
+        .setMinValues(1)
+        .setMaxValues(1)
+    );
+    rows.push(userSelectRow);
+
     // Post to registration channel
     const registerChannel = interaction.client.channels.cache.get(config.channels.register);
     if (!registerChannel) {
-      return interaction.editReply({ content: '❌ 出演者登録チャンネルが見つかりません' });
+      return interaction.editReply({ content: '❌ 出演者登録チャンネルが見つかりません。Bot にチャンネルの権限があるか確認してください。' });
     }
 
     // Check if a registration message already exists for this event
@@ -103,7 +116,7 @@ module.exports = {
     // Log to admin channel
     const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
     if (adminChannel) {
-      await adminChannel.send(`📋 **${event.title}** の出演者登録メッセージを投稿しました（出演者: ${event.performers.length}名）`);
+      await adminChannel.send(`📋 **${event.title}** の出演者登録メッセージを投稿しました（出演者: ${event.performers.length}名）`).catch(() => {});
     }
   },
 };
