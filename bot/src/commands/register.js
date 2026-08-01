@@ -109,7 +109,7 @@ module.exports = {
     }
 
     try {
-      const msg = await registerChannel.send({ embeds: [embed], components: rows });
+      const msg = await registerChannel.send({ content: '@everyone', embeds: [embed], components: rows });
       await firebase.setRegistrationMessageId(event.id, msg.id);
       await interaction.editReply({ content: `✅ 「${event.title}」の登録メッセージを #出演者登録 に投稿しました` });
     } catch (sendError) {

@@ -22,11 +22,11 @@ const config = {
   firebaseServiceAccountPath: process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './serviceAccountKey.json',
 
   // Reminder settings
-  remindHours: (process.env.REMIND_HOURS || '72,24,3')
+  remindHours: (process.env.REMIND_HOURS || '168,72,24,3')
     .split(',')
     .map(h => parseFloat(h.trim()))
     .filter(h => !isNaN(h) && h > 0)
-    .sort((a, b) => b - a), // descending: [72, 24, 3]
+    .sort((a, b) => b - a), // descending: [168, 72, 24, 3]
 };
 
 // Validation

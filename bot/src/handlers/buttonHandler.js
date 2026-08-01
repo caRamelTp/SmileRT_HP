@@ -20,18 +20,6 @@ async function handleButton(interaction) {
     await handleRegistrationButton(interaction);
     return;
   }
-
-  // Unregister confirmation: unreg_confirm_{eventId}_{performerId}
-  if (customId.startsWith('unreg_confirm_')) {
-    await handleUnregisterConfirm(interaction);
-    return;
-  }
-
-  // Unregister cancel
-  if (customId.startsWith('unreg_cancel')) {
-    await interaction.update({ content: 'キャンセルしました', components: [] });
-    return;
-  }
 }
 
 /**
@@ -87,7 +75,6 @@ async function handleUserSelect(interaction) {
         content: `✅ <@${selectedUserId}> を既存の出演者「**${existingPerformer.name}**」に自動リンクしました！`,
       });
 
-      // Log
       const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
       if (adminChannel) {
         await adminChannel.send(`🔗 <@${selectedUserId}> を既存の出演者「**${existingPerformer.name}**」（${event.title}）に自動リンクしました`).catch(() => {});
@@ -101,7 +88,6 @@ async function handleUserSelect(interaction) {
 
       await firebase.addPerformerToEvent(eventId, newPerformer);
 
-      // Save Discord ID mapping
       await firebase.setMapping(eventId, newPerformer.id, {
         performerName: displayName,
         discordUserId: selectedUserId,
@@ -112,7 +98,6 @@ async function handleUserSelect(interaction) {
         content: `✅ <@${selectedUserId}>（**${displayName}**）を出演者として追加しました！`,
       });
 
-      // Log
       const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
       if (adminChannel) {
         await adminChannel.send(`➕ <@${selectedUserId}>（**${displayName}**）が「${event.title}」の出演者として追加されました`).catch(() => {});
@@ -132,7 +117,7 @@ async function handleUserSelect(interaction) {
 }
 
 /**
- * Handle registration button click (self-registration)
+ * Handle registration button click (toggle: register / unregister)
  */
 async function handleRegistrationButton(interaction) {
   const parts = interaction.customId.split('_');
@@ -156,26 +141,25 @@ async function handleRegistrationButton(interaction) {
       return interaction.editReply({ content: '❌ 出演者が見つかりません' });
     }
 
-    // Check existing mapping
+    // Check existing mapping for this performer
     const existing = await firebase.getMapping(eventId, performerId);
 
     if (existing) {
       if (existing.discordUserId === interaction.user.id) {
-        // Same user clicked again → offer to unregister
-        const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`unreg_confirm_${eventId}_${performerId}`)
-            .setLabel('登録を解除する')
-            .setStyle(ButtonStyle.Danger),
-          new ButtonBuilder()
-            .setCustomId('unreg_cancel')
-            .setLabel('キャンセル')
-            .setStyle(ButtonStyle.Secondary),
-        );
-        return interaction.editReply({
-          content: `🔄 **${performer.name}** の登録を解除しますか？`,
-          components: [row],
+        // Same user → toggle OFF (unregister immediately)
+        await firebase.deleteMapping(eventId, performerId);
+
+        await interaction.editReply({
+          content: `🔓 **${performer.name}** の登録を解除しました。`,
         });
+
+        await updateRegistrationButtons(interaction.client, event);
+
+        const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
+        if (adminChannel) {
+          await adminChannel.send(`🔓 <@${interaction.user.id}> が **${performer.name}**（${event.title}）の登録を解除しました`).catch(() => {});
+        }
+        return;
       } else {
         // Different user already registered
         const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
@@ -190,15 +174,15 @@ async function handleRegistrationButton(interaction) {
       }
     }
 
-    // Check if this user is already registered as a different performer in this event
+    // Check if this user is already registered as a different performer
     const userMapping = await firebase.getMappingByDiscordUser(eventId, interaction.user.id);
     if (userMapping) {
       return interaction.editReply({
-        content: `⚠ あなたは既に「**${userMapping.performerName}**」として登録されています。\n先にそちらの登録を解除してから、正しいボタンを押してください。`,
+        content: `⚠ あなたは既に「**${userMapping.performerName}**」として登録されています。\n先にそちらのボタンを押して解除してから、こちらを押してください。`,
       });
     }
 
-    // Register new mapping
+    // Register new mapping (toggle ON)
     await firebase.setMapping(eventId, performerId, {
       performerName: performer.name,
       discordUserId: interaction.user.id,
@@ -206,13 +190,11 @@ async function handleRegistrationButton(interaction) {
     });
 
     await interaction.editReply({
-      content: `✅ **${performer.name}** として登録しました！\nセトリ提出期限が近づくとこのサーバーで通知が届きます。`,
+      content: `✅ **${performer.name}** として登録しました！\nセトリ提出期限が近づくと通知が届きます。\n\n（もう一度ボタンを押すと解除できます）`,
     });
 
-    // Update button label to show ✅
     await updateRegistrationButtons(interaction.client, event);
 
-    // Log to admin channel
     const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
     if (adminChannel) {
       await adminChannel.send(`✅ <@${interaction.user.id}> が **${performer.name}**（${event.title}）として登録しました`).catch(() => {});
@@ -225,67 +207,43 @@ async function handleRegistrationButton(interaction) {
 }
 
 /**
- * Handle unregister confirmation
- */
-async function handleUnregisterConfirm(interaction) {
-  const parts = interaction.customId.split('_');
-  const eventId = parts[2];
-  const performerId = parts.slice(3).join('_');
-
-  await interaction.deferUpdate();
-
-  try {
-    const event = await firebase.getEvent(eventId);
-    const performer = event ? event.performers.find(p => p.id === performerId) : null;
-    const performerName = performer ? performer.name : '不明';
-
-    await firebase.deleteMapping(eventId, performerId);
-
-    await interaction.editReply({
-      content: `✅ **${performerName}** の登録を解除しました。\n正しいボタンを押し直してください。`,
-      components: [],
-    });
-
-    if (event) {
-      await updateRegistrationButtons(interaction.client, event);
-    }
-
-    const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
-    if (adminChannel) {
-      await adminChannel.send(`🔓 <@${interaction.user.id}> が **${performerName}**（${event ? event.title : '?'}）の登録を解除しました`).catch(() => {});
-    }
-  } catch (error) {
-    console.error('❌ 解除処理エラー:', error);
-  }
-}
-
-/**
  * Update registration message buttons to reflect current state
  */
 async function updateRegistrationButtons(client, event) {
   const messageId = await firebase.getRegistrationMessageId(event.id);
-  if (!messageId) return;
+  if (!messageId) {
+    console.log('⚠ 登録メッセージIDが見つかりません（event: ' + event.id + '）');
+    return;
+  }
 
   const registerChannel = client.channels.cache.get(config.channels.register);
-  if (!registerChannel) return;
+  if (!registerChannel) {
+    console.log('⚠ 登録チャンネルが見つかりません');
+    return;
+  }
 
   let message;
   try {
     message = await registerChannel.messages.fetch(messageId);
   } catch (e) {
+    console.log('⚠ 登録メッセージが見つかりません（削除された？）');
     return;
   }
+
+  // Re-fetch event to ensure latest performer list
+  const latestEvent = await firebase.getEvent(event.id);
+  const performers = latestEvent ? latestEvent.performers || [] : event.performers || [];
 
   const mappings = await firebase.getMappingsByEvent(event.id);
   const registeredPerformerIds = new Set(mappings.map(m => m.performerId));
 
-  // Rebuild buttons (reserve last row for UserSelectMenu)
+  // Rebuild buttons (reserve last row for UserSelectMenu, max 5 rows total)
   const maxButtonRows = 4;
   const rows = [];
   let currentRow = new ActionRowBuilder();
   let buttonCount = 0;
 
-  for (const performer of event.performers) {
+  for (const performer of performers) {
     if (buttonCount > 0 && buttonCount % 5 === 0) {
       rows.push(currentRow);
       currentRow = new ActionRowBuilder();
@@ -307,7 +265,7 @@ async function updateRegistrationButtons(client, event) {
     rows.push(currentRow);
   }
 
-  // Add UserSelectMenu
+  // Always add UserSelectMenu as the last row
   const userSelectRow = new ActionRowBuilder().addComponents(
     new UserSelectMenuBuilder()
       .setCustomId(`userselect_${event.id}`)
@@ -319,8 +277,9 @@ async function updateRegistrationButtons(client, event) {
 
   try {
     await message.edit({ components: rows });
+    console.log(`📋 登録メッセージ更新完了（${performers.length}名、${rows.length}行）`);
   } catch (e) {
-    console.error('Button update error:', e);
+    console.error('❌ 登録メッセージ更新エラー:', e.message);
   }
 }
 

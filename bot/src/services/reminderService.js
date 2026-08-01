@@ -23,11 +23,20 @@ function startReminderService(client) {
     }
   });
 
-  console.log(`⏰ リマインドサービス開始（毎時0分にチェック、通知タイミング: ${config.remindHours.join('h, ')}h 前）`);
+  const timingText = config.remindHours.map(h => formatHours(h)).join(' / ');
+  console.log(`⏰ リマインドサービス開始（毎時0分にチェック、通知タイミング: ${timingText} 前）`);
 }
 
 /**
  * Check all events for approaching deadlines
+ * 
+ * remindHours is sorted descending: [168, 72, 24, 3]
+ * For each threshold, we check if hoursLeft <= threshold.
+ * But we SKIP thresholds that are larger than the total span
+ * from when the event was created — instead, we only fire
+ * the reminder whose window the current time falls into.
+ * 
+ * Example: if hoursLeft = 48, we skip 168h, fire 72h, skip 24h/3h.
  */
 async function checkDeadlines(client) {
   const events = await firebase.getEvents();
@@ -39,19 +48,9 @@ async function checkDeadlines(client) {
       const deadline = new Date(event.setlistDeadline);
       if (deadline > now) {
         const hoursLeft = (deadline - now) / (1000 * 60 * 60);
-
-        for (const hours of config.remindHours) {
-          if (hoursLeft <= hours) {
-            const label = `${hours}h`;
-            const alreadySent = await firebase.isReminderSent(event.id, label);
-            if (!alreadySent) {
-              console.log(`  📢 ${event.title}: ${label} リマインド送信`);
-              await sendReminder(client, event, `期限まであと約 ${formatHours(hours)}`);
-              await firebase.markReminderSent(event.id, label);
-              break; // Only send the largest applicable reminder
-            }
-          }
-        }
+        await processReminders(client, event, hoursLeft, event.id, async (timeText) => {
+          await sendReminder(client, event, timeText);
+        });
       }
     }
 
@@ -63,25 +62,56 @@ async function checkDeadlines(client) {
         if (overrideDeadline <= now) continue;
 
         const hoursLeft = (overrideDeadline - now) / (1000 * 60 * 60);
+        const performer = event.performers.find(p => p.id === override.performerId);
+        if (!performer) continue;
 
-        for (const hours of config.remindHours) {
-          if (hoursLeft <= hours) {
-            const label = `override_${override.performerId}_${hours}h`;
-            const alreadySent = await firebase.isReminderSent(event.id, label);
-            if (!alreadySent) {
-              const performer = event.performers.find(p => p.id === override.performerId);
-              if (performer) {
-                console.log(`  📢 ${event.title}: ${performer.name} 個別 ${hours}h リマインド送信`);
-                await sendOverrideReminder(client, event, performer, override, `個別期限まであと約 ${formatHours(hours)}`);
-                await firebase.markReminderSent(event.id, label);
-              }
-              break;
-            }
-          }
-        }
+        await processReminders(client, event, hoursLeft, event.id, async (timeText) => {
+          await sendOverrideReminder(client, event, performer, override, `個別期限まであと約 ${formatHours(getMatchedHours(hoursLeft))}`);
+        }, `override_${override.performerId}_`);
       }
     }
   }
+}
+
+/**
+ * Find which reminder threshold hoursLeft falls into, and send if not yet sent.
+ * Only sends the ONE matching threshold — skips thresholds that have already passed.
+ * 
+ * @param {Function} sendFn - async function(timeText) to actually send the reminder
+ * @param {string} labelPrefix - prefix for the reminder label (default: "")
+ */
+async function processReminders(client, event, hoursLeft, eventId, sendFn, labelPrefix = '') {
+  const sortedHours = config.remindHours; // descending: [168, 72, 24, 3]
+
+  for (let i = 0; i < sortedHours.length; i++) {
+    const hours = sortedHours[i];
+    const nextSmaller = sortedHours[i + 1] || 0;
+
+    // hoursLeft must be within this threshold's window: nextSmaller < hoursLeft <= hours
+    if (hoursLeft <= hours && hoursLeft > nextSmaller) {
+      const label = `${labelPrefix}${hours}h`;
+      const alreadySent = await firebase.isReminderSent(eventId, label);
+      if (!alreadySent) {
+        const timeText = `期限まであと約 ${formatHours(hours)}`;
+        console.log(`  📢 ${event.title}: ${label} リマインド送信`);
+        await sendFn(timeText);
+        await firebase.markReminderSent(eventId, label);
+      }
+      break; // Only one threshold can match
+    }
+  }
+}
+
+/**
+ * Get the matched reminder hours for a given hoursLeft
+ */
+function getMatchedHours(hoursLeft) {
+  for (let i = 0; i < config.remindHours.length; i++) {
+    const hours = config.remindHours[i];
+    const nextSmaller = config.remindHours[i + 1] || 0;
+    if (hoursLeft <= hours && hoursLeft > nextSmaller) return hours;
+  }
+  return config.remindHours[config.remindHours.length - 1];
 }
 
 /**
