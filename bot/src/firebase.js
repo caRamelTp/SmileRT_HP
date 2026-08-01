@@ -165,6 +165,74 @@ async function getRegistrationMessageId(eventId) {
   return snapshot.val();
 }
 
+// ─── Write: Add performer to event (smilert/events) ───
+
+/**
+ * Generate an ID matching the frontend format
+ */
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+/**
+ * Create a performer object matching the frontend data model
+ */
+function createPerformer(overrides = {}) {
+  return {
+    id: generateId(),
+    name: '',
+    discord: '',
+    twitter: '',
+    cyalumeColor: '#ff6b9d',
+    iconUrl: '',
+    hoodie: '',
+    songs: [],
+    techRequests: '',
+    ...overrides,
+  };
+}
+
+/**
+ * Add a performer to an event in the smilert/events node
+ */
+async function addPerformerToEvent(eventId, performerData) {
+  const snapshot = await db.ref('smilert/events').once('value');
+  let events = snapshot.val();
+  if (!events) return null;
+
+  // Convert to array if Firebase stored as object
+  if (!Array.isArray(events)) events = Object.values(events);
+  events = events.filter(Boolean);
+
+  // Find event index
+  const eventIndex = events.findIndex(e => e && e.id === eventId);
+  if (eventIndex === -1) return null;
+
+  // Ensure performers array exists
+  if (!events[eventIndex].performers) events[eventIndex].performers = [];
+  if (!Array.isArray(events[eventIndex].performers)) {
+    events[eventIndex].performers = Object.values(events[eventIndex].performers).filter(Boolean);
+  }
+
+  // Add performer
+  events[eventIndex].performers.push(performerData);
+  events[eventIndex].updatedAt = new Date().toISOString();
+
+  // Write back
+  await db.ref('smilert/events').set(events);
+
+  return performerData;
+}
+
+/**
+ * Find performers in an event by Discord user ID (via bot_mappings)
+ * or by matching name
+ */
+async function findPerformerByDiscordId(eventId, discordUserId) {
+  const mappings = await getMappingsByEvent(eventId);
+  return mappings.find(m => m.discordUserId === discordUserId) || null;
+}
+
 module.exports = {
   getEvents,
   getEvent,
@@ -178,4 +246,8 @@ module.exports = {
   markReminderSent,
   setRegistrationMessageId,
   getRegistrationMessageId,
+  generateId,
+  createPerformer,
+  addPerformerToEvent,
+  findPerformerByDiscordId,
 };
