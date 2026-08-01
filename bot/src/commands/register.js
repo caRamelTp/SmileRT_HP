@@ -19,18 +19,19 @@ module.exports = {
         .setRequired(true)),
 
   async execute(interaction) {
+    // Always deferReply first to avoid timeout
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
     const eventName = interaction.options.getString('event');
     const event = await firebase.findEventByTitle(eventName);
 
     if (!event) {
-      return interaction.reply({ content: `❌ イベント「${eventName}」が見つかりません`, flags: MessageFlags.Ephemeral });
+      return interaction.editReply({ content: `❌ イベント「${eventName}」が見つかりません` });
     }
 
     if (!event.performers || event.performers.length === 0) {
-      return interaction.reply({ content: `❌ 「${event.title}」に出演者が登録されていません`, flags: MessageFlags.Ephemeral });
+      return interaction.editReply({ content: `❌ 「${event.title}」に出演者が登録されていません` });
     }
-
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Get existing mappings to show ✅ on already-registered performers
     const mappings = await firebase.getMappingsByEvent(event.id);
@@ -101,17 +102,20 @@ module.exports = {
       try {
         const existingMsg = await registerChannel.messages.fetch(existingMessageId);
         await existingMsg.edit({ embeds: [embed], components: rows });
-        await interaction.editReply({ content: `✅ 「${event.title}」の登録メッセージを更新しました` });
-        return;
+        return interaction.editReply({ content: `✅ 「${event.title}」の登録メッセージを更新しました` });
       } catch (e) {
         // Message was deleted, create a new one
       }
     }
 
-    const msg = await registerChannel.send({ embeds: [embed], components: rows });
-    await firebase.setRegistrationMessageId(event.id, msg.id);
-
-    await interaction.editReply({ content: `✅ 「${event.title}」の登録メッセージを #出演者登録 に投稿しました` });
+    try {
+      const msg = await registerChannel.send({ embeds: [embed], components: rows });
+      await firebase.setRegistrationMessageId(event.id, msg.id);
+      await interaction.editReply({ content: `✅ 「${event.title}」の登録メッセージを #出演者登録 に投稿しました` });
+    } catch (sendError) {
+      console.error('❌ 登録メッセージ送信エラー:', sendError);
+      return interaction.editReply({ content: `❌ メッセージの送信に失敗しました。Bot に #出演者登録 の「メッセージを送信」「埋め込みリンク」権限があるか確認してください。` });
+    }
 
     // Log to admin channel
     const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
