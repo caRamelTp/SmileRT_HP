@@ -2,7 +2,7 @@
    SmileRT Reminder Bot — Slash Command: /unlink
    ============================================================ */
 
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const firebase = require('../firebase');
 const config = require('../config');
 
@@ -20,7 +20,7 @@ module.exports = {
         .setRequired(true)),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const user = interaction.options.getUser('user');
     const eventName = interaction.options.getString('event');

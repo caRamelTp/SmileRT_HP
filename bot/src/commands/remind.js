@@ -4,7 +4,7 @@
    Manually send a reminder to #セトリリマインド
    ============================================================ */
 
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const firebase = require('../firebase');
 const { sendReminder } = require('../services/reminderService');
 
@@ -18,7 +18,7 @@ module.exports = {
         .setRequired(true)),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const eventName = interaction.options.getString('event');
     const event = await firebase.findEventByTitle(eventName);

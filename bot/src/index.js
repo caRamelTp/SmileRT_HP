@@ -5,7 +5,7 @@
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 const config = require('./config');
 const { loadCommands, handleCommand } = require('./handlers/commandHandler');
-const { handleButton } = require('./handlers/buttonHandler');
+const { handleButton, handleUserSelect } = require('./handlers/buttonHandler');
 const { startReminderService } = require('./services/reminderService');
 
 // Create Discord client
@@ -42,7 +42,21 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   // Button clicks
   if (interaction.isButton()) {
-    await handleButton(interaction);
+    try {
+      await handleButton(interaction);
+    } catch (error) {
+      console.error('❌ ボタンエラー:', error);
+    }
+    return;
+  }
+
+  // User select menu
+  if (interaction.isUserSelectMenu()) {
+    try {
+      await handleUserSelect(interaction);
+    } catch (error) {
+      console.error('❌ ユーザー選択エラー:', error);
+    }
     return;
   }
 });

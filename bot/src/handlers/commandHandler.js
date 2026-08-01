@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { Collection } = require('discord.js');
+const { Collection, MessageFlags } = require('discord.js');
 
 /**
  * Load all commands from the commands directory
@@ -42,7 +42,7 @@ async function handleCommand(interaction, commands) {
     await command.execute(interaction);
   } catch (error) {
     console.error(`❌ コマンドエラー (/${interaction.commandName}):`, error);
-    const reply = { content: '❌ コマンドの実行中にエラーが発生しました', ephemeral: true };
+    const reply = { content: '❌ コマンドの実行中にエラーが発生しました', flags: MessageFlags.Ephemeral };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(reply).catch(() => {});
     } else {
