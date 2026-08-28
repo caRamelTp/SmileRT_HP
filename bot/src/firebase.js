@@ -249,5 +249,41 @@ module.exports = {
   generateId,
   createPerformer,
   addPerformerToEvent,
+  removePerformerFromEvent,
   findPerformerByDiscordId,
 };
+
+/**
+ * Remove a performer from an event in the smilert/events node
+ * Also removes the bot_mapping for that performer
+ */
+async function removePerformerFromEvent(eventId, performerId) {
+  const snapshot = await db.ref('smilert/events').once('value');
+  let events = snapshot.val();
+  if (!events) return false;
+
+  if (!Array.isArray(events)) events = Object.values(events);
+  events = events.filter(Boolean);
+
+  const eventIndex = events.findIndex(e => e && e.id === eventId);
+  if (eventIndex === -1) return false;
+
+  if (!events[eventIndex].performers) return false;
+  if (!Array.isArray(events[eventIndex].performers)) {
+    events[eventIndex].performers = Object.values(events[eventIndex].performers).filter(Boolean);
+  }
+
+  const before = events[eventIndex].performers.length;
+  events[eventIndex].performers = events[eventIndex].performers.filter(p => p.id !== performerId);
+  const after = events[eventIndex].performers.length;
+
+  if (before === after) return false; // Not found
+
+  events[eventIndex].updatedAt = new Date().toISOString();
+  await db.ref('smilert/events').set(events);
+
+  // Also remove mapping
+  await deleteMapping(eventId, performerId);
+
+  return true;
+}

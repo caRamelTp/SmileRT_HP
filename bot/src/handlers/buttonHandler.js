@@ -58,10 +58,14 @@ async function handleUserSelect(interaction) {
       });
     }
 
+
     // Check if a performer with the same name already exists in the event
-    const existingPerformer = (event.performers || []).find(p =>
-      p.name && p.name === displayName
-    );
+    // Try: exact match → case-insensitive → discord username match
+    const performers = event.performers || [];
+    const existingPerformer =
+      performers.find(p => p.name && p.name === displayName) ||
+      performers.find(p => p.name && p.name.toLowerCase() === displayName.toLowerCase()) ||
+      performers.find(p => p.discord && p.discord.toLowerCase() === username.toLowerCase());
 
     if (existingPerformer) {
       // Auto-link: same name found → link Discord ID to existing performer
