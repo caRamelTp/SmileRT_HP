@@ -1,56 +1,56 @@
 /* ============================================================
    SmileRT Reminder Bot — Button Handler
    ============================================================
-   Handles performer registration button clicks and
-   user select menu interactions
+   Handles performer registration button clicks,
+   user select menu, and performer remove menu
    ============================================================ */
 
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, UserSelectMenuBuilder, MessageFlags } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, UserSelectMenuBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const firebase = require('../firebase');
 const config = require('../config');
 
-/**
- * Handle a button interaction
- */
+// ─── Interaction Dispatchers ───
+
 async function handleButton(interaction) {
   const customId = interaction.customId;
-
-  // Registration button: reg_{eventId}_{performerId}
   if (customId.startsWith('reg_')) {
     await handleRegistrationButton(interaction);
-    return;
   }
 }
 
-/**
- * Handle user select menu interaction
- * Flow: select a server member → add them directly as a performer
- * If a performer with the same name already exists, auto-link instead.
- */
 async function handleUserSelect(interaction) {
   const customId = interaction.customId;
-  if (!customId.startsWith('userselect_')) return;
+  if (customId.startsWith('userselect_')) {
+    await handleUserSelectMenu(interaction);
+  }
+}
 
-  const eventId = customId.replace('userselect_', '');
+async function handleStringSelect(interaction) {
+  const customId = interaction.customId;
+  if (customId.startsWith('removeperf_')) {
+    await handleRemovePerformerMenu(interaction);
+  }
+}
+
+// ─── User Select: Add Member as Performer ───
+
+async function handleUserSelectMenu(interaction) {
+  const eventId = interaction.customId.replace('userselect_', '');
   const selectedUserId = interaction.values[0];
 
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const event = await firebase.getEvent(eventId);
-    if (!event) {
-      return interaction.editReply({ content: '❌ イベントが見つかりません' });
-    }
+    if (!event) return interaction.editReply({ content: '❌ イベントが見つかりません' });
 
-    // Get selected user info
     const member = await interaction.guild.members.fetch(selectedUserId).catch(() => null);
-    if (!member) {
-      return interaction.editReply({ content: '❌ サーバーメンバーが見つかりません' });
-    }
+    if (!member) return interaction.editReply({ content: '❌ サーバーメンバーが見つかりません' });
+
     const displayName = member.displayName || member.user.username;
     const username = member.user.username;
 
-    // Check if this Discord user is already registered for this event
+    // Already registered?
     const existingMapping = await firebase.getMappingByDiscordUser(eventId, selectedUserId);
     if (existingMapping) {
       return interaction.editReply({
@@ -58,9 +58,7 @@ async function handleUserSelect(interaction) {
       });
     }
 
-
-    // Check if a performer with the same name already exists in the event
-    // Try: exact match → case-insensitive → discord username match
+    // Check for existing performer with same name (exact → case-insensitive → discord username)
     const performers = event.performers || [];
     const existingPerformer =
       performers.find(p => p.name && p.name === displayName) ||
@@ -68,61 +66,116 @@ async function handleUserSelect(interaction) {
       performers.find(p => p.discord && p.discord.toLowerCase() === username.toLowerCase());
 
     if (existingPerformer) {
-      // Auto-link: same name found → link Discord ID to existing performer
       await firebase.setMapping(eventId, existingPerformer.id, {
         performerName: existingPerformer.name,
         discordUserId: selectedUserId,
         discordUsername: username,
       });
-
       await interaction.editReply({
         content: `✅ <@${selectedUserId}> を既存の出演者「**${existingPerformer.name}**」に自動リンクしました！`,
       });
-
-      const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
-      if (adminChannel) {
-        await adminChannel.send(`🔗 <@${selectedUserId}> を既存の出演者「**${existingPerformer.name}**」（${event.title}）に自動リンクしました`).catch(() => {});
-      }
     } else {
-      // No match: create a new performer and add to the event
-      const newPerformer = firebase.createPerformer({
-        name: displayName,
-        discord: username,
-      });
-
+      const newPerformer = firebase.createPerformer({ name: displayName, discord: username });
       await firebase.addPerformerToEvent(eventId, newPerformer);
-
       await firebase.setMapping(eventId, newPerformer.id, {
         performerName: displayName,
         discordUserId: selectedUserId,
         discordUsername: username,
       });
-
       await interaction.editReply({
         content: `✅ <@${selectedUserId}>（**${displayName}**）を出演者として追加しました！`,
       });
-
-      const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
-      if (adminChannel) {
-        await adminChannel.send(`➕ <@${selectedUserId}>（**${displayName}**）が「${event.title}」の出演者として追加されました`).catch(() => {});
-      }
     }
 
-    // Update registration message buttons (re-fetch event to get latest data)
+    // Refresh registration message
     const updatedEvent = await firebase.getEvent(eventId);
-    if (updatedEvent) {
-      await updateRegistrationButtons(interaction.client, updatedEvent);
-    }
+    if (updatedEvent) await updateRegistrationButtons(interaction.client, updatedEvent);
 
+    const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
+    if (adminChannel) {
+      await adminChannel.send(`➕ <@${selectedUserId}>（**${displayName}**）が「${event.title}」に登録されました`).catch(() => {});
+    }
   } catch (error) {
     console.error('❌ ユーザー選択処理エラー:', error);
     await interaction.editReply({ content: '❌ 処理中にエラーが発生しました' }).catch(() => {});
   }
 }
 
-/**
- * Handle registration button click (toggle: register / unregister)
- */
+// ─── Remove Performer Menu ───
+
+async function handleRemovePerformerMenu(interaction) {
+  const eventId = interaction.customId.replace('removeperf_', '');
+  const performerId = interaction.values[0];
+
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+  try {
+    const event = await firebase.getEvent(eventId);
+    if (!event) return interaction.editReply({ content: '❌ イベントが見つかりません' });
+
+    const performer = (event.performers || []).find(p => p.id === performerId);
+    if (!performer) return interaction.editReply({ content: '❌ 出演者が見つかりません' });
+
+    const hasSongs = performer.songs && performer.songs.length > 0;
+
+    // Check for duplicate names
+    const duplicates = (event.performers || []).filter(p => p.name === performer.name);
+
+    if (duplicates.length > 1 && hasSongs) {
+      // This performer has songs and there's a duplicate — warn but allow
+      const otherDup = duplicates.find(d => d.id !== performer.id);
+      const otherHasSongs = otherDup && otherDup.songs && otherDup.songs.length > 0;
+
+      if (!otherHasSongs) {
+        // Suggest deleting the OTHER one (the empty one) instead
+        await firebase.removePerformerFromEvent(eventId, otherDup.id);
+
+        // Transfer mapping if needed
+        const otherMapping = await firebase.getMapping(eventId, otherDup.id);
+        const thisMapping = await firebase.getMapping(eventId, performer.id);
+        if (otherMapping && !thisMapping) {
+          await firebase.setMapping(eventId, performer.id, {
+            performerName: performer.name,
+            discordUserId: otherMapping.discordUserId,
+            discordUsername: otherMapping.discordUsername,
+          });
+        }
+
+        const updatedEvent = await firebase.getEvent(eventId);
+        if (updatedEvent) await updateRegistrationButtons(interaction.client, updatedEvent);
+
+        return interaction.editReply({
+          content: `✅ 「**${performer.name}**」の重複（セトリなし）を削除しました\n📋 セトリありの方を残し、マッピングも引き継ぎました`,
+        });
+      }
+    }
+
+    // Normal delete
+    const removed = await firebase.removePerformerFromEvent(eventId, performerId);
+    if (!removed) return interaction.editReply({ content: '❌ 削除に失敗しました' });
+
+    let msg = `✅ 「**${performer.name}**」を削除しました`;
+    if (hasSongs) {
+      msg += `\n⚠ この出演者にはセトリ（${performer.songs.length}曲）が登録されていました`;
+    }
+
+    await interaction.editReply({ content: msg });
+
+    const updatedEvent = await firebase.getEvent(eventId);
+    if (updatedEvent) await updateRegistrationButtons(interaction.client, updatedEvent);
+
+    const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
+    if (adminChannel) {
+      await adminChannel.send(`🗑 ${interaction.user.tag} が「**${performer.name}**」を「${event.title}」から削除しました`).catch(() => {});
+    }
+  } catch (error) {
+    console.error('❌ 出演者削除エラー:', error);
+    await interaction.editReply({ content: '❌ 処理中にエラーが発生しました' }).catch(() => {});
+  }
+}
+
+// ─── Registration Button (toggle register/unregister) ───
+
 async function handleRegistrationButton(interaction) {
   const parts = interaction.customId.split('_');
   const eventId = parts[1];
@@ -136,27 +189,18 @@ async function handleRegistrationButton(interaction) {
 
   try {
     const event = await firebase.getEvent(eventId);
-    if (!event) {
-      return interaction.editReply({ content: '❌ イベントが見つかりません' });
-    }
+    if (!event) return interaction.editReply({ content: '❌ イベントが見つかりません' });
 
     const performer = event.performers.find(p => p.id === performerId);
-    if (!performer) {
-      return interaction.editReply({ content: '❌ 出演者が見つかりません' });
-    }
+    if (!performer) return interaction.editReply({ content: '❌ 出演者が見つかりません' });
 
-    // Check existing mapping for this performer
     const existing = await firebase.getMapping(eventId, performerId);
 
     if (existing) {
       if (existing.discordUserId === interaction.user.id) {
-        // Same user → toggle OFF (unregister immediately)
+        // Toggle OFF
         await firebase.deleteMapping(eventId, performerId);
-
-        await interaction.editReply({
-          content: `🔓 **${performer.name}** の登録を解除しました。`,
-        });
-
+        await interaction.editReply({ content: `🔓 **${performer.name}** の登録を解除しました。` });
         await updateRegistrationButtons(interaction.client, event);
 
         const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
@@ -165,84 +209,61 @@ async function handleRegistrationButton(interaction) {
         }
         return;
       } else {
-        // Different user already registered
-        const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
-        if (adminChannel) {
-          await adminChannel.send(
-            `⚠ **重複登録の試行**: <@${interaction.user.id}> が「${performer.name}」（${event.title}）を押しましたが、既に <@${existing.discordUserId}> が登録済みです`
-          ).catch(() => {});
-        }
         return interaction.editReply({
           content: `⚠ **${performer.name}** は既に別の方が登録済みです。\n心当たりがない場合は運営にお問い合わせください。`,
         });
       }
     }
 
-    // Check if this user is already registered as a different performer
+    // Check if user is already registered as someone else
     const userMapping = await firebase.getMappingByDiscordUser(eventId, interaction.user.id);
     if (userMapping) {
       return interaction.editReply({
-        content: `⚠ あなたは既に「**${userMapping.performerName}**」として登録されています。\n先にそちらのボタンを押して解除してから、こちらを押してください。`,
+        content: `⚠ あなたは既に「**${userMapping.performerName}**」として登録されています。\n先にそちらのボタンを押して解除してください。`,
       });
     }
 
-    // Register new mapping (toggle ON)
+    // Toggle ON
     await firebase.setMapping(eventId, performerId, {
       performerName: performer.name,
       discordUserId: interaction.user.id,
       discordUsername: interaction.user.username,
     });
-
     await interaction.editReply({
-      content: `✅ **${performer.name}** として登録しました！\nセトリ提出期限が近づくと通知が届きます。\n\n（もう一度ボタンを押すと解除できます）`,
+      content: `✅ **${performer.name}** として登録しました！\nセトリ提出期限が近づくと通知が届きます。\n（もう一度ボタンを押すと解除できます）`,
     });
-
     await updateRegistrationButtons(interaction.client, event);
 
     const adminChannel = interaction.client.channels.cache.get(config.channels.admin);
     if (adminChannel) {
       await adminChannel.send(`✅ <@${interaction.user.id}> が **${performer.name}**（${event.title}）として登録しました`).catch(() => {});
     }
-
   } catch (error) {
     console.error('❌ ボタン処理エラー:', error);
     await interaction.editReply({ content: '❌ 処理中にエラーが発生しました' }).catch(() => {});
   }
 }
 
+// ─── Build Components (shared by register.js & updateRegistrationButtons) ───
+
 /**
- * Update registration message buttons to reflect current state
+ * Build all ActionRow components for the registration message
+ * Layout (max 5 rows):
+ *   Rows 1-3: Performer buttons (max 15)
+ *   Row 4:    UserSelectMenu (add member)
+ *   Row 5:    StringSelectMenu (remove performer)
  */
-async function updateRegistrationButtons(client, event) {
-  const messageId = await firebase.getRegistrationMessageId(event.id);
-  if (!messageId) {
-    console.log('⚠ 登録メッセージIDが見つかりません（event: ' + event.id + '）');
-    return;
-  }
+function buildRegistrationComponents(event, mappings) {
+  const registeredPerformerIds = new Set((mappings || []).map(m => m.performerId));
+  const performers = event.performers || [];
 
-  const registerChannel = client.channels.cache.get(config.channels.register);
-  if (!registerChannel) {
-    console.log('⚠ 登録チャンネルが見つかりません');
-    return;
-  }
+  // Detect duplicate names
+  const nameCount = {};
+  performers.forEach(p => {
+    if (p.name) nameCount[p.name] = (nameCount[p.name] || 0) + 1;
+  });
 
-  let message;
-  try {
-    message = await registerChannel.messages.fetch(messageId);
-  } catch (e) {
-    console.log('⚠ 登録メッセージが見つかりません（削除された？）');
-    return;
-  }
-
-  // Re-fetch event to ensure latest performer list
-  const latestEvent = await firebase.getEvent(event.id);
-  const performers = latestEvent ? latestEvent.performers || [] : event.performers || [];
-
-  const mappings = await firebase.getMappingsByEvent(event.id);
-  const registeredPerformerIds = new Set(mappings.map(m => m.performerId));
-
-  // Rebuild buttons (reserve last row for UserSelectMenu, max 5 rows total)
-  const maxButtonRows = 4;
+  const maxButtonRows = 3; // Reserve 2 rows for select menus
   const rows = [];
   let currentRow = new ActionRowBuilder();
   let buttonCount = 0;
@@ -255,13 +276,16 @@ async function updateRegistrationButtons(client, event) {
     if (rows.length >= maxButtonRows) break;
 
     const isRegistered = registeredPerformerIds.has(performer.id);
-    const label = isRegistered ? `✅ ${performer.name}` : performer.name;
+    const isDuplicate = nameCount[performer.name] > 1;
+    let label = performer.name;
+    if (isDuplicate) label = `⚠ ${label}`;
+    if (isRegistered) label = `✅ ${label}`;
 
     currentRow.addComponents(
       new ButtonBuilder()
         .setCustomId(`reg_${event.id}_${performer.id}`)
         .setLabel(label.slice(0, 80))
-        .setStyle(isRegistered ? ButtonStyle.Success : ButtonStyle.Secondary)
+        .setStyle(isRegistered ? ButtonStyle.Success : isDuplicate ? ButtonStyle.Danger : ButtonStyle.Secondary)
     );
     buttonCount++;
   }
@@ -269,22 +293,81 @@ async function updateRegistrationButtons(client, event) {
     rows.push(currentRow);
   }
 
-  // Always add UserSelectMenu as the last row
-  const userSelectRow = new ActionRowBuilder().addComponents(
-    new UserSelectMenuBuilder()
-      .setCustomId(`userselect_${event.id}`)
-      .setPlaceholder('サーバーメンバーを選んで登録...')
-      .setMinValues(1)
-      .setMaxValues(1)
+  // Row 4: UserSelectMenu (add member)
+  rows.push(
+    new ActionRowBuilder().addComponents(
+      new UserSelectMenuBuilder()
+        .setCustomId(`userselect_${event.id}`)
+        .setPlaceholder('➕ サーバーメンバーを選んで追加...')
+        .setMinValues(1)
+        .setMaxValues(1)
+    )
   );
-  rows.push(userSelectRow);
+
+  // Row 5: StringSelectMenu (remove performer) — only if there are performers
+  if (performers.length > 0) {
+    const options = performers.slice(0, 25).map(p => { // Discord max 25 options
+      const isDuplicate = nameCount[p.name] > 1;
+      const hasSongs = p.songs && p.songs.length > 0;
+      let desc = '';
+      if (isDuplicate) desc += '⚠ 重複あり ';
+      if (hasSongs) desc += `セトリ ${p.songs.length}曲`;
+      if (!desc) desc = '未登録';
+
+      return {
+        label: p.name.slice(0, 100),
+        value: p.id,
+        description: desc.slice(0, 100),
+        emoji: isDuplicate ? '⚠' : '🗑',
+      };
+    });
+
+    rows.push(
+      new ActionRowBuilder().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId(`removeperf_${event.id}`)
+          .setPlaceholder('🗑 出演者を削除...')
+          .setMinValues(1)
+          .setMaxValues(1)
+          .addOptions(options)
+      )
+    );
+  }
+
+  return rows;
+}
+
+// ─── Update Registration Message ───
+
+async function updateRegistrationButtons(client, event) {
+  const messageId = await firebase.getRegistrationMessageId(event.id);
+  if (!messageId) return;
+
+  const registerChannel = client.channels.cache.get(config.channels.register);
+  if (!registerChannel) return;
+
+  let message;
+  try {
+    message = await registerChannel.messages.fetch(messageId);
+  } catch (e) {
+    return;
+  }
+
+  const latestEvent = await firebase.getEvent(event.id);
+  const mappings = await firebase.getMappingsByEvent(event.id);
+  const rows = buildRegistrationComponents(latestEvent || event, mappings);
 
   try {
     await message.edit({ components: rows });
-    console.log(`📋 登録メッセージ更新完了（${performers.length}名、${rows.length}行）`);
   } catch (e) {
     console.error('❌ 登録メッセージ更新エラー:', e.message);
   }
 }
 
-module.exports = { handleButton, handleUserSelect, updateRegistrationButtons };
+module.exports = {
+  handleButton,
+  handleUserSelect,
+  handleStringSelect,
+  buildRegistrationComponents,
+  updateRegistrationButtons,
+};

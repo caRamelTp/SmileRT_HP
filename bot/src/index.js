@@ -5,7 +5,7 @@
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 const config = require('./config');
 const { loadCommands, handleCommand } = require('./handlers/commandHandler');
-const { handleButton, handleUserSelect } = require('./handlers/buttonHandler');
+const { handleButton, handleUserSelect, handleStringSelect } = require('./handlers/buttonHandler');
 const { startReminderService } = require('./services/reminderService');
 
 // Create Discord client
@@ -50,12 +50,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
-  // User select menu
+  // User select menu (add member)
   if (interaction.isUserSelectMenu()) {
     try {
       await handleUserSelect(interaction);
     } catch (error) {
       console.error('❌ ユーザー選択エラー:', error);
+    }
+    return;
+  }
+
+  // String select menu (remove performer)
+  if (interaction.isStringSelectMenu()) {
+    try {
+      await handleStringSelect(interaction);
+    } catch (error) {
+      console.error('❌ セレクトメニューエラー:', error);
     }
     return;
   }
