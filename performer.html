@@ -445,6 +445,18 @@
 
         function registerNew() {
             if (!selectedEventId) return;
+
+            const confirmed = confirm(
+                '⚠ 新規登録の前にご確認ください ⚠\n\n' +
+                'Discordの #出演者登録 チャンネルから\n' +
+                '先に登録すると、自動で名前が追加されます。\n\n' +
+                'すでにDiscordから登録済みの場合は、\n' +
+                '「キャンセル」を押して一覧から自分の名前を\n' +
+                '選んでください。\n\n' +
+                '本当に新しい出演者として登録しますか？'
+            );
+            if (!confirmed) return;
+
             // Navigate to input page in "new performer" mode — no DB write until user saves
             document.getElementById('stepDot2').className = 'step-dot done';
             document.getElementById('stepDot2').textContent = '✓';
