@@ -34,6 +34,8 @@ function _diffPerformer(oldP, newP) {
   if ((oldP.hoodie || '') !== (newP.hoodie || '')) profileChanges.push(`パーカーサイズ → ${newP.hoodie || '(空)'}`);
   if ((oldP.techRequests || '') !== (newP.techRequests || '')) profileChanges.push('技術リクエストを更新');
   if ((oldP.iconUrl || '') !== (newP.iconUrl || '')) profileChanges.push('アイコン素材URLを更新');
+  if ((oldP.photoPermission || 'none') !== (newP.photoPermission || 'none')) profileChanges.push(`写真投稿許可 → ${newP.photoPermission === 'ok' ? '許可' : '不可'}`);
+  if ((oldP.photoNote || '') !== (newP.photoNote || '')) profileChanges.push('カメラマンへのコメントを更新');
   if (profileChanges.length > 0) {
     sections.push('[プロフィール]\n' + profileChanges.map(c => `  ・${c}`).join('\n'));
   }
@@ -205,6 +207,8 @@ function createPerformer(overrides = {}) {
     cyalumeColor: '#ff6b9d',
     iconUrl: '',
     hoodie: '',               // パーカーサイズ
+    photoPermission: 'none',  // 写真投稿許可: 'ok' | 'none'
+    photoNote: '',            // カメラマンへの一言コメント
     songs: [],
     techRequests: '',
     ...overrides

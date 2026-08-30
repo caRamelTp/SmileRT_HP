@@ -227,6 +227,20 @@
                             placeholder="例: サビで照明を赤に、MCの時間が必要"></textarea>
                     </div>
                 </div>
+                <!-- Photo Permission -->
+                <div class="section-divider">📷 写真掲載について</div>
+                <div class="glass-card">
+                    <div class="form-group">
+                        <label class="form-check" style="font-size:0.95rem;cursor:pointer">
+                            <input type="checkbox" id="inputPhotoPermission">
+                            当日カメラマンが撮影した写真のSNS投稿を許可する
+                        </label>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0"><label class="form-label">カメラマンへの一言（任意）</label>
+                        <textarea class="form-textarea" id="inputPhotoNote" rows="2"
+                            placeholder="例: 完全に顔が写っていなければOK / 横顔までなら大丈夫"></textarea>
+                    </div>
+                </div>
                 <!-- Preview -->
                 <div class="preview-card">
                     <h4>入力プレビュー</h4>
@@ -322,6 +336,8 @@
             document.getElementById('inputIcon').value = p.iconUrl || '';
             document.getElementById('inputHoodie').value = p.hoodie || '';
             document.getElementById('inputTech').value = p.techRequests || '';
+            document.getElementById('inputPhotoPermission').checked = p.photoPermission === 'ok';
+            document.getElementById('inputPhotoNote').value = p.photoNote || '';
             songs = p.songs.length ? p.songs : [createSong()];
             renderSongs(); updatePreview();
         }
@@ -390,6 +406,8 @@
                 iconUrl: document.getElementById('inputIcon').value.trim(),
                 hoodie: document.getElementById('inputHoodie').value,
                 techRequests: document.getElementById('inputTech').value.trim(),
+                photoPermission: document.getElementById('inputPhotoPermission').checked ? 'ok' : 'none',
+                photoNote: document.getElementById('inputPhotoNote').value.trim(),
                 songs: songs.filter(s => s.title.trim())
             };
             if (eventId && performerId) {

@@ -186,6 +186,8 @@ function createPerformer(overrides = {}) {
     cyalumeColor: '#ff6b9d',
     iconUrl: '',
     hoodie: '',
+    photoPermission: 'none',  // 写真投稿許可: 'ok' | 'none'
+    photoNote: '',            // カメラマンへの一言コメント
     songs: [],
     techRequests: '',
     ...overrides,

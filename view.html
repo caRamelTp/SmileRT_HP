@@ -947,6 +947,9 @@
             </div>`).join('')}
           </div>
           ${p.techRequests ? `<div style="margin-top:var(--space-md);padding-top:var(--space-md);border-top:1px solid var(--border-color)"><p style="font-size:0.82rem;color:var(--text-secondary)">${escHtml(p.techRequests)}</p></div>` : ''}
+          <div style="margin-top:var(--space-md);padding-top:var(--space-md);border-top:1px solid var(--border-color)">
+            <p style="font-size:0.82rem"><strong>📷 写真投稿:</strong> ${p.photoPermission === 'ok' ? '<span style="color:var(--accent-green);font-weight:600">✅ 許可</span>' : '<span style="color:var(--accent-red);font-weight:600">❌ 不可</span>'}${p.photoNote ? `<br><span style="color:var(--text-secondary)">💬 ${escHtml(p.photoNote)}</span>` : ''}</p>
+          </div>
         </div>`).join('');
         }
 

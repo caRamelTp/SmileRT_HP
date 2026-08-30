@@ -1263,6 +1263,7 @@
               </div>`).join('')}
             </div>` : ''}
             ${p.techRequests ? `<div class="detail-tech-note"><strong style="font-size:0.72rem;color:var(--text-muted)">技術リクエスト・備考:</strong><br>${escHtml(p.techRequests)}</div>` : ''}
+            <div class="detail-tech-note" style="margin-top:var(--space-sm)"><strong style="font-size:0.72rem;color:var(--text-muted)">📷 写真投稿:</strong> ${p.photoPermission === 'ok' ? '<span class="badge badge-green" style="font-size:0.65rem">✅ 許可</span>' : '<span class="badge badge-red" style="font-size:0.65rem">❌ 不可</span>'}${p.photoNote ? `<div style="font-size:0.82rem;color:var(--text-secondary);margin-top:4px">💬 ${escHtml(p.photoNote)}</div>` : ''}</div>
           </div>
         </div>`;
             }).join('');
@@ -1375,6 +1376,13 @@
         </div>
         <div class="form-group"><label class="form-label">アイコン素材URL</label><input type="text" class="form-input" id="pIcon" value="${escHtml(p.iconUrl)}"></div>
         <div class="form-group"><label class="form-label">技術リクエスト・備考</label><textarea class="form-textarea" id="pTech">${escHtml(p.techRequests)}</textarea></div>
+        <div class="form-group">
+          <label class="form-check" style="font-size:0.95rem;cursor:pointer">
+            <input type="checkbox" id="pPhotoPermission" ${p.photoPermission === 'ok' ? 'checked' : ''}>
+            📷 写真のSNS投稿を許可する
+          </label>
+        </div>
+        <div class="form-group"><label class="form-label">カメラマンへの一言</label><textarea class="form-textarea" id="pPhotoNote" rows="2" placeholder="例: 完全に顔が写っていなければOK">${escHtml(p.photoNote || '')}</textarea></div>
         <hr style="border-color:var(--border-color);margin:var(--space-xl) 0">
         <div class="section-header" style="margin-bottom:var(--space-md)"><h4>セットリスト</h4>
           <button class="btn btn-secondary btn-sm" onclick="addSongToEdit()">+ 曲を追加</button>
@@ -1429,6 +1437,8 @@
             p.iconUrl = document.getElementById('pIcon').value.trim();
             p.hoodie = document.getElementById('pHoodie').value;
             p.techRequests = document.getElementById('pTech').value.trim();
+            p.photoPermission = document.getElementById('pPhotoPermission').checked ? 'ok' : 'none';
+            p.photoNote = document.getElementById('pPhotoNote').value.trim();
             document.querySelectorAll('.sf').forEach(f => {
                 const i = parseInt(f.dataset.i), k = f.dataset.f; if (!p.songs[i]) return;
                 if (k === 'duration') p.songs[i].duration = parseDuration(f.value);
