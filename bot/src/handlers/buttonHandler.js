@@ -255,12 +255,13 @@ async function handleRegistrationButton(interaction) {
  */
 function buildRegistrationComponents(event, mappings) {
   const registeredPerformerIds = new Set((mappings || []).map(m => m.performerId));
-  const performers = event.performers || [];
+  const performers = (event.performers || []).filter(Boolean);
 
   // Detect duplicate names
   const nameCount = {};
   performers.forEach(p => {
-    if (p.name) nameCount[p.name] = (nameCount[p.name] || 0) + 1;
+    const name = p.name || '(名前なし)';
+    nameCount[name] = (nameCount[name] || 0) + 1;
   });
 
   const maxButtonRows = 3; // Reserve 2 rows for select menus
@@ -275,9 +276,10 @@ function buildRegistrationComponents(event, mappings) {
     }
     if (rows.length >= maxButtonRows) break;
 
+    const name = performer.name || '(名前なし)';
     const isRegistered = registeredPerformerIds.has(performer.id);
-    const isDuplicate = nameCount[performer.name] > 1;
-    let label = performer.name;
+    const isDuplicate = nameCount[name] > 1;
+    let label = name;
     if (isDuplicate) label = `⚠ ${label}`;
     if (isRegistered) label = `✅ ${label}`;
 
@@ -306,8 +308,9 @@ function buildRegistrationComponents(event, mappings) {
 
   // Row 5: StringSelectMenu (remove performer) — only if there are performers
   if (performers.length > 0) {
-    const options = performers.slice(0, 25).map(p => { // Discord max 25 options
-      const isDuplicate = nameCount[p.name] > 1;
+    const options = performers.slice(0, 25).map(p => {
+      const name = p.name || '(名前なし)';
+      const isDuplicate = nameCount[name] > 1;
       const hasSongs = p.songs && p.songs.length > 0;
       let desc = '';
       if (isDuplicate) desc += '⚠ 重複あり ';
@@ -315,7 +318,7 @@ function buildRegistrationComponents(event, mappings) {
       if (!desc) desc = '未登録';
 
       return {
-        label: p.name.slice(0, 100),
+        label: name.slice(0, 100) || '(名前なし)',
         value: p.id,
         description: desc.slice(0, 100),
         emoji: isDuplicate ? '⚠' : '🗑',
@@ -340,27 +343,33 @@ function buildRegistrationComponents(event, mappings) {
 // ─── Update Registration Message ───
 
 async function updateRegistrationButtons(client, event) {
-  const messageId = await firebase.getRegistrationMessageId(event.id);
-  if (!messageId) return;
-
-  const registerChannel = client.channels.cache.get(config.channels.register);
-  if (!registerChannel) return;
-
-  let message;
   try {
-    message = await registerChannel.messages.fetch(messageId);
-  } catch (e) {
-    return;
-  }
+    const messageId = await firebase.getRegistrationMessageId(event.id);
+    if (!messageId) {
+      console.log('⚠ 登録メッセージID未登録（event: ' + event.id + '）');
+      return;
+    }
 
-  const latestEvent = await firebase.getEvent(event.id);
-  const mappings = await firebase.getMappingsByEvent(event.id);
-  const rows = buildRegistrationComponents(latestEvent || event, mappings);
+    const registerChannel = client.channels.cache.get(config.channels.register);
+    if (!registerChannel) return;
 
-  try {
+    let message;
+    try {
+      message = await registerChannel.messages.fetch(messageId);
+    } catch (e) {
+      console.log('⚠ 登録メッセージが見つかりません（削除された？）');
+      return;
+    }
+
+    const latestEvent = await firebase.getEvent(event.id);
+    const mappings = await firebase.getMappingsByEvent(event.id);
+    const rows = buildRegistrationComponents(latestEvent || event, mappings);
+
     await message.edit({ components: rows });
+    console.log(`📋 登録メッセージ更新完了（${(latestEvent || event).performers?.length || 0}名、${rows.length}行）`);
   } catch (e) {
     console.error('❌ 登録メッセージ更新エラー:', e.message);
+    console.error('  詳細:', e.code, e.status, JSON.stringify(e.rawError || {}).slice(0, 300));
   }
 }
 

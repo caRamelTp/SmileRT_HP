@@ -66,7 +66,7 @@ async function checkDeadlines(client) {
         if (!performer) continue;
 
         await processReminders(client, event, hoursLeft, event.id, async (timeText) => {
-          await sendOverrideReminder(client, event, performer, override, `個別期限まであと約 ${formatHours(getMatchedHours(hoursLeft))}`);
+          await sendOverrideReminder(client, event, performer, override, `個別${timeText}`);
         }, `override_${override.performerId}_`);
       }
     }
@@ -92,8 +92,9 @@ async function processReminders(client, event, hoursLeft, eventId, sendFn, label
       const label = `${labelPrefix}${hours}h`;
       const alreadySent = await firebase.isReminderSent(eventId, label);
       if (!alreadySent) {
-        const timeText = `期限まであと約 ${formatHours(hours)}`;
-        console.log(`  📢 ${event.title}: ${label} リマインド送信`);
+        // Use actual remaining time, not the threshold
+        const timeText = `期限まであと **${formatHoursActual(hoursLeft)}**`;
+        console.log(`  📢 ${event.title}: ${label} リマインド送信 (実際: ${hoursLeft.toFixed(1)}h)`);
         await sendFn(timeText);
         await firebase.markReminderSent(eventId, label);
       }
@@ -214,6 +215,23 @@ function formatHours(hours) {
     return `${days}日${remainHours}時間`;
   }
   return `${hours}時間`;
+}
+
+/**
+ * Format actual remaining hours into readable string
+ * e.g. 50.3 → "2日と2時間", 2.5 → "2時間30分"
+ */
+function formatHoursActual(hoursLeft) {
+  const totalMinutes = Math.floor(hoursLeft * 60);
+  const days = Math.floor(totalMinutes / (24 * 60));
+  const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0 && hours > 0) return `${days}日と${hours}時間`;
+  if (days > 0) return `${days}日`;
+  if (hours > 0 && minutes > 0) return `${hours}時間${minutes}分`;
+  if (hours > 0) return `${hours}時間`;
+  return `${minutes}分`;
 }
 
 /**
