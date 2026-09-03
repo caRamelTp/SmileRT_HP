@@ -388,6 +388,8 @@
           </div>
           <div class="form-group"><label class="form-label">🎬 きっかけメモ</label>
             <textarea class="form-textarea" data-song="${i}" data-field="cueNote" rows="2" placeholder="例: MC後にスタート、SE入り" oninput="onSI(this)">${escHtml(s.cueNote || '')}</textarea></div>
+          <div class="form-group"><label class="form-label">📋 運営への要望</label>
+            <textarea class="form-textarea" data-song="${i}" data-field="requestNote" rows="2" placeholder="例: キー変更の要望、その他リクエスト" oninput="onSI(this)">${escHtml(s.requestNote || '')}</textarea></div>
         </div>`).join('');
         }
 
