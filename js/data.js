@@ -824,7 +824,7 @@ class SmileRTDatabase {
 
           const song = createSong({
             title,
-            type: (row[i + 1] || '').includes('オリジナル') ? 'original' : 'cover',
+            type: (row[i + 1] || '').includes('オリジナル') ? 'original' : (row[i + 1] || '').includes('弾き語り') ? 'acoustic' : 'cover',
             duration: parseDuration(row[i + 2] || ''),
             audioStatus: (row[i + 3] || '').includes('あり') ? 'uploaded' : 'none',
             audioUrl: (row[i + 4] || '').trim(),

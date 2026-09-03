@@ -971,8 +971,16 @@ body.modal-open {
   border-left: 3px solid var(--accent-purple);
 }
 
-.timetable-row.acoustic-row {
+.timetable-row.acoustic-row,
+.tt-wrap tbody tr.acoustic-row {
   background: rgba(95, 173, 142, 0.05);
+  border-left: 3px solid var(--accent-green);
+}
+
+/* Admin setlist table acoustic row */
+.setlist-wrap tr.acoustic-row,
+table tr.acoustic-row {
+  background: rgba(95, 173, 142, 0.05) !important;
   border-left: 3px solid var(--accent-green);
 }
 
