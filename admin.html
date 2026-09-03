@@ -1404,16 +1404,28 @@
             <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">曲名</label>
               <input type="text" class="form-input sf" data-f="title" data-i="${i}" value="${escHtml(s.title)}"></div>
             <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">種別</label>
-              <select class="form-select sf" data-f="type" data-i="${i}"><option value="cover" ${s.type === 'cover' ? 'selected' : ''}>カバー</option><option value="original" ${s.type === 'original' ? 'selected' : ''}>オリジナル</option></select></div>
+              <select class="form-select sf" data-f="type" data-i="${i}" onchange="onEditTypeChange(${i},this.value)"><option value="cover" ${s.type === 'cover' ? 'selected' : ''}>カバー</option><option value="original" ${s.type === 'original' ? 'selected' : ''}>オリジナル</option><option value="acoustic" ${s.type === 'acoustic' ? 'selected' : ''}>弾き語り</option></select></div>
           </div>
+          ${s.type === 'acoustic' ? `<div class="form-row">
+            <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">🎸 使用楽器</label>
+              <input type="text" class="form-input sf" data-f="equipment" data-i="${i}" value="${escHtml(s.equipment || '')}" placeholder="例: アコギ、エレキ"></div>
+            <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">借りたい機材</label>
+              <input type="text" class="form-input sf" data-f="equipmentRequest" data-i="${i}" value="${escHtml(s.equipmentRequest || '')}" placeholder="任意"></div>
+          </div>` : ''}
           <div class="form-row">
             <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">曲尺</label>
               <input type="text" class="form-input sf" data-f="duration" data-i="${i}" value="${formatDuration(s.duration)}" placeholder="4:30"></div>
             <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">音源URL</label>
               <input type="text" class="form-input sf" data-f="audioUrl" data-i="${i}" value="${escHtml(s.audioUrl)}"></div>
           </div>
-          <div class="form-group" style="margin-bottom:0"><label class="form-label">きっかけ・照明・音響 / 備考</label>
-            <textarea class="form-textarea sf" data-f="cue" data-i="${i}" rows="2" placeholder="演出リクエスト、備考など">${escHtml(s.cue)}${s.remarks ? '\n' + escHtml(s.remarks) : ''}</textarea></div>
+          <div class="form-row">
+            <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">🔊 音響メモ</label>
+              <textarea class="form-textarea sf" data-f="soundNote" data-i="${i}" rows="2" placeholder="例: リバーブ強め">${escHtml(s.soundNote || '')}</textarea></div>
+            <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">💡 照明メモ</label>
+              <textarea class="form-textarea sf" data-f="lightNote" data-i="${i}" rows="2" placeholder="例: サビで赤に">${escHtml(s.lightNote || '')}</textarea></div>
+          </div>
+          <div class="form-group" style="margin-bottom:0"><label class="form-label">🎬 きっかけメモ / 備考</label>
+            <textarea class="form-textarea sf" data-f="cueNote" data-i="${i}" rows="2" placeholder="演出リクエスト、備考など">${escHtml(s.cueNote || '')}${s.remarks ? '\n' + escHtml(s.remarks) : ''}</textarea></div>
         </div>`).join('');
         }
 
@@ -1426,6 +1438,18 @@
         function rmSongEdit(i) {
             const p = db.getPerformer(currentEventId, editingPerformerId); if (!p) return;
             p.songs.splice(i, 1); db.updatePerformer(currentEventId, p); renderEditSongs(p.songs);
+        }
+        function onEditTypeChange(songIdx, newType) {
+            const p = db.getPerformer(currentEventId, editingPerformerId); if (!p || !p.songs[songIdx]) return;
+            // Save current form values first
+            document.querySelectorAll('.sf').forEach(f => {
+                const i = parseInt(f.dataset.i), k = f.dataset.f; if (!p.songs[i]) return;
+                if (k === 'duration') p.songs[i].duration = parseDuration(f.value);
+                else p.songs[i][k] = f.value;
+            });
+            p.songs[songIdx].type = newType;
+            db.updatePerformer(currentEventId, p);
+            renderEditSongs(p.songs);
         }
 
         function savePerformerEdit() {
@@ -1463,8 +1487,10 @@
           <th style="width:110px">演者名</th>
           <th>曲名</th>
           <th class="col-group-start" style="width:60px">プロンプト</th>
-          <th style="width:200px">きっかけ・照明・音響</th>
-          <th style="width:140px">備考・要望</th>
+          <th style="width:130px">音響</th>
+          <th style="width:130px">照明</th>
+          <th style="width:130px">きっかけ</th>
+          <th style="width:120px">備考・要望</th>
           <th class="col-group-start" style="width:50px">マイク</th>
           <th style="width:50px">カウント</th>
           <th style="width:40px">Key</th>
@@ -1475,18 +1501,21 @@
         </tr></thead>
         <tbody>${timeline.map((t, idx) => {
                 const isSpecial = t.slotType === 'break' || t.slotType === 'exchange' || t.slotType === 'mc';
-                if (isSpecial) return `<tr class="special-row" data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)"><td><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="11"></td><td style="text-align:center"><button class="btn btn-ghost btn-sm" style="color:var(--accent-red);font-size:0.7rem;padding:2px 6px" onclick="event.stopPropagation();deleteSpecialSlot('${t.songId}','${escHtml(t.songTitle)}')" title="削除">✕</button></td></tr>`;
+                if (isSpecial) return `<tr class="special-row" data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)"><td><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="13"></td><td style="text-align:center"><button class="btn btn-ghost btn-sm" style="color:var(--accent-red);font-size:0.7rem;padding:2px 6px" onclick="event.stopPropagation();deleteSpecialSlot('${t.songId}','${escHtml(t.songTitle)}')" title="削除">✕</button></td></tr>`;
 
                 const micCls = 'ie-select mic-select';
                 const audioCls = 'ie-select audio-select' + (t.completedAudio === '完成済み' ? ' status-done' : t.completedAudio === '受け取り済み' ? ' status-received' : '');
+                const acousticCls = t.type === 'acoustic' ? ' acoustic-row' : '';
 
-                return `<tr data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)">
+                return `<tr class="${acousticCls}" data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)">
             <td style="text-align:center;color:var(--text-muted);font-size:0.78rem"><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${t.order}</td>
             <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
             <td><div class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</div></td>
-            <td>${escHtml(t.songTitle)} ${t.type === 'original' ? '<span class="badge badge-purple" style="font-size:0.6rem">O</span>' : ''}</td>
+            <td>${escHtml(t.songTitle)} ${t.type === 'original' ? '<span class="badge badge-purple" style="font-size:0.6rem">O</span>' : t.type === 'acoustic' ? '<span class="badge badge-green" style="font-size:0.6rem">🎸</span>' : ''}</td>
             <td class="col-group-start"><input class="ie ie-sm" value="${escHtml(t.promptNumber)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'promptNumber',this.value)"></td>
-            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'cue',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.cue)}</textarea></td>
+            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'soundNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.soundNote)}</textarea></td>
+            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'lightNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.lightNote)}</textarea></td>
+            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'cueNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.cueNote)}</textarea></td>
             <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'remarks',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.remarks)}</textarea></td>
             <td class="col-group-start"><select class="${micCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'micCount',parseInt(this.value))">
               ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<option ${t.micCount === n ? 'selected' : ''}>${n}</option>`).join('')}</select></td>

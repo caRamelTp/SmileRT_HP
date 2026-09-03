@@ -971,6 +971,11 @@ body.modal-open {
   border-left: 3px solid var(--accent-purple);
 }
 
+.timetable-row.acoustic-row {
+  background: rgba(95, 173, 142, 0.05);
+  border-left: 3px solid var(--accent-green);
+}
+
 /* --- Color Swatch --- */
 .color-swatch {
   width: 20px;

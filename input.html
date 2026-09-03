@@ -357,6 +357,7 @@
               <select class="form-select" data-song="${i}" data-field="type" onchange="onSI(this)">
                 <option value="cover" ${s.type === 'cover' ? 'selected' : ''}>カバー</option>
                 <option value="original" ${s.type === 'original' ? 'selected' : ''}>オリジナル</option>
+                <option value="acoustic" ${s.type === 'acoustic' ? 'selected' : ''}>弾き語り</option>
               </select></div>
             <div class="form-group"><label class="form-label">曲の尺</label>
               <input type="text" class="form-input" data-song="${i}" data-field="duration" value="${formatDuration(s.duration)}" placeholder="4:30" oninput="onSI(this)"></div>
@@ -365,6 +366,13 @@
                 ${[1,2,3,4,5,6,7,8].map(n => `<option value="${n}" ${(s.micCount || 1) === n ? 'selected' : ''}>${n}本</option>`).join('')}
               </select></div>
           </div>
+          ${s.type === 'acoustic' ? `
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">🎸 使用楽器</label>
+              <input type="text" class="form-input" data-song="${i}" data-field="equipment" value="${escHtml(s.equipment || '')}" placeholder="例: アコギ、エレキ" oninput="onSI(this)"></div>
+            <div class="form-group"><label class="form-label">借りたい機材</label>
+              <input type="text" class="form-input" data-song="${i}" data-field="equipmentRequest" value="${escHtml(s.equipmentRequest || '')}" placeholder="任意: ギタースタンド等" oninput="onSI(this)"></div>
+          </div>` : ''}
           <div class="form-group"><label class="form-label">音源アップロード</label>
             <div class="flex gap-md mb-sm">
               <label class="form-check"><input type="radio" name="audio_${i}" value="uploaded" ${s.audioStatus === 'uploaded' ? 'checked' : ''} onchange="onAC(${i},'uploaded')"> あり</label>
@@ -372,19 +380,25 @@
             </div>
             <input type="text" class="form-input" data-song="${i}" data-field="audioUrl" value="${escHtml(s.audioUrl)}" placeholder="GigaFile等のリンク" oninput="onSI(this)" style="${s.audioStatus !== 'uploaded' ? 'display:none' : ''}" id="aUrl_${i}">
           </div>
-          <div class="form-group"><label class="form-label">演出や特殊リクエスト</label>
-            <textarea class="form-textarea" data-song="${i}" data-field="cue" rows="2" placeholder="照明・BGM・演出" oninput="onSI(this)">${escHtml(s.cue)}</textarea></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">🔊 音響メモ</label>
+              <textarea class="form-textarea" data-song="${i}" data-field="soundNote" rows="2" placeholder="例: リバーブ強め、ボーカル大きめ" oninput="onSI(this)">${escHtml(s.soundNote || '')}</textarea></div>
+            <div class="form-group"><label class="form-label">💡 照明メモ</label>
+              <textarea class="form-textarea" data-song="${i}" data-field="lightNote" rows="2" placeholder="例: サビで赤に、暗転スタート" oninput="onSI(this)">${escHtml(s.lightNote || '')}</textarea></div>
+          </div>
+          <div class="form-group"><label class="form-label">🎬 きっかけメモ</label>
+            <textarea class="form-textarea" data-song="${i}" data-field="cueNote" rows="2" placeholder="例: MC後にスタート、SE入り" oninput="onSI(this)">${escHtml(s.cueNote || '')}</textarea></div>
         </div>`).join('');
         }
 
-        function onSI(el) { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i]) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : f === 'micCount' ? parseInt(el.value) || 1 : el.value; updatePreview(); }
+        function onSI(el) { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i]) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : f === 'micCount' ? parseInt(el.value) || 1 : el.value; if (f === 'type') renderSongs(); updatePreview(); }
         function onAC(idx, v) { songs[idx].audioStatus = v; const u = document.getElementById(`aUrl_${idx}`); if (u) u.style.display = v === 'uploaded' ? '' : 'none'; }
 
         function updatePreview() {
             const name = document.getElementById('inputName').value || '未入力';
             document.getElementById('previewContent').innerHTML = `
         <p style="font-weight:600;margin-bottom:var(--space-sm)">${escHtml(name)}</p>
-        ${songs.filter(s => s.title).map((s, i) => `<div class="preview-song"><span class="num">${i + 1}</span><span style="flex:1">${escHtml(s.title)}</span><span class="badge ${s.type === 'original' ? 'badge-purple' : 'badge-blue'}" style="font-size:0.65rem">${s.type === 'original' ? 'O' : 'C'}</span>${(s.micCount || 1) > 1 ? `<span style="font-size:0.72rem;color:var(--text-muted)">🎤${s.micCount}</span>` : ''}${s.duration ? `<span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">${formatDuration(s.duration)}</span>` : ''}</div>`).join('') || '<p class="text-muted" style="font-size:0.85rem">曲を入力してください</p>'}`;
+        ${songs.filter(s => s.title).map((s, i) => `<div class="preview-song"><span class="num">${i + 1}</span><span style="flex:1">${escHtml(s.title)}</span><span class="badge ${s.type === 'original' ? 'badge-purple' : s.type === 'acoustic' ? 'badge-green' : 'badge-blue'}" style="font-size:0.65rem">${s.type === 'original' ? 'O' : s.type === 'acoustic' ? '🎸' : 'C'}</span>${(s.micCount || 1) > 1 ? `<span style="font-size:0.72rem;color:var(--text-muted)">🎤${s.micCount}</span>` : ''}${s.duration ? `<span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">${formatDuration(s.duration)}</span>` : ''}</div>`).join('') || '<p class="text-muted" style="font-size:0.85rem">曲を入力してください</p>'}`;
         }
 
         function saveInput() {

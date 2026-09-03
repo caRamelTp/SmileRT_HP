@@ -54,11 +54,16 @@ function _diffPerformer(oldP, newP) {
     const changes = [];
     const songNum = newSongIndex.get(ns.id);
     if ((os.title || '') !== (ns.title || '')) changes.push(`曲名: ${os.title || '(空)'} → ${ns.title || '(空)'}`);
-    if ((os.type || 'cover') !== (ns.type || 'cover')) changes.push(`種別 → ${ns.type === 'original' ? 'オリジナル' : 'カバー'}`);
+    if ((os.type || 'cover') !== (ns.type || 'cover')) changes.push(`種別 → ${ns.type === 'original' ? 'オリジナル' : ns.type === 'acoustic' ? '弾き語り' : 'カバー'}`);
     if ((os.duration || 0) !== (ns.duration || 0)) changes.push(`曲尺 → ${formatDuration(ns.duration) || '(空)'}`);
     if ((os.audioStatus || 'none') !== (ns.audioStatus || 'none')) changes.push('音源ステータスを更新');
     if ((os.audioUrl || '') !== (ns.audioUrl || '')) changes.push('音源URLを更新');
     if ((os.cue || '') !== (ns.cue || '')) changes.push('演出リクエストを更新');
+    if ((os.soundNote || '') !== (ns.soundNote || '')) changes.push('音響メモを更新');
+    if ((os.lightNote || '') !== (ns.lightNote || '')) changes.push('照明メモを更新');
+    if ((os.cueNote || '') !== (ns.cueNote || '')) changes.push('きっかけメモを更新');
+    if ((os.equipment || '') !== (ns.equipment || '')) changes.push(`使用楽器 → ${ns.equipment || '(空)'}`);
+    if ((os.equipmentRequest || '') !== (ns.equipmentRequest || '')) changes.push('借りたい機材を更新');
     if ((os.remarks || '') !== (ns.remarks || '')) changes.push('備考を更新');
     if ((os.completedAudio || '') !== (ns.completedAudio || '')) changes.push(`完成音源 → ${ns.completedAudio || '(空)'}`);
     if ((os.audioConfirmed || false) !== (ns.audioConfirmed || false)) changes.push(`音源確認 → ${ns.audioConfirmed ? 'チェック' : '解除'}`);
@@ -179,14 +184,19 @@ function createSong(overrides = {}) {
   return {
     id: generateId(),
     title: '',
-    type: 'cover',           // 'cover' | 'original'
+    type: 'cover',           // 'cover' | 'original' | 'acoustic'
     duration: 0,              // seconds
     audioStatus: 'none',      // 'none' | 'uploaded' | 'confirmed'
     audioUrl: '',
     micCount: 1,
     prompt: false,
     promptNumber: '',
-    cue: '',                  // きっかけ・照明・音響
+    cue: '',                  // (レガシー) きっかけ・照明・音響 — マイグレーション用に残す
+    soundNote: '',            // 音響メモ
+    lightNote: '',            // 照明メモ
+    cueNote: '',              // きっかけメモ
+    equipment: '',            // 使用楽器（弾き語り時）
+    equipmentRequest: '',     // 借りたい機材（弾き語り時）
     remarks: '',              // 備考・要望
     key: '',
     count: '',                // カウント
@@ -346,6 +356,18 @@ class SmileRTDatabase {
     if (!Array.isArray(e.setlistOverrides)) e.setlistOverrides = e.setlistOverrides ? Object.values(e.setlistOverrides) : [];
     e.performers.forEach(p => {
       if (!Array.isArray(p.songs)) p.songs = p.songs ? Object.values(p.songs) : [];
+      // Migrate legacy 'cue' field to 'cueNote' (one-time migration)
+      p.songs.forEach(s => {
+        if (s.cue && !s.cueNote && !s.soundNote && !s.lightNote) {
+          s.cueNote = s.cue;
+        }
+        // Ensure new fields exist
+        if (s.soundNote === undefined) s.soundNote = '';
+        if (s.lightNote === undefined) s.lightNote = '';
+        if (s.cueNote === undefined) s.cueNote = '';
+        if (s.equipment === undefined) s.equipment = '';
+        if (s.equipmentRequest === undefined) s.equipmentRequest = '';
+      });
     });
     return e;
   }
@@ -480,6 +502,11 @@ class SmileRTDatabase {
         prompt: item.prompt || false,
         promptNumber: item.promptNumber || '',
         cue: item.cue || '',
+        soundNote: item.soundNote || '',
+        lightNote: item.lightNote || '',
+        cueNote: item.cueNote || '',
+        equipment: item.equipment || '',
+        equipmentRequest: item.equipmentRequest || '',
         remarks: item.remarks || '',
         key: item.key || '',
         count: item.count || '',
@@ -651,7 +678,7 @@ class SmileRTDatabase {
     const event = this.getEvent(eventId);
     if (!event) return;
     const timeline = this.calculateTimetable(event);
-    const headers = ['曲順', '時間', '演者名', '曲名', '種別', '曲尺', 'プロンプト', 'きっかけ・照明・音響', '備考', 'マイク', 'カウント', 'Key', '完成音源', '音源確認', 'はれむぅ確認'];
+    const headers = ['曲順', '時間', '演者名', '曲名', '種別', '曲尺', 'プロンプト', '音響', '照明', 'きっかけ', '備考', 'マイク', 'カウント', 'Key', '使用楽器', '借りたい機材', '完成音源', '音源確認', 'はれむぅ確認'];
     const csvEsc = v => {
       const s = String(v || '');
       if (s.includes(',') || s.includes('"') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"';
@@ -660,13 +687,16 @@ class SmileRTDatabase {
     const rows = [headers.map(csvEsc).join(',')];
     timeline.forEach(t => {
       if (t.slotType !== 'song') {
-        rows.push([csvEsc(t.songTitle || t.slotType), csvEsc(t.timeRange), '', '', '', csvEsc(t.durationStr), '', '', '', '', '', '', '', '', ''].join(','));
+        rows.push([csvEsc(t.songTitle || t.slotType), csvEsc(t.timeRange), '', '', '', csvEsc(t.durationStr), '', '', '', '', '', '', '', '', '', '', '', '', ''].join(','));
       } else {
+        const typeStr = t.type === 'original' ? 'オリジナル' : t.type === 'acoustic' ? '弾き語り' : 'カバー';
         rows.push([
           csvEsc(t.order), csvEsc(t.timeRange), csvEsc(t.performerName), csvEsc(t.songTitle),
-          csvEsc(t.type === 'original' ? 'オリジナル' : 'カバー'), csvEsc(t.durationStr),
-          csvEsc(t.promptNumber), csvEsc(t.cue), csvEsc(t.remarks),
+          csvEsc(typeStr), csvEsc(t.durationStr),
+          csvEsc(t.promptNumber), csvEsc(t.soundNote), csvEsc(t.lightNote), csvEsc(t.cueNote),
+          csvEsc(t.remarks),
           csvEsc(t.micCount), csvEsc(t.count), csvEsc(t.key),
+          csvEsc(t.equipment), csvEsc(t.equipmentRequest),
           csvEsc(t.completedAudio),
           csvEsc(t.audioConfirmed ? '✓' : ''), csvEsc(t.audioConfirmedHaremu ? '✓' : '')
         ].join(','));
@@ -685,17 +715,20 @@ class SmileRTDatabase {
     const event = this.getEvent(eventId);
     if (!event) return '';
     const timeline = this.calculateTimetable(event);
-    const headers = ['曲順', '時間', '演者名', '曲名', '種別', '曲尺', 'プロンプト', 'きっかけ・照明・音響', '備考', 'マイク', 'カウント', 'Key', '完成音源', '音源確認', 'はれむぅ確認'];
+    const headers = ['曲順', '時間', '演者名', '曲名', '種別', '曲尺', 'プロンプト', '音響', '照明', 'きっかけ', '備考', 'マイク', 'カウント', 'Key', '使用楽器', '借りたい機材', '完成音源', '音源確認', 'はれむぅ確認'];
     const rows = [headers.join('\t')];
     timeline.forEach(t => {
       if (t.slotType !== 'song') {
-        rows.push([t.songTitle || t.slotType, t.timeRange, '', '', '', t.durationStr, '', '', '', '', '', '', '', '', ''].join('\t'));
+        rows.push([t.songTitle || t.slotType, t.timeRange, '', '', '', t.durationStr, '', '', '', '', '', '', '', '', '', '', '', '', ''].join('\t'));
       } else {
+        const typeStr = t.type === 'original' ? 'オリジナル' : t.type === 'acoustic' ? '弾き語り' : 'カバー';
         rows.push([
           t.order, t.timeRange, t.performerName, t.songTitle,
-          t.type === 'original' ? 'オリジナル' : 'カバー', t.durationStr,
-          t.promptNumber, t.cue, t.remarks,
+          typeStr, t.durationStr,
+          t.promptNumber, t.soundNote, t.lightNote, t.cueNote,
+          t.remarks,
           t.micCount, t.count, t.key,
+          t.equipment, t.equipmentRequest,
           t.completedAudio,
           t.audioConfirmed ? '✓' : '', t.audioConfirmedHaremu ? '✓' : ''
         ].join('\t'));
@@ -711,29 +744,35 @@ class SmileRTDatabase {
     const timeline = this.calculateTimetable(event);
     const thStyle = 'background:#f0f0f0;font-weight:bold;border:1px solid #ccc;padding:4px 8px;font-size:12px;text-align:center;';
     const tdStyle = 'border:1px solid #ddd;padding:4px 8px;font-size:12px;';
-    const headers = ['曲順', '時間', '演者名', '曲名', '種別', '曲尺', 'プロンプト', 'きっかけ・照明・音響', '備考', 'マイク', 'カウント', 'Key', '完成音源', '音源確認', 'はれむぅ確認'];
+    const headers = ['曲順', '時間', '演者名', '曲名', '種別', '曲尺', 'プロンプト', '音響', '照明', 'きっかけ', '備考', 'マイク', 'カウント', 'Key', '使用楽器', '借りたい機材', '完成音源', '音源確認', 'はれむぅ確認'];
     
     let html = `<table style="border-collapse:collapse;font-family:sans-serif;">`;
     html += `<thead><tr>${headers.map(h => `<th style="${thStyle}">${h}</th>`).join('')}</tr></thead><tbody>`;
     
     timeline.forEach(t => {
       if (t.slotType !== 'song') {
-        html += `<tr style="background:#fff8e1;"><td style="${tdStyle}font-weight:bold;color:#b8860b;" colspan="15">${t.songTitle || t.slotType}　${t.timeRange}　(${t.durationStr})</td></tr>`;
+        html += `<tr style="background:#fff8e1;"><td style="${tdStyle}font-weight:bold;color:#b8860b;" colspan="19">${t.songTitle || t.slotType}　${t.timeRange}　(${t.durationStr})</td></tr>`;
       } else {
         const doneColor = t.completedAudio === '完成済み' ? 'color:#16a34a;font-weight:bold;' : t.completedAudio === '受け取り済み' ? 'color:#d97706;font-weight:bold;' : '';
-        html += `<tr>
+        const typeStr = t.type === 'original' ? 'オリジナル' : t.type === 'acoustic' ? '弾き語り' : 'カバー';
+        const acousticBg = t.type === 'acoustic' ? 'background:#f0fdf4;' : '';
+        html += `<tr style="${acousticBg}">
           <td style="${tdStyle}text-align:center;">${t.order}</td>
           <td style="${tdStyle}font-family:monospace;">${t.timeRange}</td>
           <td style="${tdStyle}">${t.performerName}</td>
           <td style="${tdStyle}font-weight:600;">${t.songTitle}</td>
-          <td style="${tdStyle}text-align:center;">${t.type === 'original' ? 'オリジナル' : 'カバー'}</td>
+          <td style="${tdStyle}text-align:center;">${typeStr}</td>
           <td style="${tdStyle}text-align:center;font-family:monospace;">${t.durationStr}</td>
           <td style="${tdStyle}text-align:center;">${t.promptNumber}</td>
-          <td style="${tdStyle}">${t.cue}</td>
+          <td style="${tdStyle}">${t.soundNote}</td>
+          <td style="${tdStyle}">${t.lightNote}</td>
+          <td style="${tdStyle}">${t.cueNote}</td>
           <td style="${tdStyle}">${t.remarks}</td>
           <td style="${tdStyle}text-align:center;">${t.micCount || 0}</td>
           <td style="${tdStyle}text-align:center;">${t.count}</td>
           <td style="${tdStyle}text-align:center;">${t.key}</td>
+          <td style="${tdStyle}">${t.equipment}</td>
+          <td style="${tdStyle}">${t.equipmentRequest}</td>
           <td style="${tdStyle}text-align:center;${doneColor}">${t.completedAudio}</td>
           <td style="${tdStyle}text-align:center;">${t.audioConfirmed ? '✓' : ''}</td>
           <td style="${tdStyle}text-align:center;">${t.audioConfirmedHaremu ? '✓' : ''}</td>

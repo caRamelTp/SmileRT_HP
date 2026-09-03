@@ -64,7 +64,7 @@
         .tt-wrap table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1000px
+            min-width: 1200px
         }
 
         .tt-wrap thead th {
@@ -305,7 +305,7 @@
 
         @media (max-width:768px) {
             .tt-wrap table {
-                min-width: 600px
+                min-width: 800px
             }
 
             .detail-grid {
@@ -876,7 +876,7 @@
 
             wrap.innerHTML = `<table><thead><tr>
         <th>曲順</th><th>時間</th>${rTh}<th>演者名</th><th>曲名</th><th class="col-group-start">プロンプト</th>
-        <th>きっかけ・照明・音響</th><th>備考</th><th class="col-group-start">マイク</th><th>カウント</th><th>Key</th>
+        <th>音響</th><th>照明</th><th>きっかけ</th><th>備考</th><th class="col-group-start">マイク</th><th>カウント</th><th>Key</th>
         <th class="col-group-start">曲尺</th><th class="col-group-start">完成音源</th><th>音源確認</th><th>はれむぅ確認</th>
       </tr></thead><tbody>${timeline.map(t => {
                 let rTd = '';
@@ -888,16 +888,18 @@
                 } else if (rCol) {
                     rTd = '<td class="col-rehearsal"></td>';
                 }
-                const specialColspan = rCol ? 13 : 12;
+                const specialColspan = rCol ? 15 : 14;
                 if (t.slotType !== 'song') return `<tr class="special-row"><td>${escHtml(t.songTitle || t.slotType)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td>${rTd}<td colspan="${specialColspan}"></td></tr>`;
-                return `<tr>
+                return `<tr class="${t.type === 'acoustic' ? 'acoustic-row' : ''}">
           <td style="text-align:center;font-size:0.78rem;color:var(--text-muted)">${t.order}</td>
           <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
           ${rTd}
           <td><span class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</span></td>
-          <td>${escHtml(t.songTitle)}${t.type === 'original' ? ' <span class="badge badge-purple" style="font-size:0.6rem">O</span>' : ''}</td>
+          <td>${escHtml(t.songTitle)}${t.type === 'original' ? ' <span class="badge badge-purple" style="font-size:0.6rem">O</span>' : t.type === 'acoustic' ? ' <span class="badge badge-green" style="font-size:0.6rem">🎸</span>' : ''}</td>
           <td class="col-group-start" style="text-align:center">${escHtml(t.promptNumber)}</td>
-          <td style="font-size:0.78rem">${escHtml(t.cue)}</td>
+          <td style="font-size:0.78rem">${escHtml(t.soundNote)}</td>
+          <td style="font-size:0.78rem">${escHtml(t.lightNote)}</td>
+          <td style="font-size:0.78rem">${escHtml(t.cueNote)}</td>
           <td style="font-size:0.78rem">${escHtml(t.remarks)}</td>
           <td class="col-group-start" style="text-align:center">${t.micCount || 0}</td>
           <td style="text-align:center">${escHtml(t.count)}</td>
@@ -937,10 +939,13 @@
               <div style="flex:1;min-width:0">
                 <div class="flex items-center gap-xs" style="flex-wrap:wrap">
                   <strong style="font-size:0.9rem">${escHtml(s.title || '曲名未入力')}</strong>
-                  <span class="badge ${s.type === 'original' ? 'badge-purple' : 'badge-blue'}" style="font-size:0.6rem">${s.type === 'original' ? 'オリジナル' : 'カバー'}</span>
+                  <span class="badge ${s.type === 'original' ? 'badge-purple' : s.type === 'acoustic' ? 'badge-green' : 'badge-blue'}" style="font-size:0.6rem">${s.type === 'original' ? 'オリジナル' : s.type === 'acoustic' ? '弾き語り' : 'カバー'}</span>
                   ${s.duration ? `<span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">${formatDuration(s.duration)}</span>` : ''}
                 </div>
-                ${s.cue ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">${escHtml(s.cue)}</div>` : ''}
+                ${s.type === 'acoustic' && s.equipment ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">🎸 ${escHtml(s.equipment)}${s.equipmentRequest ? ` / 借りたい: ${escHtml(s.equipmentRequest)}` : ''}</div>` : ''}
+                ${s.soundNote ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">🔊 ${escHtml(s.soundNote)}</div>` : ''}
+                ${s.lightNote ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">💡 ${escHtml(s.lightNote)}</div>` : ''}
+                ${s.cueNote ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">🎬 ${escHtml(s.cueNote)}</div>` : ''}
                 ${s.remarks ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">${escHtml(s.remarks)}</div>` : ''}
                 ${s.audioUrl ? `<div style="font-size:0.75rem;margin-top:2px"><a href="${escHtml(s.audioUrl)}" target="_blank">音源</a></div>` : ''}
               </div>
