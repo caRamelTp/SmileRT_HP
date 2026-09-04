@@ -392,8 +392,31 @@
         </div>`).join('');
         }
 
-        function onSI(el) { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i]) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : f === 'micCount' ? parseInt(el.value) || 0 : el.value; if (f === 'type') renderSongs(); updatePreview(); }
-        function onAC(idx, v) { songs[idx].audioStatus = v; const u = document.getElementById(`aUrl_${idx}`); if (u) u.style.display = v === 'uploaded' ? '' : 'none'; }
+        function onSI(el) {
+            const i = parseInt(el.dataset.song), f = el.dataset.field;
+            if (!songs[i]) return;
+            songs[i][f] = f === 'duration' ? parseDuration(el.value) : f === 'micCount' ? parseInt(el.value) || 0 : el.value;
+            if (f === 'type') {
+                if (el.value !== 'acoustic') {
+                    songs[i].equipment = '';
+                    songs[i].equipmentRequest = '';
+                }
+                renderSongs();
+            }
+            updatePreview();
+        }
+        function onAC(idx, v) {
+            if (!songs[idx]) return;
+            songs[idx].audioStatus = v;
+            const u = document.getElementById(`aUrl_${idx}`);
+            if (u) {
+                u.style.display = v === 'uploaded' ? '' : 'none';
+                if (v !== 'uploaded') {
+                    u.value = '';
+                    songs[idx].audioUrl = '';
+                }
+            }
+        }
 
         function updatePreview() {
             const name = document.getElementById('inputName').value || '未入力';
@@ -426,24 +449,42 @@
                     songs[i][f] = el.value;
                 }
             });
+            // Clean up inactive/erased fields
+            songs.forEach(s => {
+                if (s.audioStatus !== 'uploaded') s.audioUrl = '';
+                if (s.type !== 'acoustic') {
+                    s.equipment = '';
+                    s.equipmentRequest = '';
+                }
+            });
             const validSongs = songs.filter(s => {
-                const hasTitle = s.title && s.title.trim().length > 0;
-                const hasNotes = (s.soundNote && s.soundNote.trim()) || (s.lightNote && s.lightNote.trim()) || (s.cueNote && s.cueNote.trim()) || (s.requestNote && s.requestNote.trim()) || (s.equipment && s.equipment.trim()) || (s.audioUrl && s.audioUrl.trim());
+                const hasTitle = Boolean(s.title && s.title.trim().length > 0);
+                const hasNotes = Boolean(
+                    (s.soundNote && s.soundNote.trim()) ||
+                    (s.lightNote && s.lightNote.trim()) ||
+                    (s.cueNote && s.cueNote.trim()) ||
+                    (s.requestNote && s.requestNote.trim()) ||
+                    (s.equipment && s.equipment.trim()) ||
+                    (s.audioUrl && s.audioUrl.trim())
+                );
                 return hasTitle || hasNotes;
             }).map(s => {
                 s.title = (s.title || '').trim();
                 return s;
             });
+            const finalSongs = validSongs.length ? validSongs : [createSong()];
+            const colorTextEl = document.getElementById('inputColorText');
+            const cyalumeColor = colorTextEl ? colorTextEl.value.trim() : '';
             const data = {
                 name, discord: document.getElementById('inputDiscord').value.trim(),
                 twitter: document.getElementById('inputTwitter').value.trim(),
-                cyalumeColor: document.getElementById('inputColorText').value.trim() || document.getElementById('inputColor').value,
+                cyalumeColor: cyalumeColor,
                 iconUrl: document.getElementById('inputIcon').value.trim(),
                 hoodie: document.getElementById('inputHoodie').value,
                 techRequests: document.getElementById('inputTech').value.trim(),
                 photoPermission: document.getElementById('inputPhotoPermission').checked ? 'ok' : 'none',
                 photoNote: document.getElementById('inputPhotoNote').value.trim(),
-                songs: validSongs
+                songs: finalSongs
             };
             if (eventId && performerId) {
                 // Existing performer — update

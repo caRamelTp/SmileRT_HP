@@ -1452,8 +1452,7 @@
             const pTwitterEl = document.getElementById('pTwitter');
             if (pTwitterEl) p.twitter = pTwitterEl.value.trim();
             const pColorTextEl = document.getElementById('pColorText');
-            const pColorEl = document.getElementById('pColor');
-            if (pColorTextEl || pColorEl) p.cyalumeColor = (pColorTextEl?.value.trim()) || (pColorEl?.value) || p.cyalumeColor;
+            if (pColorTextEl) p.cyalumeColor = pColorTextEl.value.trim();
             const pIconEl = document.getElementById('pIcon');
             if (pIconEl) p.iconUrl = pIconEl.value.trim();
             const pHoodieEl = document.getElementById('pHoodie');
@@ -1470,6 +1469,12 @@
                 if (!p.songs[i] || !k) return;
                 if (k === 'duration') p.songs[i].duration = parseDuration(f.value);
                 else p.songs[i][k] = f.value;
+            });
+            p.songs.forEach(s => {
+                if (s.type !== 'acoustic') {
+                    s.equipment = '';
+                    s.equipmentRequest = '';
+                }
             });
         }
 
@@ -1492,6 +1497,10 @@
             const p = db.getPerformer(currentEventId, editingPerformerId); if (!p || !p.songs[songIdx]) return;
             _collectModalFormData(p);
             p.songs[songIdx].type = newType;
+            if (newType !== 'acoustic') {
+                p.songs[songIdx].equipment = '';
+                p.songs[songIdx].equipmentRequest = '';
+            }
             db.updatePerformer(currentEventId, p);
             renderEditSongs(p.songs);
         }

@@ -382,8 +382,11 @@ class SmileRTDatabase {
       if (!Array.isArray(p.songs)) p.songs = p.songs ? Object.values(p.songs) : [];
       // Migrate legacy 'cue' field to 'cueNote' (one-time migration)
       p.songs.forEach(s => {
-        if (s.cue && !s.cueNote && !s.soundNote && !s.lightNote) {
-          s.cueNote = s.cue;
+        if (s.cue !== undefined && s.cue !== '') {
+          if (!s.cueNote && !s.soundNote && !s.lightNote) {
+            s.cueNote = s.cue;
+          }
+          delete s.cue;
         }
         // Ensure new fields exist
         if (s.soundNote === undefined) s.soundNote = '';
