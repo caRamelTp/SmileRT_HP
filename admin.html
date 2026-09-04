@@ -1404,7 +1404,7 @@
             <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">曲名</label>
               <input type="text" class="form-input sf" data-f="title" data-i="${i}" value="${escHtml(s.title)}"></div>
             <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">種別</label>
-              <select class="form-select sf" data-f="type" data-i="${i}" onchange="onEditTypeChange(${i},this.value)"><option value="cover" ${s.type === 'cover' ? 'selected' : ''}>カバー</option><option value="original" ${s.type === 'original' ? 'selected' : ''}>オリジナル</option><option value="acoustic" ${s.type === 'acoustic' ? 'selected' : ''}>弾き語り</option></select></div>
+              <select class="form-select sf" data-f="type" data-i="${i}" onchange="onEditTypeChange(${i},this.value)"><option value="oke" ${s.type !== 'acoustic' ? 'selected' : ''}>オケ</option><option value="acoustic" ${s.type === 'acoustic' ? 'selected' : ''}>弾き語り</option></select></div>
           </div>
           ${s.type === 'acoustic' ? `<div class="form-row">
             <div class="form-group" style="margin-bottom:var(--space-sm)"><label class="form-label">🎸 使用楽器</label>
@@ -1496,10 +1496,7 @@
           <th style="width:120px">照明</th>
           <th style="width:120px">きっかけ</th>
           <th style="width:120px">運営への要望</th>
-          <th style="width:100px">備考・要望</th>
           <th class="col-group-start" style="width:50px">マイク</th>
-          <th style="width:50px">カウント</th>
-          <th style="width:40px">Key</th>
           <th class="col-group-start" style="width:55px">曲尺</th>
           <th class="col-group-start" style="width:80px">完成音源</th>
           <th style="width:50px">音源確認</th>
@@ -1507,7 +1504,7 @@
         </tr></thead>
         <tbody>${timeline.map((t, idx) => {
                 const isSpecial = t.slotType === 'break' || t.slotType === 'exchange' || t.slotType === 'mc';
-                if (isSpecial) return `<tr class="special-row" data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)"><td><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="15"></td><td style="text-align:center"><button class="btn btn-ghost btn-sm" style="color:var(--accent-red);font-size:0.7rem;padding:2px 6px" onclick="event.stopPropagation();deleteSpecialSlot('${t.songId}','${escHtml(t.songTitle)}')" title="削除">✕</button></td></tr>`;
+                if (isSpecial) return `<tr class="special-row" data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)"><td><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="12"></td><td style="text-align:center"><button class="btn btn-ghost btn-sm" style="color:var(--accent-red);font-size:0.7rem;padding:2px 6px" onclick="event.stopPropagation();deleteSpecialSlot('${t.songId}','${escHtml(t.songTitle)}')" title="削除">✕</button></td></tr>`;
 
                 const micCls = 'ie-select mic-select';
                 const audioCls = 'ie-select audio-select' + (t.completedAudio === '完成済み' ? ' status-done' : t.completedAudio === '受け取り済み' ? ' status-received' : '');
@@ -1518,18 +1515,15 @@
             <td style="text-align:center;color:var(--text-muted);font-size:0.78rem"><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${t.order}</td>
             <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
             <td><div class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</div></td>
-            <td>${escHtml(t.songTitle)} ${t.type === 'original' ? '<span class="badge badge-purple" style="font-size:0.6rem">O</span>' : ''}</td>
+            <td>${escHtml(t.songTitle)}</td>
             <td style="text-align:center;font-size:0.78rem;color:var(--accent-green);font-weight:600">${acousticCol}</td>
             <td class="col-group-start"><input class="ie ie-sm" value="${escHtml(t.promptNumber)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'promptNumber',this.value)"></td>
             <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'soundNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.soundNote)}</textarea></td>
             <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'lightNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.lightNote)}</textarea></td>
             <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'cueNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.cueNote)}</textarea></td>
             <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'requestNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.requestNote)}</textarea></td>
-            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'remarks',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.remarks)}</textarea></td>
             <td class="col-group-start"><select class="${micCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'micCount',parseInt(this.value))">
               ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<option ${t.micCount === n ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
-            <td><input class="ie ie-sm" value="${escHtml(t.count)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'count',this.value)"></td>
-            <td><input class="ie ie-sm" value="${escHtml(t.key)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'key',this.value)"></td>
             <td class="col-group-start" style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
             <td class="col-group-start"><select class="${audioCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'completedAudio',this.value);this.className='ie-select audio-select'+(this.value==='完成済み'?' status-done':this.value==='受け取り済み'?' status-received':'')">
               <option value="" ${!t.completedAudio ? 'selected' : ''}></option>

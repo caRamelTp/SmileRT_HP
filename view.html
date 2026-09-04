@@ -882,7 +882,7 @@
 
             wrap.innerHTML = `<table><thead><tr>
         <th>曲順</th><th>時間</th>${rTh}<th>演者名</th><th>曲名</th><th>弾き語り</th><th class="col-group-start">プロンプト</th>
-        <th>音響</th><th>照明</th><th>きっかけ</th><th>運営への要望</th><th>備考</th><th class="col-group-start">マイク</th><th>カウント</th><th>Key</th>
+        <th>音響</th><th>照明</th><th>きっかけ</th><th>運営への要望</th><th class="col-group-start">マイク</th>
         <th class="col-group-start">曲尺</th><th class="col-group-start">完成音源</th><th>音源確認</th><th>はれむぅ確認</th>
       </tr></thead><tbody>${timeline.map(t => {
                 let rTd = '';
@@ -894,7 +894,7 @@
                 } else if (rCol) {
                     rTd = '<td class="col-rehearsal"></td>';
                 }
-                const specialColspan = rCol ? 17 : 16;
+                const specialColspan = rCol ? 14 : 13;
                 if (t.slotType !== 'song') return `<tr class="special-row"><td>${escHtml(t.songTitle || t.slotType)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td>${rTd}<td colspan="${specialColspan}"></td></tr>`;
                 const acousticCol = t.type === 'acoustic' ? (t.equipment ? escHtml(t.equipment) : '✓') : '';
                 return `<tr class="${t.type === 'acoustic' ? 'acoustic-row' : ''}">
@@ -902,17 +902,14 @@
           <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
           ${rTd}
           <td><span class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</span></td>
-          <td>${escHtml(t.songTitle)}${t.type === 'original' ? ' <span class="badge badge-purple" style="font-size:0.6rem">O</span>' : ''}</td>
+          <td>${escHtml(t.songTitle)}</td>
           <td style="text-align:center;font-size:0.78rem;color:var(--accent-green);font-weight:600">${acousticCol}</td>
           <td class="col-group-start" style="text-align:center">${escHtml(t.promptNumber)}</td>
           <td style="font-size:0.78rem">${escHtml(t.soundNote)}</td>
           <td style="font-size:0.78rem">${escHtml(t.lightNote)}</td>
           <td style="font-size:0.78rem">${escHtml(t.cueNote)}</td>
           <td style="font-size:0.78rem">${escHtml(t.requestNote)}</td>
-          <td style="font-size:0.78rem">${escHtml(t.remarks)}</td>
           <td class="col-group-start" style="text-align:center">${t.micCount || 0}</td>
-          <td style="text-align:center">${escHtml(t.count)}</td>
-          <td style="text-align:center">${escHtml(t.key)}</td>
           <td class="col-group-start" style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
           <td class="col-group-start ${t.completedAudio === '完成済み' ? 'audio-done' : t.completedAudio === '受け取り済み' ? 'audio-received' : ''}" style="text-align:center;font-size:0.78rem">${escHtml(t.completedAudio)}</td>
           <td style="text-align:center">${t.audioConfirmed ? '✓' : ''}</td>
@@ -948,7 +945,7 @@
               <div style="flex:1;min-width:0">
                 <div class="flex items-center gap-xs" style="flex-wrap:wrap">
                   <strong style="font-size:0.9rem">${escHtml(s.title || '曲名未入力')}</strong>
-                  <span class="badge ${s.type === 'original' ? 'badge-purple' : s.type === 'acoustic' ? 'badge-green' : 'badge-blue'}" style="font-size:0.6rem">${s.type === 'original' ? 'オリジナル' : s.type === 'acoustic' ? '弾き語り' : 'カバー'}</span>
+                  <span class="badge ${s.type === 'acoustic' ? 'badge-green' : 'badge-blue'}" style="font-size:0.6rem">${s.type === 'acoustic' ? '弾き語り' : 'オケ'}</span>
                   ${s.duration ? `<span style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)">${formatDuration(s.duration)}</span>` : ''}
                 </div>
                 ${s.type === 'acoustic' && s.equipment ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">🎸 ${escHtml(s.equipment)}${s.equipmentRequest ? ` / 借りたい: ${escHtml(s.equipmentRequest)}` : ''}</div>` : ''}
