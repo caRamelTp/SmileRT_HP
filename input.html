@@ -374,8 +374,8 @@
           </div>` : ''}
           <div class="form-group"><label class="form-label">音源アップロード</label>
             <div class="flex gap-md mb-sm">
-              <label class="form-check"><input type="radio" name="audio_${i}" value="uploaded" ${s.audioStatus === 'uploaded' ? 'checked' : ''} onchange="onAC(${i},'uploaded')"> あり</label>
-              <label class="form-check"><input type="radio" name="audio_${i}" value="none" ${s.audioStatus !== 'uploaded' ? 'checked' : ''} onchange="onAC(${i},'none')"> なし</label>
+              <label class="form-check"><input type="radio" name="audio_${i}" data-song="${i}" data-field="audioStatus" value="uploaded" ${s.audioStatus === 'uploaded' ? 'checked' : ''} onchange="onAC(${i},'uploaded')"> あり</label>
+              <label class="form-check"><input type="radio" name="audio_${i}" data-song="${i}" data-field="audioStatus" value="none" ${s.audioStatus !== 'uploaded' ? 'checked' : ''} onchange="onAC(${i},'none')"> なし</label>
             </div>
             <input type="text" class="form-input" data-song="${i}" data-field="audioUrl" value="${escHtml(s.audioUrl)}" placeholder="GigaFile等のリンク" oninput="onSI(this)" style="${s.audioStatus !== 'uploaded' ? 'display:none' : ''}" id="aUrl_${i}">
           </div>
@@ -413,7 +413,27 @@
             }
             const name = document.getElementById('inputName').value.trim();
             if (!name) { showToast('出演者名を入力してください', 'error'); return; }
-            document.querySelectorAll('[data-song]').forEach(el => { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i] || !f) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : f === 'micCount' ? parseInt(el.value) || 0 : el.value; });
+            document.querySelectorAll('[data-song]').forEach(el => {
+                const i = parseInt(el.dataset.song), f = el.dataset.field;
+                if (!songs[i] || !f) return;
+                if (el.type === 'radio') {
+                    if (el.checked) songs[i][f] = el.value;
+                } else if (f === 'duration') {
+                    songs[i][f] = parseDuration(el.value);
+                } else if (f === 'micCount') {
+                    songs[i][f] = parseInt(el.value) || 0;
+                } else {
+                    songs[i][f] = el.value;
+                }
+            });
+            const validSongs = songs.filter(s => {
+                const hasTitle = s.title && s.title.trim().length > 0;
+                const hasNotes = (s.soundNote && s.soundNote.trim()) || (s.lightNote && s.lightNote.trim()) || (s.cueNote && s.cueNote.trim()) || (s.requestNote && s.requestNote.trim()) || (s.equipment && s.equipment.trim()) || (s.audioUrl && s.audioUrl.trim());
+                return hasTitle || hasNotes;
+            }).map(s => {
+                s.title = (s.title || '').trim();
+                return s;
+            });
             const data = {
                 name, discord: document.getElementById('inputDiscord').value.trim(),
                 twitter: document.getElementById('inputTwitter').value.trim(),
@@ -423,12 +443,23 @@
                 techRequests: document.getElementById('inputTech').value.trim(),
                 photoPermission: document.getElementById('inputPhotoPermission').checked ? 'ok' : 'none',
                 photoNote: document.getElementById('inputPhotoNote').value.trim(),
-                songs: songs.filter(s => s.title.trim())
+                songs: validSongs
             };
             if (eventId && performerId) {
                 // Existing performer — update
                 const ex = db.getPerformer(eventId, performerId);
-                if (ex) { Object.assign(ex, data); db.updatePerformer(eventId, ex); showToast('保存しました', 'success'); return; }
+                if (ex) {
+                    Object.assign(ex, data);
+                    db.updatePerformer(eventId, ex);
+                    songs = ex.songs;
+                    renderSongs();
+                    updatePreview();
+                    showToast('保存しました', 'success');
+                    return;
+                } else {
+                    showToast('出演者データが見つかりませんでした。ページを再読み込みしてください。', 'error');
+                    return;
+                }
             }
             if (eventId && !performerId) {
                 // New performer for existing event — confirm first

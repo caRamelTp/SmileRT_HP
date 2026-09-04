@@ -278,9 +278,11 @@ class SmileRTDatabase {
         ref.on('value', (snapshot) => {
           const val = snapshot.val();
           if (val) {
+            if (!val.events) val.events = [];
+            if (!Array.isArray(val.events)) val.events = Object.values(val.events);
+            val.events.forEach(e => this._normalizeEvent(e));
+            if (!val.settings) val.settings = {};
             this._data = val;
-            if (!this._data.events) this._data.events = [];
-            if (!this._data.settings) this._data.settings = {};
           }
           // Save to localStorage as cache
           this._saveLocal();
@@ -297,6 +299,26 @@ class SmileRTDatabase {
       } else {
         this._ready = true;
         resolve();
+      }
+
+      // Sync across browser tabs via storage event
+      if (typeof window !== 'undefined' && window.addEventListener && !this._storageListenerSet) {
+        this._storageListenerSet = true;
+        window.addEventListener('storage', (e) => {
+          if (e.key === DB_KEY && e.newValue) {
+            try {
+              const fresh = JSON.parse(e.newValue);
+              if (fresh && fresh.events) {
+                if (!Array.isArray(fresh.events)) fresh.events = Object.values(fresh.events);
+                fresh.events.forEach(ev => this._normalizeEvent(ev));
+                this._data = fresh;
+                this._fireChange();
+              }
+            } catch (err) {
+              console.error('Storage sync error:', err);
+            }
+          }
+        });
       }
     });
   }
@@ -396,6 +418,8 @@ class SmileRTDatabase {
 
   saveEvent(event) {
     const data = this._load();
+    if (!Array.isArray(data.events)) data.events = data.events ? Object.values(data.events) : [];
+    this._ensureTimetableOrder(event);
     const idx = data.events.findIndex(e => e.id === event.id);
     event.updatedAt = new Date().toISOString();
     if (idx >= 0) data.events[idx] = event;
@@ -406,6 +430,7 @@ class SmileRTDatabase {
 
   deleteEvent(id) {
     const data = this._load();
+    if (!Array.isArray(data.events)) data.events = data.events ? Object.values(data.events) : [];
     data.events = data.events.filter(e => e.id !== id);
     this._save();
   }
@@ -413,7 +438,8 @@ class SmileRTDatabase {
   // --- Performers ---
   getPerformer(eventId, performerId) {
     const event = this.getEvent(eventId);
-    const p = event ? event.performers.find(p => p.id === performerId) || null : null;
+    if (!event || !Array.isArray(event.performers)) return null;
+    const p = event.performers.find(p => p.id === performerId) || null;
     // Only store snapshot if none exists (preserve baseline for change detection)
     if (p && !this._performerSnapshots.has(p.id)) {
       this._performerSnapshots.set(p.id, JSON.parse(JSON.stringify(p)));
@@ -424,6 +450,7 @@ class SmileRTDatabase {
   addPerformer(eventId, performer) {
     const event = this.getEvent(eventId);
     if (!event) return null;
+    if (!Array.isArray(event.performers)) event.performers = event.performers ? Object.values(event.performers) : [];
     event.performers.push(performer);
     this.saveEvent(event);
     // Discord notification for new performer
@@ -438,22 +465,25 @@ class SmileRTDatabase {
   updatePerformer(eventId, performer) {
     const event = this.getEvent(eventId);
     if (!event) return null;
+    if (!Array.isArray(event.performers)) event.performers = event.performers ? Object.values(event.performers) : [];
     const idx = event.performers.findIndex(p => p.id === performer.id);
+    const oldPerformer = this._performerSnapshots.get(performer.id) || null;
     if (idx >= 0) {
-      // Use snapshot taken at getPerformer() time (before caller modified the reference)
-      const oldPerformer = this._performerSnapshots.get(performer.id) || null;
       event.performers[idx] = performer;
-      this.saveEvent(event);
-      // Detect changes and notify Discord
-      if (oldPerformer) {
-        const changeText = _diffPerformer(oldPerformer, performer);
-        if (changeText) {
-          _scheduleDiscordNotification(event.title, performer.name || oldPerformer.name, changeText, 'update');
-        }
-      }
-      // Update snapshot to current state
-      this._performerSnapshots.set(performer.id, JSON.parse(JSON.stringify(performer)));
+    } else {
+      // If performer wasn't found in array, add it rather than silently discarding
+      event.performers.push(performer);
     }
+    this.saveEvent(event);
+    // Detect changes and notify Discord
+    if (oldPerformer) {
+      const changeText = _diffPerformer(oldPerformer, performer);
+      if (changeText) {
+        _scheduleDiscordNotification(event.title, performer.name || oldPerformer.name, changeText, 'update');
+      }
+    }
+    // Update snapshot to current state
+    this._performerSnapshots.set(performer.id, JSON.parse(JSON.stringify(performer)));
     return performer;
   }
 

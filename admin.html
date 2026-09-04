@@ -1082,6 +1082,16 @@
                 renderEventList();
                 if (currentEventId) renderEventDetail();
             });
+            const setlistWrap = document.getElementById('setlistWrap');
+            if (setlistWrap) {
+                setlistWrap.addEventListener('focusout', () => {
+                    setTimeout(() => {
+                        if (pendingSetlistRender && !setlistWrap.contains(document.activeElement)) {
+                            renderSetlistTable();
+                        }
+                    }, 150);
+                });
+            }
         }); });
 
         // === EVENT LIST ===
@@ -1433,24 +1443,54 @@
         </div>`).join('');
         }
 
+        function _collectModalFormData(p) {
+            if (!p) return;
+            const pNameEl = document.getElementById('pName');
+            if (pNameEl) p.name = pNameEl.value.trim();
+            const pDiscordEl = document.getElementById('pDiscord');
+            if (pDiscordEl) p.discord = pDiscordEl.value.trim();
+            const pTwitterEl = document.getElementById('pTwitter');
+            if (pTwitterEl) p.twitter = pTwitterEl.value.trim();
+            const pColorTextEl = document.getElementById('pColorText');
+            const pColorEl = document.getElementById('pColor');
+            if (pColorTextEl || pColorEl) p.cyalumeColor = (pColorTextEl?.value.trim()) || (pColorEl?.value) || p.cyalumeColor;
+            const pIconEl = document.getElementById('pIcon');
+            if (pIconEl) p.iconUrl = pIconEl.value.trim();
+            const pHoodieEl = document.getElementById('pHoodie');
+            if (pHoodieEl) p.hoodie = pHoodieEl.value;
+            const pTechEl = document.getElementById('pTech');
+            if (pTechEl) p.techRequests = pTechEl.value.trim();
+            const pPhotoPermEl = document.getElementById('pPhotoPermission');
+            if (pPhotoPermEl) p.photoPermission = pPhotoPermEl.checked ? 'ok' : 'none';
+            const pPhotoNoteEl = document.getElementById('pPhotoNote');
+            if (pPhotoNoteEl) p.photoNote = pPhotoNoteEl.value.trim();
+
+            document.querySelectorAll('.sf').forEach(f => {
+                const i = parseInt(f.dataset.i), k = f.dataset.f;
+                if (!p.songs[i] || !k) return;
+                if (k === 'duration') p.songs[i].duration = parseDuration(f.value);
+                else p.songs[i][k] = f.value;
+            });
+        }
+
         function addSongToEdit() {
             const p = db.getPerformer(currentEventId, editingPerformerId); if (!p) return;
-            p.songs.push(createSong()); db.updatePerformer(currentEventId, p);
+            _collectModalFormData(p);
+            p.songs.push(createSong());
+            db.updatePerformer(currentEventId, p);
             renderEditSongs(p.songs);
             document.getElementById('editSongList').lastElementChild?.scrollIntoView({ behavior: 'smooth' });
         }
         function rmSongEdit(i) {
             const p = db.getPerformer(currentEventId, editingPerformerId); if (!p) return;
-            p.songs.splice(i, 1); db.updatePerformer(currentEventId, p); renderEditSongs(p.songs);
+            _collectModalFormData(p);
+            p.songs.splice(i, 1);
+            db.updatePerformer(currentEventId, p);
+            renderEditSongs(p.songs);
         }
         function onEditTypeChange(songIdx, newType) {
             const p = db.getPerformer(currentEventId, editingPerformerId); if (!p || !p.songs[songIdx]) return;
-            // Save current form values first
-            document.querySelectorAll('.sf').forEach(f => {
-                const i = parseInt(f.dataset.i), k = f.dataset.f; if (!p.songs[i]) return;
-                if (k === 'duration') p.songs[i].duration = parseDuration(f.value);
-                else p.songs[i][k] = f.value;
-            });
+            _collectModalFormData(p);
             p.songs[songIdx].type = newType;
             db.updatePerformer(currentEventId, p);
             renderEditSongs(p.songs);
@@ -1458,29 +1498,23 @@
 
         function savePerformerEdit() {
             const p = db.getPerformer(currentEventId, editingPerformerId); if (!p) return;
-            p.name = document.getElementById('pName').value.trim();
-            p.discord = document.getElementById('pDiscord').value.trim();
-            p.twitter = document.getElementById('pTwitter').value.trim();
-            p.cyalumeColor = document.getElementById('pColorText').value.trim() || document.getElementById('pColor').value;
-            p.iconUrl = document.getElementById('pIcon').value.trim();
-            p.hoodie = document.getElementById('pHoodie').value;
-            p.techRequests = document.getElementById('pTech').value.trim();
-            p.photoPermission = document.getElementById('pPhotoPermission').checked ? 'ok' : 'none';
-            p.photoNote = document.getElementById('pPhotoNote').value.trim();
-            document.querySelectorAll('.sf').forEach(f => {
-                const i = parseInt(f.dataset.i), k = f.dataset.f; if (!p.songs[i]) return;
-                if (k === 'duration') p.songs[i].duration = parseDuration(f.value);
-                else p.songs[i][k] = f.value;
-            });
-            db.updatePerformer(currentEventId, p); closeModal('editPerformerModal');
-            renderEventDetail(); showToast('保存しました', 'success');
+            _collectModalFormData(p);
+            db.updatePerformer(currentEventId, p);
+            closeModal('editPerformerModal');
+            renderEventDetail();
+            showToast('保存しました', 'success');
         }
 
-        // === TIMETABLE (GLOBAL SETLIST) ===
-        function renderSetlistTable() {
+        let pendingSetlistRender = false;
+        function renderSetlistTable(force = false) {
+            const wrap = document.getElementById('setlistWrap');
+            if (!force && wrap && wrap.contains(document.activeElement)) {
+                pendingSetlistRender = true;
+                return;
+            }
+            pendingSetlistRender = false;
             const ev = db.getEvent(currentEventId); if (!ev) return;
             const timeline = db.calculateTimetable(ev);
-            const wrap = document.getElementById('setlistWrap');
             selectedRows.clear(); updateSwapUI();
             if (!timeline.length) { wrap.innerHTML = '<div class="empty-state" style="padding:var(--space-xl)"><p>セットリストがまだありません</p></div>'; return; }
 
