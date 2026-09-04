@@ -413,7 +413,7 @@
             }
             const name = document.getElementById('inputName').value.trim();
             if (!name) { showToast('出演者名を入力してください', 'error'); return; }
-            document.querySelectorAll('[data-song]').forEach(el => { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i] || !f) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : f === 'micCount' ? parseInt(el.value) || 1 : el.value; });
+            document.querySelectorAll('[data-song]').forEach(el => { const i = parseInt(el.dataset.song), f = el.dataset.field; if (!songs[i] || !f) return; songs[i][f] = f === 'duration' ? parseDuration(el.value) : f === 'micCount' ? parseInt(el.value) || 0 : el.value; });
             const data = {
                 name, discord: document.getElementById('inputDiscord').value.trim(),
                 twitter: document.getElementById('inputTwitter').value.trim(),
