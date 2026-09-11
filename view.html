@@ -339,7 +339,7 @@
             border-radius: var(--radius-lg);
             padding: var(--space-md);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            z-index: 100;
+            z-index: 9999;
             width: 210px;
             max-height: 70vh;
             overflow-y: auto;
@@ -350,7 +350,18 @@
 
         .col-filter-panel.open {
             display: block;
-            animation: fadeIn 0.2s ease;
+        }
+
+        .col-filter-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 9998;
+        }
+
+        .col-filter-overlay.open {
+            display: block;
         }
 
         .col-filter-header {
@@ -380,6 +391,8 @@
         .col-filter-item input[type="checkbox"] {
             cursor: pointer;
             flex-shrink: 0;
+            width: 16px;
+            height: 16px;
         }
 
         @media (max-width:768px) {
@@ -400,7 +413,7 @@
                 width: 100%;
                 max-height: 60vh;
                 border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-                box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.2);
+                box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.25);
                 padding: var(--space-lg);
             }
         }
@@ -943,7 +956,8 @@
                         <button type="button" class="col-filter-btn" onclick="toggleColumnFilter(event)">
                             📋 表示列
                         </button>
-                        <div class="col-filter-panel" id="colFilterPanel" onclick="event.stopPropagation()">
+                        <div class="col-filter-overlay" id="colFilterOverlay" onclick="closeColumnFilter()"></div>
+                        <div class="col-filter-panel" id="colFilterPanel">
                             <div class="col-filter-header">
                                 <span style="font-size:0.8rem;font-weight:600">表示する列</span>
                                 <button type="button" class="btn btn-secondary btn-sm" style="padding:0.1rem 0.4rem;font-size:0.7rem" onclick="showAllColumns()">すべて表示</button>
@@ -1019,11 +1033,21 @@
         function toggleColumnFilter(e) {
             e.stopPropagation();
             const panel = document.getElementById('colFilterPanel');
+            const overlay = document.getElementById('colFilterOverlay');
             const isOpen = panel.classList.contains('open');
-            if (!isOpen) {
+            if (isOpen) {
+                panel.classList.remove('open');
+                overlay.classList.remove('open');
+            } else {
                 renderFilterPanel();
+                panel.classList.add('open');
+                overlay.classList.add('open');
             }
-            panel.classList.toggle('open');
+        }
+
+        function closeColumnFilter() {
+            document.getElementById('colFilterPanel').classList.remove('open');
+            document.getElementById('colFilterOverlay').classList.remove('open');
         }
 
         function toggleColumn(colId) {
@@ -1079,12 +1103,6 @@
             }).join('');
         }
 
-        document.addEventListener('click', (e) => {
-            const panel = document.getElementById('colFilterPanel');
-            if (panel && panel.classList.contains('open') && !e.target.closest('.col-filter-wrap')) {
-                panel.classList.remove('open');
-            }
-        });
 
         document.addEventListener('DOMContentLoaded', () => { db.init().then(() => {
             const events = db.getEvents(), sel = document.getElementById('eventSelect');
