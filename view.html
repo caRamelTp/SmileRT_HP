@@ -303,6 +303,77 @@
             background: rgba(124, 185, 204, 0.10);
         }
 
+        /* ===== 列フィルター ===== */
+        .col-filter-wrap {
+            position: relative;
+            display: inline-block;
+        }
+
+        .col-filter-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+            padding: 0.3rem 0.7rem;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--border-color);
+            background: var(--bg-glass);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .col-filter-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .col-filter-panel {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            left: 0;
+            background: var(--bg-glass-strong);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-md);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            width: 200px;
+            display: none;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .col-filter-panel.open {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .col-filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-sm);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .col-filter-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: 0.25rem 0;
+            cursor: pointer;
+            font-size: 0.82rem;
+            color: var(--text-primary);
+        }
+        
+        .col-filter-item input[type="checkbox"] {
+            cursor: pointer;
+        }
+
         @media (max-width:768px) {
             .tt-wrap table {
                 min-width: 900px
@@ -847,6 +918,18 @@
                         <span class="toggle-icon"></span>
                         リハ時間
                     </button>
+                    <div class="col-filter-wrap no-print">
+                        <button type="button" class="col-filter-btn" onclick="toggleColumnFilter(event)">
+                            📋 表示列
+                        </button>
+                        <div class="col-filter-panel" id="colFilterPanel" onclick="event.stopPropagation()">
+                            <div class="col-filter-header">
+                                <span style="font-size:0.8rem;font-weight:600">表示する列</span>
+                                <button type="button" class="btn btn-secondary btn-sm" style="padding:0.1rem 0.4rem;font-size:0.7rem" onclick="showAllColumns()">すべて表示</button>
+                            </div>
+                            <div id="colFilterList"></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="tt-wrap" id="ttWrap"></div>
             </div>
@@ -876,6 +959,112 @@
     <script>
         let selectedEventId = null;
         let showRehearsalTime = false;
+        
+        const TT_COLUMNS = [
+            { id: 'order', name: '曲順' },
+            { id: 'time', name: '時間' },
+            { id: 'rehearsal', name: 'リハ時間' },
+            { id: 'performer', name: '演者名' },
+            { id: 'song', name: '曲名' },
+            { id: 'acoustic', name: '弾き語り' },
+            { id: 'prompt', name: 'プロンプト' },
+            { id: 'sound', name: '音響' },
+            { id: 'light', name: '照明' },
+            { id: 'cue', name: 'きっかけ' },
+            { id: 'request', name: '運営への要望' },
+            { id: 'mic', name: 'マイク' },
+            { id: 'duration', name: '曲尺' },
+            { id: 'audio', name: '完成音源' },
+            { id: 'audioCheck', name: '音源確認' },
+            { id: 'haremuCheck', name: 'はれむぅ確認' }
+        ];
+
+        function getVisibleColumns() {
+            const saved = localStorage.getItem('smilert-tt-visible-cols');
+            if (saved) {
+                try {
+                    return JSON.parse(saved);
+                } catch (e) {}
+            }
+            return TT_COLUMNS.map(c => c.id);
+        }
+
+        function saveVisibleColumns(cols) {
+            localStorage.setItem('smilert-tt-visible-cols', JSON.stringify(cols));
+        }
+
+        let visibleCols = getVisibleColumns();
+
+        function toggleColumnFilter(e) {
+            e.stopPropagation();
+            const panel = document.getElementById('colFilterPanel');
+            const isOpen = panel.classList.contains('open');
+            if (!isOpen) {
+                renderFilterPanel();
+            }
+            panel.classList.toggle('open');
+        }
+
+        function toggleColumn(colId) {
+            if (visibleCols.includes(colId)) {
+                visibleCols = visibleCols.filter(c => c !== colId);
+            } else {
+                visibleCols.push(colId);
+            }
+            saveVisibleColumns(visibleCols);
+            applyColumnVisibility();
+            renderFilterPanel();
+        }
+
+        function showAllColumns() {
+            visibleCols = TT_COLUMNS.map(c => c.id);
+            saveVisibleColumns(visibleCols);
+            renderFilterPanel();
+            applyColumnVisibility();
+        }
+
+        function applyColumnVisibility() {
+            let css = '';
+            TT_COLUMNS.forEach(col => {
+                let isVisible = visibleCols.includes(col.id);
+                if (col.id === 'rehearsal' && !showRehearsalTime) {
+                    isVisible = false;
+                }
+                if (!isVisible) {
+                    css += `[data-col="${col.id}"] { display: none !important; }\n`;
+                }
+            });
+            let styleEl = document.getElementById('colFilterStyle');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'colFilterStyle';
+                document.head.appendChild(styleEl);
+            }
+            styleEl.innerHTML = css;
+        }
+
+        function renderFilterPanel() {
+            const list = document.getElementById('colFilterList');
+            const rehearsalStartStr = selectedEventId ? (db.getEvent(selectedEventId)?.schedule?.rehearsalStart || null) : null;
+            list.innerHTML = TT_COLUMNS.map(col => {
+                if (col.id === 'rehearsal' && !rehearsalStartStr) return '';
+                const isChecked = visibleCols.includes(col.id) ? 'checked' : '';
+                return `
+                    <label class="col-filter-item">
+                        <input type="checkbox" ${isChecked} onchange="toggleColumn('${col.id}')">
+                        <span>${col.name}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('colFilterPanel');
+            if (panel && panel.classList.contains('open') && !e.target.closest('.col-filter-wrap')) {
+                panel.classList.remove('open');
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => { db.init().then(() => {
             const events = db.getEvents(), sel = document.getElementById('eventSelect');
             events.forEach(e => { const o = document.createElement('option'); o.value = e.id; o.textContent = `${e.title || '無題'} (${e.date || '日付未定'})`; sel.appendChild(o) });
@@ -932,53 +1121,78 @@
             if (!rehearsalStartStr) showRehearsalTime = false;
             toggleBtn.classList.toggle('active', showRehearsalTime);
 
-            const rCol = showRehearsalTime;
-            const rTh = rCol ? '<th class="col-rehearsal">リハ時間</th>' : '';
+            const rTh = rehearsalStartStr ? '<th data-col="rehearsal" class="col-rehearsal">リハ時間</th>' : '';
 
             // リハ開始時間 + 曲尺累積で実時刻を計算
             let rehearsalCurrent = rehearsalStartStr ? parseTime(rehearsalStartStr) : null;
 
             wrap.innerHTML = `<table><thead><tr>
-        <th>曲順</th><th>時間</th>${rTh}<th>演者名</th><th>曲名</th><th>弾き語り</th><th class="col-group-start">プロンプト</th>
-        <th>音響</th><th>照明</th><th>きっかけ</th><th>運営への要望</th><th class="col-group-start">マイク</th>
-        <th class="col-group-start">曲尺</th><th class="col-group-start">完成音源</th><th>音源確認</th><th>はれむぅ確認</th>
+        <th data-col="order">曲順</th><th data-col="time">時間</th>${rTh}<th data-col="performer">演者名</th><th data-col="song">曲名</th><th data-col="acoustic">弾き語り</th><th data-col="prompt" class="col-group-start">プロンプト</th>
+        <th data-col="sound">音響</th><th data-col="light">照明</th><th data-col="cue">きっかけ</th><th data-col="request">運営への要望</th><th data-col="mic" class="col-group-start">マイク</th>
+        <th data-col="duration" class="col-group-start">曲尺</th><th data-col="audio" class="col-group-start">完成音源</th><th data-col="audioCheck">音源確認</th><th data-col="haremuCheck">はれむぅ確認</th>
       </tr></thead><tbody>${timeline.map(t => {
                 let rTd = '';
-                if (rCol && rehearsalCurrent) {
+                if (rehearsalStartStr && rehearsalCurrent) {
                     const rStart = formatTime(rehearsalCurrent);
                     const rEnd = new Date(rehearsalCurrent.getTime() + (t.duration || 0) * 1000);
-                    rTd = `<td class="col-rehearsal">${rStart}〜${formatTime(rEnd)}</td>`;
+                    rTd = `<td data-col="rehearsal" class="col-rehearsal">${rStart}〜${formatTime(rEnd)}</td>`;
                     rehearsalCurrent = rEnd;
-                } else if (rCol) {
-                    rTd = '<td class="col-rehearsal"></td>';
+                } else if (rehearsalStartStr) {
+                    rTd = '<td data-col="rehearsal" class="col-rehearsal"></td>';
                 }
-                const specialColspan = rCol ? 14 : 13;
-                if (t.slotType !== 'song') return `<tr class="special-row"><td>${escHtml(t.songTitle || t.slotType)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td>${rTd}<td colspan="${specialColspan}"></td></tr>`;
+                
+                if (t.slotType !== 'song') {
+                    return `<tr class="special-row">
+                        <td data-col="order">${escHtml(t.songTitle || t.slotType)}</td>
+                        <td data-col="time" style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td>
+                        ${rTd}
+                        <td data-col="performer"></td>
+                        <td data-col="song"></td>
+                        <td data-col="acoustic"></td>
+                        <td data-col="prompt" class="col-group-start"></td>
+                        <td data-col="sound"></td>
+                        <td data-col="light"></td>
+                        <td data-col="cue"></td>
+                        <td data-col="request"></td>
+                        <td data-col="mic" class="col-group-start"></td>
+                        <td data-col="duration" class="col-group-start"></td>
+                        <td data-col="audio" class="col-group-start"></td>
+                        <td data-col="audioCheck"></td>
+                        <td data-col="haremuCheck"></td>
+                    </tr>`;
+                }
+
                 const acousticCol = t.type === 'acoustic' ? (t.equipment ? escHtml(t.equipment) : '✓') : '';
                 return `<tr class="${t.type === 'acoustic' ? 'acoustic-row' : ''}">
-          <td style="text-align:center;font-size:0.78rem;color:var(--text-muted)">${t.order}</td>
-          <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
+          <td data-col="order" style="text-align:center;font-size:0.78rem;color:var(--text-muted)">${t.order}</td>
+          <td data-col="time" style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
           ${rTd}
-          <td><span class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</span></td>
-          <td>${escHtml(t.songTitle)}</td>
-          <td style="text-align:center;font-size:0.78rem;color:var(--accent-green);font-weight:600">${acousticCol}</td>
-          <td class="col-group-start" style="text-align:center">${escHtml(t.promptNumber)}</td>
-          <td style="font-size:0.78rem">${escHtml(t.soundNote)}</td>
-          <td style="font-size:0.78rem">${escHtml(t.lightNote)}</td>
-          <td style="font-size:0.78rem">${escHtml(t.cueNote)}</td>
-          <td style="font-size:0.78rem">${escHtml(t.requestNote)}</td>
-          <td class="col-group-start" style="text-align:center">${t.micCount || 0}</td>
-          <td class="col-group-start" style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
-          <td class="col-group-start ${t.completedAudio === '完成済み' ? 'audio-done' : t.completedAudio === '受け取り済み' ? 'audio-received' : ''}" style="text-align:center;font-size:0.78rem">${escHtml(t.completedAudio)}</td>
-          <td style="text-align:center">${t.audioConfirmed ? '✓' : ''}</td>
-          <td style="text-align:center">${t.audioConfirmedHaremu ? '✓' : ''}</td>
+          <td data-col="performer"><span class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</span></td>
+          <td data-col="song">${escHtml(t.songTitle)}</td>
+          <td data-col="acoustic" style="text-align:center;font-size:0.78rem;color:var(--accent-green);font-weight:600">${acousticCol}</td>
+          <td data-col="prompt" class="col-group-start" style="text-align:center">${escHtml(t.promptNumber)}</td>
+          <td data-col="sound" style="font-size:0.78rem">${escHtml(t.soundNote)}</td>
+          <td data-col="light" style="font-size:0.78rem">${escHtml(t.lightNote)}</td>
+          <td data-col="cue" style="font-size:0.78rem">${escHtml(t.cueNote)}</td>
+          <td data-col="request" style="font-size:0.78rem">${escHtml(t.requestNote)}</td>
+          <td data-col="mic" class="col-group-start" style="text-align:center">${t.micCount || 0}</td>
+          <td data-col="duration" class="col-group-start" style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
+          <td data-col="audio" class="col-group-start ${t.completedAudio === '完成済み' ? 'audio-done' : t.completedAudio === '受け取り済み' ? 'audio-received' : ''}" style="text-align:center;font-size:0.78rem">${escHtml(t.completedAudio)}</td>
+          <td data-col="audioCheck" style="text-align:center">${t.audioConfirmed ? '✓' : ''}</td>
+          <td data-col="haremuCheck" style="text-align:center">${t.audioConfirmedHaremu ? '✓' : ''}</td>
         </tr>`;
             }).join('')}</tbody></table>`;
+            
+            applyColumnVisibility();
         }
 
         function toggleRehearsalTime() {
             showRehearsalTime = !showRehearsalTime;
-            renderView();
+            const toggleBtn = document.getElementById('rehearsalToggle');
+            if (toggleBtn) {
+                toggleBtn.classList.toggle('active', showRehearsalTime);
+            }
+            applyColumnVisibility();
         }
 
         function renderDetailCards(ev) {
