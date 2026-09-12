@@ -338,14 +338,16 @@
             width: 100%;
             max-height: 60vh;
             overflow-y: auto;
-            background: var(--bg-glass-strong);
+            background: #fff;
             border-top: 1px solid var(--border-color);
             border-radius: var(--radius-lg) var(--radius-lg) 0 0;
             padding: var(--space-lg);
             box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.25);
             z-index: 9999;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+        }
+
+        [data-theme="dark"] .col-filter-panel {
+            background: #1a1a1a;
         }
 
         .col-filter-panel.open {
@@ -953,14 +955,6 @@
                         <button type="button" class="col-filter-btn" onclick="toggleColumnFilter(event)">
                             📋 表示列
                         </button>
-                        <div class="col-filter-overlay" id="colFilterOverlay" onclick="closeColumnFilter()"></div>
-                        <div class="col-filter-panel" id="colFilterPanel">
-                            <div class="col-filter-header">
-                                <span style="font-size:0.8rem;font-weight:600">表示する列</span>
-                                <button type="button" class="btn btn-secondary btn-sm" style="padding:0.1rem 0.4rem;font-size:0.7rem" onclick="showAllColumns()">すべて表示</button>
-                            </div>
-                            <div id="colFilterList" class="col-filter-body"></div>
-                        </div>
                     </div>
                 </div>
                 <div class="tt-wrap" id="ttWrap"></div>
@@ -1339,6 +1333,16 @@
             if (table) table.style.minWidth = '';
         });
     </script>
+
+    <!-- 列フィルター: body直下に配置（backdrop-filterを持つ祖先要素の影響でposition:fixedが壊れるため） -->
+    <div class="col-filter-overlay no-print" id="colFilterOverlay" onclick="closeColumnFilter()"></div>
+    <div class="col-filter-panel no-print" id="colFilterPanel">
+        <div class="col-filter-header">
+            <span style="font-size:0.8rem;font-weight:600">表示する列</span>
+            <button type="button" class="btn btn-secondary btn-sm" style="padding:0.2rem 0.5rem;font-size:0.75rem" onclick="showAllColumns()">すべて表示</button>
+        </div>
+        <div id="colFilterList" class="col-filter-body"></div>
+    </div>
 </body>
 
 </html>
