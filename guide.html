@@ -12,7 +12,6 @@
     .guide-hero h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
     .guide-hero p { color: #6b7280; font-size: 1.05rem; }
 
-    /* Section */
     .guide-section { margin-bottom: 3.5rem; }
     .guide-section h2 {
       display: flex; align-items: center; gap: 0.75rem;
@@ -28,7 +27,6 @@
     .guide-desc { color: #374151; font-size: 0.95rem; line-height: 1.7; margin-bottom: 1rem; }
     .guide-desc strong { color: #1f2937; }
 
-    /* Annotated screenshot (baked images) */
     .annotated-img {
       width: 100%;
       border-radius: 12px; overflow: hidden;
@@ -36,7 +34,6 @@
     }
     .annotated-img img { width: 100%; display: block; }
 
-    /* Tips box */
     .tip-box {
       background: linear-gradient(135deg, #eff6ff, #f0fdf4);
       border: 1px solid #bfdbfe; border-radius: 12px;
@@ -53,28 +50,27 @@
     }
     .warn-box::before { content: '⚠️ '; font-size: 1rem; }
 
-    /* Divider */
     .guide-divider {
       height: 2px; background: linear-gradient(90deg, transparent, #d1d5db, transparent);
       margin: 3rem 0;
     }
 
-    /* Tech docs special section */
-    .tech-section { margin-top: 4rem; }
-    .tech-section h2 { color: #7c3aed; border-color: #c4b5fd; }
-
-    /* Legend */
-    .legend {
-      display: flex; gap: 1.2rem; flex-wrap: wrap;
-      margin-bottom: 1.5rem; font-size: 0.82rem; color: #6b7280;
+    .feature-list { list-style: none; padding: 0; margin: 1rem 0; }
+    .feature-list li {
+      padding: 0.6rem 0; border-bottom: 1px solid #f3f4f6;
+      font-size: 0.92rem; color: #374151;
+      display: flex; align-items: flex-start; gap: 0.5rem;
     }
-    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
-    .legend-dot { width: 14px; height: 14px; border-radius: 4px; }
+    .feature-list li::before { content: '▸'; color: #7cb9cc; font-weight: 700; flex-shrink: 0; }
+
+    .col-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 0.8rem; }
+    .col-table th { padding: 8px 12px; text-align: left; border-bottom: 2px solid #d1d5db; background: #f3f4f6; }
+    .col-table td { padding: 6px 12px; border-bottom: 1px solid #e5e7eb; }
+    .col-table td:first-child { font-weight: 600; white-space: nowrap; }
 
     @media (max-width: 640px) {
       .guide-hero h1 { font-size: 1.6rem; }
       .guide-section h2 { font-size: 1.15rem; }
-      .callout { font-size: 0.7rem; padding: 4px 10px; }
     }
   </style>
 </head>
@@ -95,7 +91,7 @@
     <!-- Hero -->
     <div class="guide-hero">
       <h1>📖 出演者ガイド</h1>
-      <p>セットリストの入力方法と技術資料ページの見かたを図付きで解説します</p>
+      <p>セットリストの入力方法を図付きで解説します</p>
     </div>
 
     <!-- ===== PART 1: 出演者ページの使い方 ===== -->
@@ -104,7 +100,7 @@
     </h2>
     <p class="guide-desc" style="margin-bottom: 2rem;">出演者ページでは <strong>3ステップ</strong> で入力が完了します。</p>
 
-    <!-- STEP 1 -->
+    <!-- STEP 1: イベント選択 -->
     <div class="guide-section">
       <h2><span class="step-num">1</span> イベントを選択する</h2>
       <p class="guide-desc">
@@ -113,15 +109,15 @@
       </p>
 
       <div class="annotated-img">
-        <img src="guide/step1_annotated.png" alt="ステップ1: イベント選択">
+        <img src="guide/new_step1.png" alt="ステップ1: イベント選択">
       </div>
 
       <div class="tip-box">
-        <strong>「受付中」</strong>と表示されているイベントだけ選択できます。期限が過ぎると「受付終了」になり入力できなくなります。
+        <strong>「受付中」</strong>と表示されているイベントだけ選択できます。期限が過ぎると「受付終了」になりグレーアウトされます。
       </div>
     </div>
 
-    <!-- STEP 2 -->
+    <!-- STEP 2: 出演者選択 -->
     <div class="guide-section">
       <h2><span class="step-num">2</span> 自分の名前を選ぶ／新規登録する</h2>
       <p class="guide-desc">
@@ -131,98 +127,103 @@
       </p>
 
       <div class="annotated-img">
-        <img src="guide/step2_annotated.png" alt="ステップ2: 出演者選択">
-      </div>
-    </div>
-
-    <!-- STEP 3 -->
-    <div class="guide-section">
-      <h2><span class="step-num">3</span> プロフィールを入力する</h2>
-      <p class="guide-desc">
-        入力フォームが開きます。まず上部の <strong>プロフィール</strong> を入力してください。
-      </p>
-
-      <div class="annotated-img">
-        <img src="guide/step3_annotated.png" alt="ステップ3: プロフィール入力">
-      </div>
-
-      <div class="legend" style="margin-top: 0.8rem;">
-        <div class="legend-item"><div class="legend-dot" style="background:#ef4444;"></div><span>必須項目</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6;"></div><span>任意項目</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#10b981;"></div><span>推奨項目</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6;"></div><span>該当者のみ</span></div>
-      </div>
-    </div>
-
-    <!-- STEP 4 -->
-    <div class="guide-section">
-      <h2><span class="step-num">4</span> セットリスト（曲）を入力する</h2>
-      <p class="guide-desc">
-        下にスクロールすると <strong>セットリスト入力欄</strong> があります。<br>
-        曲名・尺・カバー/オリジナルなどを入力し、複数曲ある場合は <strong>「+ 曲を追加する」</strong> をタップ。
-      </p>
-
-      <div class="annotated-img">
-        <img src="guide/step4_annotated.png" alt="ステップ4: セットリスト入力">
+        <img src="guide/new_step2.png" alt="ステップ2: 出演者選択">
       </div>
 
       <div class="warn-box">
-        入力が終わったら必ず画面下の <strong>「保存する」ボタン</strong> をタップしてください。保存しないとデータが消えてしまいます！
+        <strong>Discordの #出演者登録 から登録済みの方は注意！</strong>
+        Discordで先に登録した場合、すでに名前が一覧にあります。「+ 新しく登録する」を押すと<strong>重複登録</strong>になるため、既存の名前をタップしてください。
+      </div>
+    </div>
+
+    <!-- STEP 3: 入力 -->
+    <div class="guide-section">
+      <h2><span class="step-num">3</span> プロフィール＆セットリストを入力する</h2>
+      <p class="guide-desc">
+        入力フォームが開きます。上から順に入力してください。
+      </p>
+
+      <!-- プロフィール -->
+      <h3 style="font-size:1.15rem; font-weight:700; margin: 1.5rem 0 0.8rem; color:#0f766e;">👤 プロフィール</h3>
+
+      <div class="annotated-img">
+        <img src="guide/new_step3_profile.png" alt="ステップ3: プロフィール入力">
+      </div>
+
+      <table class="col-table" style="margin-top:1rem;">
+        <thead><tr><th>項目</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td>出演者名 *</td><td>ステージネーム（必須）</td></tr>
+          <tr><td>Discord / X (Twitter)</td><td>SNSアカウント（任意）</td></tr>
+          <tr><td>サイリウムカラー</td><td>カラーピッカーまたは色名で指定（推奨）</td></tr>
+          <tr><td>パーカーサイズ</td><td>S〜XXLから選択（該当イベントのみ）</td></tr>
+          <tr><td>アイコン素材URL</td><td>フライヤー用素材のリンク（GigaFile等）</td></tr>
+        </tbody>
+      </table>
+
+      <!-- セットリスト -->
+      <h3 style="font-size:1.15rem; font-weight:700; margin: 2rem 0 0.8rem; color:#0f766e;">🎵 セットリスト（曲情報）</h3>
+
+      <div class="annotated-img">
+        <img src="guide/new_step3_setlist.png" alt="ステップ3: セットリスト入力">
+      </div>
+
+      <table class="col-table" style="margin-top:1rem;">
+        <thead><tr><th>項目</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td>楽曲名 *</td><td>曲名（必須）</td></tr>
+          <tr><td>種別</td><td>「オケ」または「弾き語り」を選択</td></tr>
+          <tr><td>曲の尺</td><td>曲の長さ（例: 4:30）</td></tr>
+          <tr><td>マイク本数</td><td>使用するマイクの本数（0〜8本）</td></tr>
+          <tr><td>音源アップロード</td><td>「あり」を選ぶとURL入力欄が表示</td></tr>
+          <tr><td>🔊 音響メモ</td><td>リバーブ強め、ボーカル大きめ 等</td></tr>
+          <tr><td>💡 照明メモ</td><td>サビで赤に、暗転スタート 等</td></tr>
+          <tr><td>🎬 きっかけメモ</td><td>MC後にスタート、SE入り 等</td></tr>
+          <tr><td>📋 運営への要望</td><td>キー変更、コラボ相手の情報 等</td></tr>
+        </tbody>
+      </table>
+
+      <div class="tip-box">
+        <strong>「弾き語り」</strong>を選択すると、使用楽器（アコギ、エレキ等）や借りたい機材の入力欄が追加で表示されます。
       </div>
 
       <div class="tip-box" style="margin-top:0.8rem;">
-        曲を2曲以上演奏する場合は、「+ 曲を追加する」ボタンで曲を追加できます。
+        曲を2曲以上演奏する場合は、<strong>「+ 曲を追加する」</strong>ボタンで追加できます。各曲カードの右上「✕」で削除も可能です（最低1曲は必要です）。
+      </div>
+
+      <!-- 技術リクエスト＆写真掲載 -->
+      <h3 style="font-size:1.15rem; font-weight:700; margin: 2rem 0 0.8rem; color:#0f766e;">🔧 その他の入力項目</h3>
+
+      <div class="annotated-img">
+        <img src="guide/new_step3_extras.png" alt="ステップ3: 技術リクエスト・写真掲載・保存">
+      </div>
+
+      <ul class="feature-list">
+        <li><strong>技術リクエスト</strong> — 演出・照明・その他の要望をまとめて記入</li>
+        <li><strong>写真掲載について</strong> — 当日カメラマンが撮影した写真のSNS投稿を許可するかチェック＆カメラマンへの一言</li>
+        <li><strong>リアルタイムプレビュー</strong> — 入力内容がリアルタイムで表示され、確認できます</li>
+      </ul>
+
+      <div class="warn-box">
+        すべて入力したら、画面下部の <strong>「保存する」ボタン</strong> を必ずタップしてください。<br>保存しないとデータが消えてしまいます！
       </div>
     </div>
 
     <!-- Divider -->
     <div class="guide-divider"></div>
 
-    <!-- ===== PART 2: 技術資料ページの見方 ===== -->
-    <div class="tech-section">
+    <!-- ===== PART 2: 技術資料の確認 ===== -->
+    <div class="guide-section">
       <h2 style="font-size:1.6rem; font-weight:800; color:#7c3aed; margin-bottom:0.5rem; border:none; padding:0;">
-        📋 技術資料ページの見かた
+        📋 技術資料で入力内容を確認
       </h2>
-      <p class="guide-desc" style="margin-bottom: 2rem;">
-        技術資料ページでは、入力された情報が<strong>タイムテーブル形式</strong>で自動的にまとまります。<br>
-        自分の入力内容が正しく反映されているか確認できます。
+      <p class="guide-desc" style="margin-bottom: 1rem;">
+        ナビの <strong>「技術資料」</strong> ページを開くと、入力した情報が<strong>タイムテーブル形式</strong>で表示されます。<br>
+        自分の曲名・尺・出番の開始時間が正しいか確認してみてください。
       </p>
 
-      <div class="guide-section">
-        <h2 style="border-color:#c4b5fd;"><span class="step-num" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">📋</span> 技術資料の各エリア</h2>
-
-        <div class="annotated-img">
-          <img src="guide/step5_annotated.png" alt="技術資料ページ">
-        </div>
-
-        <div class="tip-box" style="margin-top:1rem;">
-          技術資料は<strong>スタッフ・PA向け</strong>の資料ですが、出演者も自分の入力内容を確認するのに使えます。「自分の曲名や尺が正しいか」チェックしてみてください。
-        </div>
-
-        <div class="tip-box" style="margin-top:0.8rem;">
-          タイムテーブルでは<strong>自分の曲頭（出番の開始時間）</strong>も確認できます！ 「何時何分から自分の出番か」をここで把握して、当日の準備に役立ててください 🎶
-        </div>
-
-        <div style="margin-top:1.5rem;">
-          <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.8rem;">📊 タイムテーブルの列の意味</h3>
-          <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
-            <thead>
-              <tr style="background:#f3f4f6;">
-                <th style="padding:8px 12px; text-align:left; border-bottom:2px solid #d1d5db;">列名</th>
-                <th style="padding:8px 12px; text-align:left; border-bottom:2px solid #d1d5db;">意味</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">曲順</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">全体の通し番号</td></tr>
-              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">時間</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">出番の開始〜終了時刻</td></tr>
-              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">演者名</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">出演者名（サイリウムカラー付き）</td></tr>
-              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">曲名</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">楽曲名（オリジナルは O バッジ）</td></tr>
-              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">きっかけ・照明・音響</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">演出リクエストの内容</td></tr>
-              <tr><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb; font-weight:600;">曲尺</td><td style="padding:6px 12px; border-bottom:1px solid #e5e7eb;">曲の長さ（分:秒）</td></tr>
-              <tr><td style="padding:6px 12px; font-weight:600;">完成音源</td><td style="padding:6px 12px;">音源の提出ステータス</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="tip-box">
+        タイムテーブルで<strong>自分の曲頭（出番の開始時間）</strong>が確認できます！ 当日の準備に役立ててください 🎶
       </div>
     </div>
 
@@ -236,16 +237,20 @@
           → 出演者ページから同じイベント → 自分の名前を選ぶと、もう一度編集できます。修正後に「保存する」を忘れずに！
         </div>
         <div class="tip-box">
-          <strong>Q. 曲を追加・削除したい</strong><br>
-          → 「+ 曲を追加する」で追加、各曲カードの右上「✕」で削除できます（最低1曲は必要です）。
-        </div>
-        <div class="tip-box">
           <strong>Q. 受付終了と表示されて入力できない</strong><br>
-          → 主催者が設定した締切を過ぎています。変更が必要な場合は主催者にご連絡ください。
+          → 主催者が設定した締切を過ぎています。変更が必要な場合は主催者にご連絡ください。主催者が個別に変更許可を出すことも可能です。
         </div>
         <div class="tip-box">
           <strong>Q. 音源はどうやって提出する？</strong><br>
-          → GigaFile便などにアップロードし、そのURLを「音源アップロード」の欄に貼り付けてください。
+          → GigaFile便などにアップロードし、そのURLを各曲の「音源アップロード」→「あり」→ URL入力欄に貼り付けてください。
+        </div>
+        <div class="tip-box">
+          <strong>Q. 「弾き語り」を選ぶとどうなる？</strong><br>
+          → 使用楽器（アコギ・エレキ等）や借りたい機材の入力欄が追加で表示されます。弾き語りでない場合は「オケ」を選んでください。
+        </div>
+        <div class="tip-box">
+          <strong>Q. Discordで登録したのに名前がない</strong><br>
+          → データの同期にタイムラグがある場合があります。ページを更新（リロード）してみてください。それでもない場合は主催者にお問い合わせください。
         </div>
       </div>
     </div>

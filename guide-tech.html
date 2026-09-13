@@ -64,7 +64,6 @@
     }
     .feature-list li::before { content: '▸'; color: #0ea5e9; font-weight: 700; flex-shrink: 0; }
 
-    /* Column table */
     .col-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 0.8rem; }
     .col-table th { padding: 8px 12px; text-align: left; border-bottom: 2px solid #d1d5db; background: #f3f4f6; }
     .col-table td { padding: 6px 12px; border-bottom: 1px solid #e5e7eb; }
@@ -114,7 +113,7 @@
       </p>
 
       <div class="annotated-img">
-        <img src="guide/tech_overview.png" alt="技術資料：イベント選択とスケジュール">
+        <img src="guide/new_tech_overview.png" alt="技術資料：イベント選択とスケジュール">
       </div>
 
       <div class="tip-box">
@@ -131,16 +130,14 @@
 
       <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.8rem; margin-top:1.5rem;">📅 スケジュール欄</h3>
       <table class="col-table">
-        <thead>
-          <tr><th>項目</th><th>内容</th></tr>
-        </thead>
+        <thead><tr><th>項目</th><th>内容</th></tr></thead>
         <tbody>
           <tr><td>会場入り</td><td>スタッフの集合時間</td></tr>
-          <tr><td>リハ開始</td><td>リハーサル開始時刻</td></tr>
-          <tr><td>リハ終了</td><td>リハーサル終了時刻</td></tr>
+          <tr><td>リハ開始 / 終了</td><td>リハーサルの時間帯</td></tr>
           <tr><td>顔合わせ</td><td>出演者顔合わせの時刻</td></tr>
           <tr><td>オープン</td><td>開場時刻（お客さん入場）</td></tr>
           <tr><td>スタート</td><td>開演時刻（ライブ開始）</td></tr>
+          <tr><td>交流会開始 / 終了</td><td>交流会の時間帯</td></tr>
           <tr><td>完全撤収</td><td>撤収完了の目標時刻</td></tr>
         </tbody>
       </table>
@@ -163,33 +160,76 @@
       </p>
 
       <div class="annotated-img">
-        <img src="guide/tech_timetable.png" alt="技術資料：タイムテーブル">
+        <img src="guide/new_tech_timetable.png" alt="技術資料：タイムテーブル">
       </div>
 
       <h3 style="font-size:1.1rem; font-weight:700; margin-bottom:0.8rem; margin-top:1.5rem;">📊 各列の説明</h3>
       <table class="col-table">
-        <thead>
-          <tr><th>列名</th><th>内容</th></tr>
-        </thead>
+        <thead><tr><th>列名</th><th>内容</th></tr></thead>
         <tbody>
           <tr><td>曲順</td><td>全体の通し番号</td></tr>
           <tr><td>時間</td><td>各曲の開始〜終了時刻（開演時間から自動計算）</td></tr>
           <tr><td>演者名</td><td>出演者名（サイリウムカラー付き）</td></tr>
           <tr><td>曲名</td><td>楽曲名</td></tr>
+          <tr><td>弾き語り</td><td>弾き語りの場合、使用楽器を表示</td></tr>
           <tr><td>プロンプト</td><td>曲の出だし・きっかけの説明</td></tr>
-          <tr><td>きっかけ・照明・音響</td><td>演出リクエスト（照明の色味、音響の要望など）</td></tr>
-          <tr><td>備考・要望</td><td>その他の特記事項</td></tr>
-          <tr><td>マイク</td><td>使用マイク番号</td></tr>
-          <tr><td>カウント</td><td>マイク本数</td></tr>
-          <tr><td>Key</td><td>キー変更がある場合の指定</td></tr>
+          <tr><td>音響</td><td>音響の演出リクエスト</td></tr>
+          <tr><td>照明</td><td>照明の演出リクエスト</td></tr>
+          <tr><td>きっかけ</td><td>MCからの転換きっかけ</td></tr>
+          <tr><td>運営への要望</td><td>その他の要望</td></tr>
+          <tr><td>マイク</td><td>使用マイク本数</td></tr>
           <tr><td>曲尺</td><td>曲の長さ（分:秒）</td></tr>
-          <tr><td>完成音源</td><td>音源の提出ステータス（未提出 / 受領 / 完了）</td></tr>
+          <tr><td>完成音源</td><td>音源提出ステータス（受け取り済み / 完成済み）</td></tr>
+          <tr><td>音源確認</td><td>音源チェック済みかの確認</td></tr>
+          <tr><td>はれむぅ確認</td><td>最終確認ステータス</td></tr>
         </tbody>
       </table>
 
       <div class="tip-box">
         タイムテーブル内の <strong>黄色い行</strong> は「休憩」や「交流会」などの特殊スロットです。
       </div>
+    </div>
+
+    <!-- STEP 3.5: リハ時間 -->
+    <div class="guide-section">
+      <h2 style="border-color:#8b5cf6;">
+        <span class="step-num" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">⏱️</span>
+        リハ時間の表示
+      </h2>
+      <p class="guide-desc">
+        イベントに <strong>リハ開始時刻</strong> が設定されている場合、タイムテーブル上部に <strong>「リハ時間」トグルボタン</strong> が表示されます。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/new_tech_rehearsal.png" alt="技術資料：リハ時間トグル">
+      </div>
+
+      <ul class="feature-list">
+        <li>トグルをONにすると、タイムテーブルに <strong>「リハ時間」列</strong> が追加されます</li>
+        <li>リハ開始時刻 + 曲尺の累積から <strong>リハーサルの実時刻</strong> が自動計算されます</li>
+        <li>本番とは別のタイムスケジュールでリハの進行を把握できます</li>
+      </ul>
+    </div>
+
+    <!-- STEP 3.6: 表示列フィルター -->
+    <div class="guide-section">
+      <h2 style="border-color:#10b981;">
+        <span class="step-num" style="background:linear-gradient(135deg,#10b981,#059669);">📋</span>
+        表示列のカスタマイズ
+      </h2>
+      <p class="guide-desc">
+        <strong>「📋 表示列」ボタン</strong> をクリックすると、表示したい列をチェックボックスで個別にON/OFFできるパネルが開きます。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/new_tech_colfilter.png" alt="技術資料：表示列フィルター">
+      </div>
+
+      <ul class="feature-list">
+        <li>必要な列だけを表示して、画面を見やすくカスタマイズ</li>
+        <li>設定は <strong>ブラウザに自動保存</strong> されるため、次回以降も設定が維持されます</li>
+        <li>PA担当は音響列を重点表示、照明担当は照明列を重点表示…といった使い分けに最適</li>
+      </ul>
     </div>
 
     <!-- STEP 4: 出演者詳細 -->
@@ -201,15 +241,17 @@
       </p>
 
       <div class="annotated-img">
-        <img src="guide/tech_performer_detail.png" alt="技術資料：出演者詳細カード">
+        <img src="guide/new_tech_detail.png" alt="技術資料：出演者詳細カード">
       </div>
 
       <ul class="feature-list">
         <li><strong>出演者名</strong>・サイリウムカラー・パーカーサイズ</li>
         <li><strong>SNSアカウント</strong>（X / Discord）</li>
-        <li><strong>セットリスト</strong> — 曲名・カバー/オリジナル・尺</li>
-        <li><strong>演出リクエスト</strong> — 照明・音響・きっかけの詳細</li>
+        <li><strong>セットリスト</strong> — 曲名・オケ/弾き語り・尺</li>
+        <li><strong>演出リクエスト</strong> — 音響・照明・きっかけ・要望の詳細</li>
         <li><strong>音源URL</strong> — アップロード済みの音源リンク</li>
+        <li><strong>技術リクエスト</strong> — 全体の演出要望</li>
+        <li><strong>写真投稿許可</strong> — SNS投稿の許諾状況</li>
       </ul>
     </div>
 
@@ -226,9 +268,7 @@
       </p>
 
       <table class="col-table">
-        <thead>
-          <tr><th>ボタン</th><th>用途</th></tr>
-        </thead>
+        <thead><tr><th>ボタン</th><th>用途</th></tr></thead>
         <tbody>
           <tr><td>📋 Sheetsにコピー</td><td>クリップボードにTSV形式でコピー。Google Sheetsにそのまま貼り付け可能</td></tr>
           <tr><td>📊 Excelにコピー</td><td>クリップボードにHTML表形式でコピー。Excelに書式付きで貼り付け可能</td></tr>
@@ -253,11 +293,11 @@
       <div style="display:grid; gap:1rem;">
         <div class="tip-box">
           <strong>PA（音響）スタッフ</strong><br>
-          → タイムテーブルの「音源ステータス」「マイク番号」「Key」列を中心にチェック。音源URLから当日使用する音源をダウンロードしておく。
+          → 「音響」列と「マイク」列を中心にチェック。「表示列」フィルターで音響関連の列だけを表示すると見やすい。音源URLから当日使用する音源をダウンロードしておく。
         </div>
         <div class="tip-box">
           <strong>照明スタッフ</strong><br>
-          → 「きっかけ・照明・音響」列の照明リクエストを確認。出演者ごとのサイリウムカラーも参考に。
+          → 「照明」列の演出リクエストを確認。出演者ごとのサイリウムカラーも参考に。
         </div>
         <div class="tip-box">
           <strong>会場スタッフ</strong><br>
@@ -265,7 +305,7 @@
         </div>
         <div class="tip-box">
           <strong>主催者（MC）</strong><br>
-          → タイムテーブルで曲順と時間配分を確認。出演者詳細カードでMC紹介用のプロフィール情報を確認。
+          → タイムテーブルで曲順と時間配分を確認。「きっかけ」列で転換のタイミングを把握。出演者詳細カードでMC紹介用のプロフィール情報を確認。
         </div>
       </div>
     </div>
@@ -289,11 +329,15 @@
         </div>
         <div class="tip-box">
           <strong>Q. スマホでも見られる？</strong><br>
-          → はい。タイムテーブルは横スクロールで全列を確認できます。印刷はPC推奨です。
+          → はい。タイムテーブルは横スクロールで全列を確認できます。「表示列」フィルターで不要な列を非表示にするとスマホでも見やすくなります。
         </div>
         <div class="tip-box">
           <strong>Q. 印刷時にテーブルが見切れる</strong><br>
           → 自動的に横向き・縮小印刷されます。PCのブラウザから印刷すると最も綺麗に出力されます。
+        </div>
+        <div class="tip-box">
+          <strong>Q. 表示列の設定はリセットできる？</strong><br>
+          → ブラウザの設定をクリアするか、全チェックボックスをONにすれば元に戻ります。
         </div>
       </div>
     </div>

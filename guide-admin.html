@@ -56,7 +56,6 @@
       margin: 3rem 0;
     }
 
-    /* Feature list */
     .feature-list { list-style: none; padding: 0; margin: 1rem 0; }
     .feature-list li {
       padding: 0.6rem 0; border-bottom: 1px solid #f3f4f6;
@@ -65,12 +64,10 @@
     }
     .feature-list li::before { content: '▸'; color: #7c3aed; font-weight: 700; flex-shrink: 0; }
 
-    /* Keyboard shortcut badge */
-    .kbd {
-      display: inline-block; background: #f3f4f6; border: 1px solid #d1d5db;
-      border-radius: 4px; padding: 1px 6px; font-size: 0.78rem;
-      font-family: monospace; color: #374151;
-    }
+    .col-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 0.8rem; }
+    .col-table th { padding: 8px 12px; text-align: left; border-bottom: 2px solid #d1d5db; background: #f3f4f6; }
+    .col-table td { padding: 6px 12px; border-bottom: 1px solid #e5e7eb; }
+    .col-table td:first-child { font-weight: 600; white-space: nowrap; }
 
     @media (max-width: 640px) {
       .guide-hero h1 { font-size: 1.6rem; }
@@ -110,16 +107,16 @@
     <div class="guide-section">
       <h2><span class="step-num">1</span> ログイン ＆ イベント一覧</h2>
       <p class="guide-desc">
-        ナビゲーションの <strong>「管理」</strong> をタップするとパスワード入力画面が表示されます。<br>
+        ナビゲーションの <strong>「管理」</strong> をタップするとPINコード入力画面が表示されます。<br>
         ログイン後、左側のサイドバーにイベント一覧が表示されます。
       </p>
 
       <div class="annotated-img">
-        <img src="guide/admin_overview.png" alt="管理画面：イベント一覧">
+        <img src="guide/new_admin_overview.png" alt="管理画面：イベント一覧">
       </div>
 
       <ul class="feature-list">
-        <li><strong>「+ 新規」ボタン</strong>でイベントを新規作成できます</li>
+        <li><strong>「+ 新規」ボタン</strong>でイベントを新規作成（イベント名・日付・会場・開演時間・スケジュール・メモを設定可能）</li>
         <li>イベント名をクリックすると詳細画面が開きます</li>
         <li>各イベントの日付・出演者数が一覧で確認できます</li>
       </ul>
@@ -129,7 +126,7 @@
       </div>
     </div>
 
-    <!-- STEP 2: イベント詳細 & 出演者管理 -->
+    <!-- STEP 2: 出演者管理 -->
     <div class="guide-section">
       <h2><span class="step-num">2</span> 出演者の管理</h2>
       <p class="guide-desc">
@@ -138,19 +135,46 @@
       </p>
 
       <div class="annotated-img">
-        <img src="guide/admin_event_detail.png" alt="管理画面：出演者一覧">
+        <img src="guide/new_admin_performers.png" alt="管理画面：出演者一覧">
       </div>
 
       <ul class="feature-list">
-        <li><strong>「+ 出演者を追加」</strong>で運営側から出演者を追加できます</li>
-        <li><strong>「▼ 詳細」</strong>をクリックすると入力内容の全項目が表示されます</li>
-        <li><strong>「フォーム」</strong>をクリックすると、その出演者の入力フォームが開きます</li>
-        <li><strong>「編集」</strong>で出演者名やプロフィールを直接修正できます</li>
-        <li><strong>「削除」</strong>で出演者を削除できます（取り消し不可）</li>
+        <li><strong>「+ 出演者を追加」</strong>で運営側から出演者を追加</li>
+        <li><strong>「▼ 詳細」</strong>をクリックすると、プロフィール・全曲一覧・音源ステータス・技術リクエスト・写真投稿許可を展開表示</li>
+        <li><strong>「フォーム」</strong>をクリックすると、その出演者の入力フォーム（input.html）が別タブで開きます</li>
+        <li><strong>「編集」</strong>で出演者名やプロフィール・曲情報を直接修正可能</li>
+        <li><strong>「削除」</strong>で出演者を削除（取り消し不可）</li>
+        <li>左の <strong>⠿ ハンドル</strong> をドラッグして出演順を入れ替えられます</li>
       </ul>
 
       <div class="warn-box">
         出演者の <strong>「削除」は取り消せません</strong>。セットリストや演出リクエストも全て消えるため、慎重に操作してください。
+      </div>
+    </div>
+
+    <!-- STEP 2.5: 個別変更許可 -->
+    <div class="guide-section">
+      <h2 style="border-color:#f59e0b;">
+        <span class="step-num" style="background:linear-gradient(135deg,#f59e0b,#d97706);">🔓</span>
+        個別セトリ変更許可
+      </h2>
+      <p class="guide-desc">
+        セトリ受付締切後でも、特定の出演者に対して <strong>期限付きでセトリ変更を許可</strong> できます。
+      </p>
+
+      <div class="annotated-img">
+        <img src="guide/new_admin_override.png" alt="管理画面：個別変更許可モーダル">
+      </div>
+
+      <ul class="feature-list">
+        <li>出演者一覧の各カードにある <strong>「🔓 変更許可」ボタン</strong> をクリック</li>
+        <li>許可期限（日時）を設定して保存</li>
+        <li>許可された出演者は期限内であればセトリの入力・修正が可能に</li>
+        <li>期限を過ぎると自動的に再び受付終了状態に戻ります</li>
+      </ul>
+
+      <div class="tip-box">
+        出演者側には「🔓 管理者によりセトリ変更が許可されています（期限表示）」の黄色バナーが表示されるため、許可されていることが一目でわかります。
       </div>
     </div>
 
@@ -159,24 +183,42 @@
       <h2><span class="step-num">3</span> タイムテーブルの編集</h2>
       <p class="guide-desc">
         <strong>「タイムテーブル」</strong>タブに切り替えると、全出演者の曲が時系列で一覧表示されます。<br>
-        ここで曲順の入れ替え・休憩の挿入・演出情報の編集が可能です。
+        曲順の入れ替え・休憩の挿入・演出情報の編集が可能です。
       </p>
 
       <div class="annotated-img">
-        <img src="guide/admin_timetable.png" alt="管理画面：タイムテーブル">
+        <img src="guide/new_admin_timetable.png" alt="管理画面：タイムテーブル">
       </div>
 
-      <ul class="feature-list">
+      <h3 style="font-size:1.1rem; font-weight:700; margin: 1.5rem 0 0.8rem;">📊 タイムテーブルの主な列</h3>
+      <table class="col-table">
+        <thead><tr><th>列名</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>曲順</td><td>通し番号（ドラッグハンドル付き）</td></tr>
+          <tr><td>時間</td><td>開演時間と曲尺から自動計算された時刻</td></tr>
+          <tr><td>演者名</td><td>出演者名（サイリウムカラー付き）</td></tr>
+          <tr><td>曲名</td><td>楽曲名</td></tr>
+          <tr><td>弾き語り</td><td>弾き語り時は使用楽器を表示</td></tr>
+          <tr><td>プロンプト</td><td>曲の出だし・きっかけ（インライン編集可）</td></tr>
+          <tr><td>音響 / 照明 / きっかけ</td><td>各演出リクエスト（インラインで直接編集可）</td></tr>
+          <tr><td>運営への要望</td><td>その他の要望（インライン編集可）</td></tr>
+          <tr><td>マイク</td><td>マイク本数（0〜10本、プルダウン選択）</td></tr>
+          <tr><td>曲尺</td><td>曲の長さ</td></tr>
+          <tr><td>完成音源</td><td>ステータス（空白 / 受け取り済み / 完成済み）</td></tr>
+          <tr><td>音源確認 / はれむぅ確認</td><td>チェックボックスで確認状況を管理</td></tr>
+        </tbody>
+      </table>
+
+      <ul class="feature-list" style="margin-top:1.5rem;">
         <li><strong>開演時間</strong>を設定すると、各曲の開始・終了時刻が自動計算されます</li>
-        <li>行左の <strong>⠿ ハンドル</strong> をドラッグして曲順を入れ替えられます</li>
-        <li><strong>「+ 休憩」「+ 交流会」</strong>で特殊スロットを挿入できます</li>
-        <li>各セルを直接クリックして <strong>きっかけ・照明・音響・備考</strong> を編集できます</li>
-        <li><strong>マイク番号</strong>・<strong>カウント</strong>・<strong>Key</strong> もセル内で選択可能です</li>
-        <li><strong>完成音源</strong>のステータスを「未提出 / 受領 / 完了」で管理できます</li>
+        <li>行左の <strong>⠿ ハンドル</strong> をドラッグして曲順を入れ替え（<strong>スマホは長押しドラッグ</strong>にも対応）</li>
+        <li><strong>「+ 休憩」「+ 交流会」</strong>で特殊スロットを挿入</li>
+        <li>2行をクリックして選択し、<strong>「入れ替える」ボタン</strong>で曲順を一括スワップも可能</li>
+        <li>各セルを直接クリックして演出メモを<strong>インライン編集</strong>できます</li>
       </ul>
 
       <div class="tip-box">
-        2行をクリックして選択し、<strong>「入れ替える」ボタン</strong>で曲順を一括で入れ替えることもできます。
+        タイムテーブルタブに切り替えると、サイドバーが自動的に折りたたまれて画面幅が最大化されます。<strong>☰ ボタン</strong>で開閉可能です。
       </div>
     </div>
 
@@ -216,7 +258,8 @@
         <li><strong>Sheetsにコピー / Excelにコピー</strong> — スプレッドシートに直接貼り付け可能</li>
         <li><strong>CSV保存</strong> — タイムテーブルをCSVファイルとしてダウンロード</li>
         <li><strong>印刷</strong> — PA・照明スタッフ向けにプリントアウト</li>
-        <li>当日のスケジュール（会場入り・リハ・開演等）も一覧表示</li>
+        <li><strong>リハ時間トグル</strong> — リハーサルの時刻を自動計算して表示</li>
+        <li><strong>表示列フィルター</strong> — 必要な列だけを表示するカスタマイズ機能</li>
       </ul>
       <div class="tip-box">
         技術資料ページは <strong>パスワード不要</strong> で誰でもアクセスできます。PA・照明スタッフにURLを共有してください。
@@ -236,12 +279,12 @@
       </p>
       <ul class="feature-list">
         <li><strong>SmileRTのURL</strong> を共有（ホームページのリンク）</li>
-        <li>出演者は <strong>「出演者」ページ</strong> からイベント選択 → 名前選択 → 入力の流れで完結します</li>
+        <li>出演者は <strong>「出演者」ページ</strong> からイベント選択 → 名前選択 → 入力の流れで完結</li>
         <li>詳しい操作手順は <a href="guide.html" style="color:#3b82f6; font-weight:600;">📖 出演者ガイド</a> にまとめてあります</li>
         <li>出演者ガイドのURLを直接共有するのも効果的です</li>
       </ul>
       <div class="tip-box">
-        セトリ締切を設定している場合は、<strong>締切日時も合わせて出演者に伝えてください</strong>。期限を過ぎると入力・修正ができなくなります。
+        セトリ締切を設定している場合は、<strong>締切日時も合わせて出演者に伝えてください</strong>。期限を過ぎると入力・修正ができなくなります（個別許可で例外対応可能）。
       </div>
     </div>
 
@@ -256,11 +299,11 @@
       <div style="display:grid; gap:1rem;">
         <div class="tip-box">
           <strong>イベント編集のポイント</strong><br>
-          → イベントヘッダーの「編集」ボタンから、イベント名・日付・会場・開演時間・スケジュール（会場入り・リハ等）を一括設定できます。
+          → イベントヘッダーの「編集」ボタンから、イベント名・日付・会場・開演時間・スケジュール（会場入り・リハ開始/終了・顔合わせ・オープン・交流会開始/終了・完全撤収）を一括設定できます。
         </div>
         <div class="tip-box">
           <strong>出演者の並び順</strong><br>
-          → 出演者一覧の左にある <strong>⠿ ハンドル</strong> をドラッグすると出演順を変更できます。タイムテーブルの曲順にも反映されます。
+          → 出演者一覧の左にある ⠿ ハンドルをドラッグすると出演順を変更できます（スマホは長押しドラッグ対応）。タイムテーブルの曲順にも反映されます。
         </div>
         <div class="tip-box">
           <strong>Discord通知</strong><br>
