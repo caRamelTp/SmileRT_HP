@@ -29,9 +29,6 @@ module.exports = {
       return interaction.editReply({ content: `❌ イベント「${eventName}」が見つかりません` });
     }
 
-    if (!event.performers || event.performers.length === 0) {
-      return interaction.editReply({ content: `❌ 「${event.title}」に出演者が登録されていません` });
-    }
 
     // Build embed
     const deadlineText = event.setlistDeadline
