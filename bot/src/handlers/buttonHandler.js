@@ -140,9 +140,10 @@ async function handleRemovePerformerMenu(interaction) {
       const otherHasSongs = otherDup && otherDup.songs && otherDup.songs.length > 0;
 
       if (!otherHasSongs) {
-        await firebase.removePerformerFromEvent(eventId, otherDup.id);
+        // Read mappings BEFORE deleting (removePerformerFromEvent also deletes the mapping)
         const otherMapping = await firebase.getMapping(eventId, otherDup.id);
         const thisMapping = await firebase.getMapping(eventId, performer.id);
+        await firebase.removePerformerFromEvent(eventId, otherDup.id);
         if (otherMapping && !thisMapping) {
           await firebase.setMapping(eventId, performer.id, {
             performerName: performer.name,

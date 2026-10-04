@@ -91,11 +91,18 @@ async function getMapping(eventId, performerId) {
 async function getMappingsByEvent(eventId) {
   const snapshot = await db.ref('bot_mappings').once('value');
   const all = snapshot.val() || {};
+  const event = await getEvent(eventId);
+  const validIds = event ? new Set(event.performers.map(p => p.id)) : null;
   const results = [];
   for (const [key, val] of Object.entries(all)) {
-    if (val && val.eventId === eventId) {
-      results.push(val);
+    if (!val || val.eventId !== eventId) continue;
+    // Orphan mapping (performer no longer exists) → clean up
+    if (validIds && !validIds.has(val.performerId)) {
+      console.log(`🧹 孤立リンクを削除: ${val.performerName} (@${val.discordUsername})`);
+      await db.ref(`bot_mappings/${key}`).remove().catch(() => {});
+      continue;
     }
+    results.push(val);
   }
   return results;
 }

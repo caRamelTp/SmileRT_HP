@@ -75,15 +75,16 @@ module.exports = {
       const toDelete = sorted[0];
       const toKeep = sorted[sorted.length - 1];
 
+      // Read mappings BEFORE deleting (removePerformerFromEvent also deletes the mapping)
+      const deletedMapping = await firebase.getMapping(event.id, toDelete.id);
+      const keptMapping = await firebase.getMapping(event.id, toKeep.id);
+
       const removed = await firebase.removePerformerFromEvent(event.id, toDelete.id);
       if (!removed) {
         return interaction.editReply({ content: '❌ 削除に失敗しました' });
       }
 
       // If the kept one doesn't have a mapping but the deleted one did, transfer it
-      const deletedMapping = await firebase.getMapping(event.id, toDelete.id);
-      const keptMapping = await firebase.getMapping(event.id, toKeep.id);
-
       if (deletedMapping && !keptMapping) {
         await firebase.setMapping(event.id, toKeep.id, {
           performerName: toKeep.name,
