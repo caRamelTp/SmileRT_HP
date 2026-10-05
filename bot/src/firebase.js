@@ -202,44 +202,58 @@ function createPerformer(overrides = {}) {
 }
 
 /**
+ * Safely mutate a single event inside smilert/events using a transaction.
+ * Prevents overwriting concurrent edits made from the website.
+ * @param {Function} fn - (event) => boolean  return false to abort
+ * @returns {Promise<boolean>} committed
+ */
+async function mutateEvent(eventId, fn) {
+  let applied = false;
+  const result = await db.ref('smilert/events').transaction(current => {
+    applied = false;
+    // First run may receive null from local cache — return as-is so Firebase retries with server data
+    if (current === null) return current;
+    const isArray = Array.isArray(current);
+    const entries = isArray ? current.map((e, i) => [i, e]) : Object.entries(current);
+    const hit = entries.find(([, e]) => e && e.id === eventId);
+    if (!hit) return; // abort
+    const ev = hit[1];
+    if (!ev.performers) ev.performers = [];
+    if (!Array.isArray(ev.performers)) ev.performers = Object.values(ev.performers);
+    ev.performers = ev.performers.filter(Boolean);
+    const ok = fn(ev);
+    if (ok === false) return; // abort
+    ev.updatedAt = new Date().toISOString();
+    applied = true;
+    return current;
+  });
+  return result.committed && applied;
+}
+
+/**
  * Add a performer to an event in the smilert/events node
  */
 async function addPerformerToEvent(eventId, performerData) {
-  const snapshot = await db.ref('smilert/events').once('value');
-  let events = snapshot.val();
-  if (!events) return null;
-
-  // Convert to array if Firebase stored as object
-  if (!Array.isArray(events)) events = Object.values(events);
-  events = events.filter(Boolean);
-
-  // Find event index
-  const eventIndex = events.findIndex(e => e && e.id === eventId);
-  if (eventIndex === -1) return null;
-
-  // Ensure performers array exists
-  if (!events[eventIndex].performers) events[eventIndex].performers = [];
-  if (!Array.isArray(events[eventIndex].performers)) {
-    events[eventIndex].performers = Object.values(events[eventIndex].performers).filter(Boolean);
-  }
-
-  // Add performer
-  events[eventIndex].performers.push(performerData);
-  events[eventIndex].updatedAt = new Date().toISOString();
-
-  // Write back
-  await db.ref('smilert/events').set(events);
-
-  return performerData;
+  const ok = await mutateEvent(eventId, ev => { ev.performers.push(performerData); });
+  return ok ? performerData : null;
 }
 
 /**
  * Find performers in an event by Discord user ID (via bot_mappings)
- * or by matching name
  */
 async function findPerformerByDiscordId(eventId, discordUserId) {
   const mappings = await getMappingsByEvent(eventId);
   return mappings.find(m => m.discordUserId === discordUserId) || null;
+}
+
+// ─── Admin notices (send once) ───
+
+async function hasNotice(eventId, key) {
+  const s = await db.ref(`bot_notices/${eventId}/${key}`).once('value');
+  return !!s.val();
+}
+async function markNotice(eventId, key) {
+  await db.ref(`bot_notices/${eventId}/${key}`).set(new Date().toISOString());
 }
 
 module.exports = {
@@ -257,9 +271,12 @@ module.exports = {
   getRegistrationMessageId,
   generateId,
   createPerformer,
+  mutateEvent,
   addPerformerToEvent,
   removePerformerFromEvent,
   findPerformerByDiscordId,
+  hasNotice,
+  markNotice,
 };
 
 /**
@@ -267,32 +284,17 @@ module.exports = {
  * Also removes the bot_mapping for that performer
  */
 async function removePerformerFromEvent(eventId, performerId) {
-  const snapshot = await db.ref('smilert/events').once('value');
-  let events = snapshot.val();
-  if (!events) return false;
+  const ok = await mutateEvent(eventId, ev => {
+    const before = ev.performers.length;
+    ev.performers = ev.performers.filter(p => p && p.id !== performerId);
+    if (ev.performers.length === before) return false; // not found → abort
+    if (ev.setlistOverrides) {
+      const ov = Array.isArray(ev.setlistOverrides) ? ev.setlistOverrides : Object.values(ev.setlistOverrides);
+      ev.setlistOverrides = ov.filter(o => o && o.performerId !== performerId);
+    }
+  });
+  if (!ok) return false;
 
-  if (!Array.isArray(events)) events = Object.values(events);
-  events = events.filter(Boolean);
-
-  const eventIndex = events.findIndex(e => e && e.id === eventId);
-  if (eventIndex === -1) return false;
-
-  if (!events[eventIndex].performers) return false;
-  if (!Array.isArray(events[eventIndex].performers)) {
-    events[eventIndex].performers = Object.values(events[eventIndex].performers).filter(Boolean);
-  }
-
-  const before = events[eventIndex].performers.length;
-  events[eventIndex].performers = events[eventIndex].performers.filter(p => p.id !== performerId);
-  const after = events[eventIndex].performers.length;
-
-  if (before === after) return false; // Not found
-
-  events[eventIndex].updatedAt = new Date().toISOString();
-  await db.ref('smilert/events').set(events);
-
-  // Also remove mapping
   await deleteMapping(eventId, performerId);
-
   return true;
 }
