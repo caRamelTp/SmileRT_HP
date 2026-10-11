@@ -102,7 +102,9 @@ async function buildEventStatusEmbed(event) {
 }
 
 function labelHours(h) {
-  if (h % 24 === 0) return h === 168 ? '1週間' : `${h / 24}日`;
+  const special = { 720: '1ヶ月', 336: '2週間', 168: '1週間' };
+  if (special[h]) return special[h];
+  if (h % 24 === 0) return `${h / 24}日`;
   return `${h}時間`;
 }
 

@@ -187,8 +187,9 @@
                         <input type="text" class="form-input" id="inputName" placeholder="ステージネーム">
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label class="form-label">Discord ハンドルネーム</label><input type="text"
-                                class="form-input" id="inputDiscord" placeholder="例: smile_rt"></div>
+                        <div class="form-group"><label class="form-label">Discord ユーザー名</label><input type="text"
+                                class="form-input" id="inputDiscord" placeholder="例: smile_rt（@の後ろの英数字）">
+                            <small style="opacity:.7;font-size:.75rem;">表示名ではなく、プロフィールの「@〜」のユーザー名を入力してください。Discord登録と自動で照合されます。</small></div>
                         <div class="form-group"><label class="form-label">X (Twitter) ID</label><input type="text"
                                 class="form-input" id="inputTwitter" placeholder="@username"></div>
                     </div>
@@ -503,6 +504,40 @@
                 }
             }
             if (eventId && !performerId) {
+                // ── 重複チェック: 同じ Discord ID / 同じ名前の出演者がこのイベントに既にいるか ──
+                const normId = s => (s || '').normalize('NFKC').trim().replace(/^@+/, '').replace(/#\d{1,4}$/, '').replace(/\s+/g, '').toLowerCase();
+                const normName = s => (s || '').normalize('NFKC').replace(/\s+/g, '').toLowerCase();
+                const ev = db.getEvent(eventId);
+                const list = (ev && ev.performers) || [];
+                const myId = normId(data.discord);
+                const match =
+                    (myId && list.find(p => normId(p.discord) === myId)) ||
+                    list.find(p => normName(p.name) === normName(name));
+
+                if (match) {
+                    const by = (myId && normId(match.discord) === myId) ? 'Discord ID' : '名前';
+                    const exSongs = (match.songs || []).length;
+                    const merge = confirm(
+                        `✅ 同じ${by}の出演者「${match.name}」が既に登録されています。\n` +
+                        '（Discordの #出演者登録 から登録済みの可能性があります）\n\n' +
+                        `「OK」→「${match.name}」のデータに今回の入力内容を保存します（重複しません）\n` +
+                        (exSongs > 0 ? `　※ 登録済みのセトリ（${exSongs}曲）は今回の入力内容で上書きされます\n` : '') +
+                        '「キャンセル」→ 保存を中止します\n\n' +
+                        '既存のデータに保存しますか？'
+                    );
+                    if (!merge) { showToast('保存を中止しました。一覧から自分の名前を選んで編集してください', 'info'); return; }
+                    const ex = db.getPerformer(eventId, match.id);
+                    if (!ex) { showToast('出演者データが見つかりませんでした。ページを再読み込みしてください。', 'error'); return; }
+                    Object.assign(ex, data, { discord: data.discord || ex.discord });
+                    delete ex.createdBy;
+                    db.updatePerformer(eventId, ex);
+                    performerId = ex.id;
+                    isNewMode = false;
+                    setParams({ event: eventId, performer: performerId });
+                    showToast(`「${ex.name}」として保存しました（Discord登録と統合済み）`, 'success');
+                    return;
+                }
+
                 // New performer for existing event — confirm first
                 const confirmed = confirm(
                     '⚠ 新しい出演者として登録します ⚠\n\n' +
@@ -511,6 +546,7 @@
                     'Discordから登録した名前が一覧にある場合は\n' +
                     '「キャンセル」を押して、そちらから\n' +
                     '編集してください。\n\n' +
+                    (myId ? '' : '💡 Discord ユーザー名を入力すると、Discord登録と自動で照合されます。\n\n') +
                     '本当に新規登録しますか？'
                 );
                 if (!confirmed) return;

@@ -13,15 +13,21 @@ const config = require('../config');
  * Start the reminder cron job (runs every hour at :00)
  */
 function startReminderService(client) {
-  // Run every hour at minute 0
-  cron.schedule('0 * * * *', async () => {
-    console.log(`⏰ [${new Date().toLocaleString('ja-JP')}] リマインドチェック実行中...`);
+  const run = async (label) => {
+    console.log(`⏰ [${new Date().toLocaleString('ja-JP')}] リマインドチェック実行中...${label || ''}`);
     try {
+      // 送信前に Discord ID 照合（直前にサイト登録した人もメンションされるように）
+      await require('./reconcileService').reconcileAll(client).catch(e => console.error('❌ 照合エラー:', e.message));
       await checkDeadlines(client);
     } catch (error) {
       console.error('❌ リマインドチェックエラー:', error);
     }
-  });
+  };
+
+  // Run every hour at minute 0
+  cron.schedule('0 * * * *', () => run());
+  // Bot 再起動で取りこぼさないよう、起動1分後にも1回チェック（送信済みは記録済みなので二重送信しない）
+  setTimeout(() => run('（起動時）'), 60 * 1000);
 
   const timingText = config.remindHours.map(h => formatHours(h)).join(' / ');
   console.log(`⏰ リマインドサービス開始（毎時0分にチェック、通知タイミング: ${timingText} 前）`);
@@ -208,6 +214,8 @@ async function sendOverrideReminder(client, event, performer, override, timeText
  * Format hours into a readable string
  */
 function formatHours(hours) {
+  const special = { 720: '1ヶ月', 336: '2週間', 168: '1週間' };
+  if (special[hours]) return special[hours];
   if (hours >= 24) {
     const days = Math.floor(hours / 24);
     const remainHours = hours % 24;

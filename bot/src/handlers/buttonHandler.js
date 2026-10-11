@@ -12,6 +12,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, UserSelectMenuBuilder, StringSelectMenuBuilder, MessageFlags } = require('discord.js');
 const firebase = require('../firebase');
 const config = require('../config');
+const { matchScore } = require('../utils/identity');
 
 // ─── Helper: Safe interaction reply ───
 
@@ -81,28 +82,42 @@ async function handleUserSelectMenu(interaction) {
       return;
     }
 
-    const performers = event.performers || [];
-    const existingPerformer =
-      performers.find(p => p.name && p.name === displayName) ||
-      performers.find(p => p.name && p.name.toLowerCase() === displayName.toLowerCase()) ||
-      performers.find(p => p.discord && p.discord.toLowerCase() === username.toLowerCase());
+    // Match existing performers (Discord ID first, then display name / name)
+    // Exclude performers already linked to someone else
+    const mappings = await firebase.getMappingsByEvent(eventId);
+    const linkedIds = new Set(mappings.map(m => m.performerId));
+    const candidates = (event.performers || [])
+      .filter(p => !linkedIds.has(p.id))
+      .map(p => ({ p, score: matchScore(p, member) }))
+      .filter(x => x.score > 0)
+      .sort((a, b) => b.score - a.score);
+    // 同じスコアが複数あれば曖昧なので、より確実な一致が1件だけの場合のみ採用
+    const top = candidates[0];
+    const ambiguous = top && candidates.filter(x => x.score === top.score).length > 1;
+    const existingPerformer = top && !ambiguous ? top.p : null;
+    const how = top ? ['', '名前', 'Discord表示名', 'Discord ID'][top.score] : '';
 
     if (existingPerformer) {
       await firebase.setMapping(eventId, existingPerformer.id, {
         performerName: existingPerformer.name,
         discordUserId: selectedUserId,
         discordUsername: username,
+        linkedBy: `select-${how}`,
       });
-      await safeReply(interaction, deferred, `✅ <@${selectedUserId}> を既存の出演者「**${existingPerformer.name}**」に自動リンクしました！`);
+      await safeReply(interaction, deferred,
+        `✅ <@${selectedUserId}> を既存の出演者「**${existingPerformer.name}**」にリンクしました！（${how}が一致）`);
     } else {
-      const newPerformer = firebase.createPerformer({ name: displayName, discord: username });
-      await firebase.addPerformerToEvent(eventId, newPerformer);
+      const newPerformer = firebase.createPerformer({ name: displayName, discord: username, createdBy: 'discord-bot' });
+      const added = await firebase.addPerformerToEvent(eventId, newPerformer);
+      if (!added) { await safeReply(interaction, deferred, '❌ 出演者の追加に失敗しました。もう一度お試しください'); return; }
       await firebase.setMapping(eventId, newPerformer.id, {
         performerName: displayName,
         discordUserId: selectedUserId,
         discordUsername: username,
       });
-      await safeReply(interaction, deferred, `✅ <@${selectedUserId}>（**${displayName}**）を出演者として追加しました！`);
+      let msg = `✅ <@${selectedUserId}>（**${displayName}**）を出演者として追加しました！`;
+      if (ambiguous) msg += `\n⚠ 似た出演者が複数あったため自動リンクしませんでした。重複していたら削除メニューで整理してください。`;
+      await safeReply(interaction, deferred, msg);
     }
 
     // Always update registration message (even if reply failed)

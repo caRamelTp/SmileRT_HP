@@ -30,6 +30,8 @@ client.once(Events.ClientReady, (readyClient) => {
 
   // Start reminder service
   startReminderService(client);
+  // Start Discord ID reconcile service
+  require('./services/reconcileService').startReconcileService(client);
 });
 
 // ─── Interaction Handler ───
