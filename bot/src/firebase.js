@@ -5,18 +5,20 @@
    Writes bot-specific data to bot_mappings / bot_reminders nodes.
    ============================================================ */
 
-const admin = require('firebase-admin');
+// firebase-admin v14 以降は名前空間 API（admin.credential / admin.database()）が廃止されたためモジュラー API を使用
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getDatabase } = require('firebase-admin/database');
 const path = require('path');
 const config = require('./config');
 
 // Initialize Firebase Admin SDK
 const serviceAccount = require(path.resolve(config.firebaseServiceAccountPath));
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+initializeApp({
+  credential: cert(serviceAccount),
   databaseURL: config.firebaseDatabaseUrl,
 });
 
-const db = admin.database();
+const db = getDatabase();
 
 // ─── Read: Existing SmileRT Data (read-only) ───
 

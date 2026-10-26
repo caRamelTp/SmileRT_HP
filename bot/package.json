@@ -8,10 +8,10 @@
     "deploy": "node src/deploy-commands.js"
   },
   "dependencies": {
-    "@firebase/app": "^0.16.0",
+    "@firebase/app": "^0.16.4",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.7",
-    "firebase-admin": "^13.0.2",
-    "node-cron": "^3.0.3"
+    "firebase-admin": "^14.5.0",
+    "node-cron": "^4.6.0"
   }
 }
