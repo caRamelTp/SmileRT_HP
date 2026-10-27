@@ -191,14 +191,14 @@
           const pCount = event.performers.length;
           const sCount = event.performers.reduce((sum, p) => sum + p.songs.length, 0);
           return `
-            <a href="performer.html?event=${event.id}" class="event-card glass-card" style="display:block; text-decoration:none; color:inherit;">
-              <div class="event-date">${event.date || '日付未定'}</div>
-              <div class="event-title">${event.title || '無題のイベント'}</div>
+            <a href="performer.html?event=${encodeURIComponent(event.id)}" class="event-card glass-card" style="display:block; text-decoration:none; color:inherit;">
+              <div class="event-date">${escHtml(event.date || '日付未定')}</div>
+              <div class="event-title">${escHtml(event.title || '無題のイベント')}</div>
               <div class="event-meta">
                 <span>${pCount}人</span>
                 <span>${sCount}曲</span>
-                <span>${event.startTime || '--:--'}</span>
-                ${event.venue ? `<span>${event.venue}</span>` : ''}
+                <span>${escHtml(event.startTime || '--:--')}</span>
+                ${event.venue ? `<span>${escHtml(event.venue)}</span>` : ''}
               </div>
             </a>
           `;

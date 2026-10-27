@@ -1123,7 +1123,7 @@
                 ['スタート', ev.startTime], ['交流会開始', s.exchangeStart],
                 ['交流会終了', s.exchangeEnd], ['完全撤収', s.fullClear]
             ].filter(([, v]) => v);
-            document.getElementById('scheduleInfo').innerHTML = items.length ? items.map(([l, v]) => `<div class="si"><span class="si-label">${l}</span><span class="si-time">${v}</span></div>`).join('') : '';
+            document.getElementById('scheduleInfo').innerHTML = items.length ? items.map(([l, v]) => `<div class="si"><span class="si-label">${l}</span><span class="si-time">${escHtml(v)}</span></div>`).join('') : '';
             document.getElementById('scheduleInfo').style.display = items.length ? '' : 'none';
 
             // Summary
@@ -1131,7 +1131,7 @@
             const totalS = ev.performers.reduce((s, p) => s + p.songs.length, 0);
             const totalD = ev.performers.reduce((s, p) => s + p.songs.reduce((a, song) => a + (song.duration || 0), 0), 0);
             document.getElementById('summaryBar').innerHTML = `
-        <div class="si">${ev.date || '日付未定'}</div>
+        <div class="si">${escHtml(ev.date || '日付未定')}</div>
         ${ev.venue ? `<div class="si">${escHtml(ev.venue)}</div>` : ''}
         <div class="si">出演者 <strong>${totalP}</strong>人</div>
         <div class="si">全 <strong>${totalS}</strong>曲</div>
@@ -1197,7 +1197,7 @@
           <td data-col="order" style="text-align:center;font-size:0.78rem;color:var(--text-muted)">${t.order}</td>
           <td data-col="time" style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
           ${rTd}
-          <td data-col="performer"><span class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</span></td>
+          <td data-col="performer"><span class="flex items-center gap-xs">${safeColor(t.cyalumeColor) ? `<span class="color-swatch" style="background:${escHtml(safeColor(t.cyalumeColor))};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</span></td>
           <td data-col="song">${escHtml(t.songTitle)}</td>
           <td data-col="acoustic" style="text-align:center;font-size:0.78rem;color:var(--accent-green);font-weight:600">${acousticCol}</td>
           <td data-col="prompt" class="col-group-start" style="text-align:center">${escHtml(t.promptNumber)}</td>
@@ -1238,9 +1238,9 @@
                 ${p.twitter ? `<span>𝕏 ${escHtml(p.twitter)}</span>` : ''}${p.discord ? `<span>Discord: ${escHtml(p.discord)}</span>` : ''}${p.hoodie ? `<span>パーカー: ${escHtml(p.hoodie)}</span>` : ''}
               </div>
             </div>
-            ${p.cyalumeColor ? `<span class="color-swatch" style="background:${p.cyalumeColor}"></span>` : ''}
+            ${safeColor(p.cyalumeColor) ? `<span class="color-swatch" style="background:${escHtml(safeColor(p.cyalumeColor))}"></span>` : ''}
           </div>
-          ${p.iconUrl ? `<div style="font-size:0.8rem;margin-bottom:var(--space-sm)"><a href="${escHtml(p.iconUrl)}" target="_blank">アイコン素材</a></div>` : ''}
+          ${safeUrl(p.iconUrl) ? `<div style="font-size:0.8rem;margin-bottom:var(--space-sm)"><a href="${escHtml(safeUrl(p.iconUrl))}" target="_blank" rel="noopener noreferrer">アイコン素材</a></div>` : ''}
           <div class="song-list">${p.songs.map((s, si) => `
             <div class="song-item">
               <span class="s-num">${si + 1}</span>
@@ -1256,7 +1256,7 @@
                 ${s.cueNote ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">🎬 ${escHtml(s.cueNote)}</div>` : ''}
                 ${s.requestNote ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">📋 ${escHtml(s.requestNote)}</div>` : ''}
                 ${s.remarks ? `<div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px">${escHtml(s.remarks)}</div>` : ''}
-                ${s.audioUrl ? `<div style="font-size:0.75rem;margin-top:2px"><a href="${escHtml(s.audioUrl)}" target="_blank">音源</a></div>` : ''}
+                ${safeUrl(s.audioUrl) ? `<div style="font-size:0.75rem;margin-top:2px"><a href="${escHtml(safeUrl(s.audioUrl))}" target="_blank" rel="noopener noreferrer">音源</a></div>` : ''}
               </div>
             </div>`).join('')}
           </div>

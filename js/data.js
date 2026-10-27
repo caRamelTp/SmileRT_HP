@@ -719,8 +719,8 @@ class SmileRTDatabase {
     const timeline = this.calculateTimetable(event);
     const headers = ['曲順', '時間', '演者名', '曲名', '種別', '弾き語り', '曲尺', 'プロンプト', '音響', '照明', 'きっかけ', '運営への要望', 'マイク', '使用楽器', '借りたい機材', '完成音源', '音源確認', 'はれむぅ確認'];
     const csvEsc = v => {
-      const s = String(v || '');
-      if (s.includes(',') || s.includes('"') || s.includes('\n')) return '"' + s.replace(/"/g, '""') + '"';
+      const s = neutralizeCell(v || ''); // CSVインジェクション対策
+      if (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r')) return '"' + s.replace(/"/g, '""') + '"';
       return s;
     };
     const rows = [headers.map(csvEsc).join(',')];
@@ -757,9 +757,11 @@ class SmileRTDatabase {
     const timeline = this.calculateTimetable(event);
     const headers = ['曲順', '時間', '演者名', '曲名', '種別', '弾き語り', '曲尺', 'プロンプト', '音響', '照明', 'きっかけ', '運営への要望', 'マイク', '使用楽器', '借りたい機材', '完成音源', '音源確認', 'はれむぅ確認'];
     const rows = [headers.join('\t')];
+    // TSVインジェクション対策: タブ/改行を除去し、数式として解釈される先頭文字を無害化
+    const tsvEsc = v => neutralizeCell(String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' '));
     timeline.forEach(t => {
       if (t.slotType !== 'song') {
-        rows.push([t.songTitle || t.slotType, t.timeRange, ...Array(16).fill('')].join('\t'));
+        rows.push([t.songTitle || t.slotType, t.timeRange, ...Array(16).fill('')].map(tsvEsc).join('\t'));
       } else {
         const typeStr = t.type === 'acoustic' ? '弾き語り' : 'オケ';
         const acousticCol = t.type === 'acoustic' ? (t.equipment || '✓') : '';
@@ -772,7 +774,7 @@ class SmileRTDatabase {
           t.equipment, t.equipmentRequest,
           t.completedAudio,
           t.audioConfirmed ? '✓' : '', t.audioConfirmedHaremu ? '✓' : ''
-        ].join('\t'));
+        ].map(tsvEsc).join('\t'));
       }
     });
     return rows.join('\n');
@@ -792,29 +794,29 @@ class SmileRTDatabase {
     
     timeline.forEach(t => {
       if (t.slotType !== 'song') {
-        html += `<tr style="background:#fff8e1;"><td style="${tdStyle}font-weight:bold;color:#b8860b;" colspan="18">${t.songTitle || t.slotType}　${t.timeRange}　(${t.durationStr})</td></tr>`;
+        html += `<tr style="background:#fff8e1;"><td style="${tdStyle}font-weight:bold;color:#b8860b;" colspan="18">${escHtml(t.songTitle || t.slotType)}　${escHtml(t.timeRange)}　(${escHtml(t.durationStr)})</td></tr>`;
       } else {
         const doneColor = t.completedAudio === '完成済み' ? 'color:#16a34a;font-weight:bold;' : t.completedAudio === '受け取り済み' ? 'color:#d97706;font-weight:bold;' : '';
         const typeStr = t.type === 'acoustic' ? '弾き語り' : 'オケ';
         const acousticBg = t.type === 'acoustic' ? 'background:#f0fdf4;' : '';
         const acousticCol = t.type === 'acoustic' ? (t.equipment || '✓') : '';
         html += `<tr style="${acousticBg}">
-          <td style="${tdStyle}text-align:center;">${t.order}</td>
-          <td style="${tdStyle}font-family:monospace;">${t.timeRange}</td>
-          <td style="${tdStyle}">${t.performerName}</td>
-          <td style="${tdStyle}font-weight:600;">${t.songTitle}</td>
+          <td style="${tdStyle}text-align:center;">${escHtml(t.order)}</td>
+          <td style="${tdStyle}font-family:monospace;">${escHtml(t.timeRange)}</td>
+          <td style="${tdStyle}">${escHtml(t.performerName)}</td>
+          <td style="${tdStyle}font-weight:600;">${escHtml(t.songTitle)}</td>
           <td style="${tdStyle}text-align:center;">${typeStr}</td>
-          <td style="${tdStyle}text-align:center;">${acousticCol}</td>
-          <td style="${tdStyle}text-align:center;font-family:monospace;">${t.durationStr}</td>
-          <td style="${tdStyle}text-align:center;">${t.promptNumber}</td>
-          <td style="${tdStyle}">${t.soundNote}</td>
-          <td style="${tdStyle}">${t.lightNote}</td>
-          <td style="${tdStyle}">${t.cueNote}</td>
-          <td style="${tdStyle}">${t.requestNote}</td>
-          <td style="${tdStyle}text-align:center;">${t.micCount || 0}</td>
-          <td style="${tdStyle}">${t.equipment}</td>
-          <td style="${tdStyle}">${t.equipmentRequest}</td>
-          <td style="${tdStyle}text-align:center;${doneColor}">${t.completedAudio}</td>
+          <td style="${tdStyle}text-align:center;">${escHtml(acousticCol)}</td>
+          <td style="${tdStyle}text-align:center;font-family:monospace;">${escHtml(t.durationStr)}</td>
+          <td style="${tdStyle}text-align:center;">${escHtml(t.promptNumber)}</td>
+          <td style="${tdStyle}">${escHtml(t.soundNote)}</td>
+          <td style="${tdStyle}">${escHtml(t.lightNote)}</td>
+          <td style="${tdStyle}">${escHtml(t.cueNote)}</td>
+          <td style="${tdStyle}">${escHtml(t.requestNote)}</td>
+          <td style="${tdStyle}text-align:center;">${escHtml(t.micCount || 0)}</td>
+          <td style="${tdStyle}">${escHtml(t.equipment)}</td>
+          <td style="${tdStyle}">${escHtml(t.equipmentRequest)}</td>
+          <td style="${tdStyle}text-align:center;${doneColor}">${escHtml(t.completedAudio)}</td>
           <td style="${tdStyle}text-align:center;">${t.audioConfirmed ? '✓' : ''}</td>
           <td style="${tdStyle}text-align:center;">${t.audioConfirmedHaremu ? '✓' : ''}</td>
         </tr>`;
@@ -1000,7 +1002,12 @@ function showToast(message, type = 'info') {
   const icons = { success: '✓', error: '✕', info: 'ℹ' };
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${message}</span>`;
+  // message に外部データが含まれても HTML として解釈されないよう textContent で設定
+  const iconEl = document.createElement('span');
+  iconEl.textContent = icons[type] || 'ℹ';
+  const msgEl = document.createElement('span');
+  msgEl.textContent = message;
+  toast.append(iconEl, msgEl);
   container.appendChild(toast);
   setTimeout(() => {
     toast.style.opacity = '0';
@@ -1103,9 +1110,44 @@ function setParams(params) {
 }
 
 // --- HTML Escape ---
+// 属性値（value="..." 等）にも安全に埋め込めるよう、引用符も含めてエスケープする
 function escHtml(str) {
-  if (!str) return '';
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
+  if (!str && str !== 0) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// --- Security Helpers ---
+// インラインイベントハンドラの引数として安全に埋め込む（JS文字列リテラル化 → HTMLエスケープ）
+// 例: onclick="fn(${jsArg(id)})"
+function jsArg(v) {
+  return escHtml(JSON.stringify(v == null ? '' : String(v)));
+}
+
+// CSS の色として妥当な値のみ許可（style 属性への注入対策）
+function safeColor(c) {
+  if (typeof c !== 'string') return '';
+  const v = c.trim();
+  if (!v || /[;"'<>{}\\]|url\(|expression/i.test(v)) return '';
+  if (typeof CSS !== 'undefined' && CSS.supports && !CSS.supports('color', v)) return '';
+  return v;
+}
+
+// http/https の URL のみ許可（javascript: 等のスキーム対策）
+function safeUrl(u) {
+  if (!u || typeof u !== 'string') return '';
+  try {
+    const x = new URL(u.trim(), window.location.href);
+    return (x.protocol === 'http:' || x.protocol === 'https:') ? x.href : '';
+  } catch (e) { return ''; }
+}
+
+// CSV/TSV インジェクション対策（= + - @ 等で始まるセルを数式として解釈させない）
+function neutralizeCell(v) {
+  const s = String(v == null ? '' : v);
+  return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
 }

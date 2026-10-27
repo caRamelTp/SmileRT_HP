@@ -1100,8 +1100,8 @@
             const list = document.getElementById('eventList');
             if (!events.length) { list.innerHTML = '<p class="text-muted text-center" style="font-size:0.85rem;padding:var(--space-lg) 0">イベントがありません</p>'; return; }
             list.innerHTML = events.map(e => `
-        <div class="event-list-item ${e.id === currentEventId ? 'active' : ''}" onclick="selectEvent('${e.id}')">
-          <div><div class="ev-title">${escHtml(e.title) || '無題'}</div><div class="ev-date">${e.date || '日付未定'} · ${e.performers.length}人</div></div>
+        <div class="event-list-item ${e.id === currentEventId ? 'active' : ''}" onclick="selectEvent(${jsArg(e.id)})">
+          <div><div class="ev-title">${escHtml(e.title) || '無題'}</div><div class="ev-date">${escHtml(e.date || '日付未定')} · ${e.performers.length}人</div></div>
         </div>
       `).join('');
         }
@@ -1194,8 +1194,8 @@
           <div>
             <h2>${escHtml(ev.title) || '無題'}</h2>
             <div class="flex gap-md mt-sm text-muted" style="font-size:0.85rem;flex-wrap:wrap">
-              <span>${ev.date || '日付未定'}</span>
-              <span>開演 ${ev.startTime || '--:--'}</span>
+              <span>${escHtml(ev.date || '日付未定')}</span>
+              <span>開演 ${escHtml(ev.startTime || '--:--')}</span>
               ${ev.venue ? `<span>${escHtml(ev.venue)}</span>` : ''}
               <span>${ev.performers.length}人</span>
               ${ev.setlistDeadline ? `<span style="font-weight:600;color:${isSetlistOpen(ev) ? 'var(--accent-green)' : 'var(--accent-red)'}">${isSetlistOpen(ev) ? '🟢 セトリ受付中' : '🔴 セトリ受付終了'} (〜${formatDeadline(ev.setlistDeadline)})</span>` : '<span style="color:var(--text-muted)">セトリ期限: なし</span>'}
@@ -1227,36 +1227,36 @@
             list.innerHTML = ev.performers.map((p, i) => {
                 const audioStatus = p.songs.map(s => s.completedAudio || '未着').join(', ');
                 return `
-        <div class="performer-item" id="pi-${p.id}" draggable="true" data-pid="${p.id}"
+        <div class="performer-item" id="pi-${escHtml(p.id)}" draggable="true" data-pid="${escHtml(p.id)}"
              ondragstart="onDS(event)" ondragover="onDO(event)" ondrop="onDP(event)" ondragend="onDE(event)" ondragleave="onDL(event)">
           <span class="drag-handle">⠿</span>
           <span class="order-num">${i + 1}</span>
-          ${p.cyalumeColor ? `<span class="color-swatch" style="background:${p.cyalumeColor}"></span>` : ''}
+          ${safeColor(p.cyalumeColor) ? `<span class="color-swatch" style="background:${escHtml(safeColor(p.cyalumeColor))}"></span>` : ''}
           <div class="performer-info">
             <div class="performer-name">${escHtml(p.name) || '未入力'}</div>
-            <div class="performer-songs">${p.songs.length ? p.songs.map(s => s.title || '曲名未入力').join(' / ') : '曲なし'}${p.hoodie ? ` | ${escHtml(p.hoodie)}` : ''}</div>
+            <div class="performer-songs">${p.songs.length ? p.songs.map(s => escHtml(s.title || '曲名未入力')).join(' / ') : '曲なし'}${p.hoodie ? ` | ${escHtml(p.hoodie)}` : ''}</div>
           </div>
           <div class="performer-actions">
             ${(!isSetlistOpen(ev) && ev.setlistDeadline) ? (() => {
               const ov = getSetlistOverride(ev, p.id);
               const isActive = ov && (!ov.deadline || new Date(ov.deadline) > new Date());
               const isExpired = ov && ov.deadline && new Date(ov.deadline) <= new Date();
-              if (isActive) return `<span class="override-badge">🔓 変更許可中 〜${formatDeadline(ov.deadline)}</span><button class="override-btn active" onclick="event.stopPropagation();revokeSetlistOverride('${p.id}')" title="変更許可を取り消す">取消</button>`;
-              if (isExpired) return `<span class="override-badge expired">期限切れ</span><button class="override-btn" onclick="event.stopPropagation();showOverrideModal('${p.id}','${escHtml(p.name)}')" title="セトリ変更を許可">🔓 変更許可</button>`;
-              return `<button class="override-btn" onclick="event.stopPropagation();showOverrideModal('${p.id}','${escHtml(p.name)}')" title="セトリ変更を許可">🔓 変更許可</button>`;
+              if (isActive) return `<span class="override-badge">🔓 変更許可中 〜${formatDeadline(ov.deadline)}</span><button class="override-btn active" onclick="event.stopPropagation();revokeSetlistOverride(${jsArg(p.id)})" title="変更許可を取り消す">取消</button>`;
+              if (isExpired) return `<span class="override-badge expired">期限切れ</span><button class="override-btn" onclick="event.stopPropagation();showOverrideModal(${jsArg(p.id)},${jsArg(p.name)})" title="セトリ変更を許可">🔓 変更許可</button>`;
+              return `<button class="override-btn" onclick="event.stopPropagation();showOverrideModal(${jsArg(p.id)},${jsArg(p.name)})" title="セトリ変更を許可">🔓 変更許可</button>`;
             })() : ''}
-            <button class="performer-detail-toggle" onclick="event.stopPropagation();togglePerformerDetail('${p.id}')">▼ 詳細</button>
-            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();window.open('input.html?event=${currentEventId}&performer=${p.id}','_blank')">フォーム</button>
-            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showEditPerformerModal('${p.id}')">編集</button>
-            <button class="btn btn-ghost btn-sm" style="color:var(--accent-red)" onclick="event.stopPropagation();delPerformer('${p.id}')">削除</button>
+            <button class="performer-detail-toggle" onclick="event.stopPropagation();togglePerformerDetail(${jsArg(p.id)})">▼ 詳細</button>
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();window.open(${jsArg('input.html?event=' + encodeURIComponent(currentEventId) + '&performer=' + encodeURIComponent(p.id))},'_blank','noopener')">フォーム</button>
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showEditPerformerModal(${jsArg(p.id)})">編集</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--accent-red)" onclick="event.stopPropagation();delPerformer(${jsArg(p.id)})">削除</button>
           </div>
-          <div class="performer-detail-panel" id="detail-${p.id}">
+          <div class="performer-detail-panel" id="detail-${escHtml(p.id)}">
             <div class="detail-info-grid">
-              ${p.cyalumeColor ? `<div class="detail-info-item"><div class="detail-label">サイリウムカラー</div><div class="detail-value flex items-center gap-xs"><span class="color-swatch" style="background:${p.cyalumeColor};width:14px;height:14px"></span> ${escHtml(p.cyalumeColor)}</div></div>` : ''}
+              ${p.cyalumeColor ? `<div class="detail-info-item"><div class="detail-label">サイリウムカラー</div><div class="detail-value flex items-center gap-xs"><span class="color-swatch" style="background:${escHtml(safeColor(p.cyalumeColor))};width:14px;height:14px"></span> ${escHtml(p.cyalumeColor)}</div></div>` : ''}
               ${p.discord ? `<div class="detail-info-item"><div class="detail-label">Discord</div><div class="detail-value">${escHtml(p.discord)}</div></div>` : ''}
               ${p.twitter ? `<div class="detail-info-item"><div class="detail-label">X (Twitter)</div><div class="detail-value">${escHtml(p.twitter)}</div></div>` : ''}
               ${p.hoodie ? `<div class="detail-info-item"><div class="detail-label">パーカーサイズ</div><div class="detail-value">${escHtml(p.hoodie)}</div></div>` : ''}
-              ${p.iconUrl ? `<div class="detail-info-item"><div class="detail-label">アイコン素材</div><div class="detail-value"><a href="${escHtml(p.iconUrl)}" target="_blank" style="font-size:0.8rem">リンクを開く ↗</a></div></div>` : ''}
+              ${p.iconUrl ? `<div class="detail-info-item"><div class="detail-label">アイコン素材</div><div class="detail-value"><a href="${escHtml(safeUrl(p.iconUrl))}" target="_blank" rel="noopener noreferrer" style="font-size:0.8rem">リンクを開く ↗</a></div></div>` : ''}
             </div>
             ${p.songs.length ? `
             <div class="detail-song-list">
@@ -1312,7 +1312,7 @@
                 </div>
                 <div class="flex gap-sm justify-center">
                   <button class="btn btn-ghost" onclick="closeModal('overrideModal')">キャンセル</button>
-                  <button class="btn btn-primary" onclick="applySetlistOverride('${performerId}')">許可する</button>
+                  <button class="btn btn-primary" onclick="applySetlistOverride(${jsArg(performerId)})">許可する</button>
                 </div>
               </div>`;
             // Create or reuse modal
@@ -1370,7 +1370,7 @@
           <div class="form-group"><label class="form-label">出演者名 <span class="required">*</span></label><input type="text" class="form-input" id="pName" value="${escHtml(p.name)}"></div>
           <div class="form-group"><label class="form-label">サイリウムカラー</label>
             <div class="flex gap-sm items-center">
-              <input type="color" id="pColor" value="${p.cyalumeColor || '#ff6b9d'}" style="width:50px;height:36px;border:none;background:transparent;cursor:pointer">
+              <input type="color" id="pColor" value="${/^#[0-9a-fA-F]{6}$/.test(p.cyalumeColor || '') ? p.cyalumeColor : '#ff6b9d'}" style="width:50px;height:36px;border:none;background:transparent;cursor:pointer">
               <input type="text" class="form-input" id="pColorText" value="${escHtml(p.cyalumeColor || '')}" placeholder="#ff6b9d" style="flex:1">
             </div>
           </div>
@@ -1547,7 +1547,7 @@
         </tr></thead>
         <tbody>${timeline.map((t, idx) => {
                 const isSpecial = t.slotType === 'break' || t.slotType === 'exchange' || t.slotType === 'mc';
-                if (isSpecial) return `<tr class="special-row" data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)"><td><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${t.timeRange}</td><td colspan="12"></td><td style="text-align:center"><button class="btn btn-ghost btn-sm" style="color:var(--accent-red);font-size:0.7rem;padding:2px 6px" onclick="event.stopPropagation();deleteSpecialSlot('${t.songId}','${escHtml(t.songTitle)}')" title="削除">✕</button></td></tr>`;
+                if (isSpecial) return `<tr class="special-row" data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)"><td><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${escHtml(t.songTitle)}</td><td style="font-family:var(--font-mono);font-size:0.78rem">${escHtml(t.timeRange)}</td><td colspan="12"></td><td style="text-align:center"><button class="btn btn-ghost btn-sm" style="color:var(--accent-red);font-size:0.7rem;padding:2px 6px" onclick="event.stopPropagation();deleteSpecialSlot(${jsArg(t.songId)},${jsArg(t.songTitle)})" title="削除">✕</button></td></tr>`;
 
                 const micCls = 'ie-select mic-select';
                 const audioCls = 'ie-select audio-select' + (t.completedAudio === '完成済み' ? ' status-done' : t.completedAudio === '受け取り済み' ? ' status-received' : '');
@@ -1557,23 +1557,23 @@
                 return `<tr class="${acousticCls}" data-row="${idx}" draggable="true" ondragstart="ttDS(event,${idx})" ondragover="ttDO(event)" ondrop="ttDP(event,${idx})" ondragend="ttDE(event)" ondragleave="ttDL(event)" onclick="toggleRowSelect(${idx},event)">
             <td style="text-align:center;color:var(--text-muted);font-size:0.78rem"><span class="tt-drag-handle" title="ドラッグで移動">⠿</span>${t.order}</td>
             <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent-blue)">${t.timeRange}</td>
-            <td><div class="flex items-center gap-xs">${t.cyalumeColor ? `<span class="color-swatch" style="background:${t.cyalumeColor};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</div></td>
+            <td><div class="flex items-center gap-xs">${safeColor(t.cyalumeColor) ? `<span class="color-swatch" style="background:${escHtml(safeColor(t.cyalumeColor))};width:10px;height:10px"></span>` : ''}${escHtml(t.performerName)}</div></td>
             <td>${escHtml(t.songTitle)}</td>
             <td style="text-align:center;font-size:0.78rem;color:var(--accent-green);font-weight:600">${acousticCol}</td>
-            <td class="col-group-start"><input class="ie ie-sm" value="${escHtml(t.promptNumber)}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'promptNumber',this.value)"></td>
-            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'soundNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.soundNote)}</textarea></td>
-            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'lightNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.lightNote)}</textarea></td>
-            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'cueNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.cueNote)}</textarea></td>
-            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'requestNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.requestNote)}</textarea></td>
-            <td class="col-group-start"><select class="${micCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'micCount',parseInt(this.value))">
+            <td class="col-group-start"><input class="ie ie-sm" value="${escHtml(t.promptNumber)}" onclick="event.stopPropagation()" onchange="usf(${jsArg(t.performerId)},${Number(t.songIndex)},'promptNumber',this.value)"></td>
+            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf(${jsArg(t.performerId)},${Number(t.songIndex)},'soundNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.soundNote)}</textarea></td>
+            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf(${jsArg(t.performerId)},${Number(t.songIndex)},'lightNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.lightNote)}</textarea></td>
+            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf(${jsArg(t.performerId)},${Number(t.songIndex)},'cueNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.cueNote)}</textarea></td>
+            <td><textarea class="ie" rows="1" onclick="event.stopPropagation()" onchange="usf(${jsArg(t.performerId)},${Number(t.songIndex)},'requestNote',this.value)" style="resize:vertical;min-height:24px;overflow-y:hidden" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${escHtml(t.requestNote)}</textarea></td>
+            <td class="col-group-start"><select class="${micCls}" onclick="event.stopPropagation()" onchange="usf(${jsArg(t.performerId)},${Number(t.songIndex)},'micCount',parseInt(this.value))">
               ${[0,1,2,3,4,5,6,7,8,9,10].map(n => `<option ${t.micCount === n ? 'selected' : ''}>${n}</option>`).join('')}</select></td>
             <td class="col-group-start" style="font-family:var(--font-mono);font-size:0.78rem;text-align:center">${t.durationStr}</td>
-            <td class="col-group-start"><select class="${audioCls}" onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'completedAudio',this.value);this.className='ie-select audio-select'+(this.value==='完成済み'?' status-done':this.value==='受け取り済み'?' status-received':'')">
+            <td class="col-group-start"><select class="${audioCls}" onclick="event.stopPropagation()" onchange="usf(${jsArg(t.performerId)},${Number(t.songIndex)},'completedAudio',this.value);this.className='ie-select audio-select'+(this.value==='完成済み'?' status-done':this.value==='受け取り済み'?' status-received':'')">
               <option value="" ${!t.completedAudio ? 'selected' : ''}></option>
               <option value="受け取り済み" ${t.completedAudio === '受け取り済み' ? 'selected' : ''}>受け取り済み</option>
               <option value="完成済み" ${t.completedAudio === '完成済み' ? 'selected' : ''}>完成済み</option></select></td>
-            <td class="cb-cell"><input type="checkbox" ${t.audioConfirmed ? 'checked' : ''} onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'audioConfirmed',this.checked)"></td>
-            <td class="cb-cell"><input type="checkbox" ${t.audioConfirmedHaremu ? 'checked' : ''} onclick="event.stopPropagation()" onchange="usf('${t.performerId}',${t.songIndex},'audioConfirmedHaremu',this.checked)"></td>
+            <td class="cb-cell"><input type="checkbox" ${t.audioConfirmed ? 'checked' : ''} onclick="event.stopPropagation()" onchange="usf(${jsArg(t.performerId)},${Number(t.songIndex)},'audioConfirmed',this.checked)"></td>
+            <td class="cb-cell"><input type="checkbox" ${t.audioConfirmedHaremu ? 'checked' : ''} onclick="event.stopPropagation()" onchange="usf(${jsArg(t.performerId)},${Number(t.songIndex)},'audioConfirmedHaremu',this.checked)"></td>
           </tr>`;
             }).join('')}</tbody></table>`;
             // Auto-resize textareas on initial render
@@ -1889,7 +1889,7 @@
                     div.innerHTML = `<div class="glass-card accent-green"><h4 style="color:var(--accent-green)">取込完了</h4><p class="mt-sm">${r.count}件の出演者データを取り込みました。</p></div>`;
                     renderEventDetail(); showToast(`${r.count}件のデータを取り込みました`, 'success');
                 } else {
-                    div.innerHTML = `<div class="glass-card accent-red"><h4 style="color:var(--accent-red)">エラー</h4><p class="mt-sm">${r.error}</p></div>`;
+                    div.innerHTML = `<div class="glass-card accent-red"><h4 style="color:var(--accent-red)">エラー</h4><p class="mt-sm">${escHtml(r.error)}</p></div>`;
                 }
             };
             reader.readAsText(file, 'UTF-8');
